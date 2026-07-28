@@ -394,6 +394,13 @@ function Rail:_applyTabs()
         return
     end
 
+    -- Picking a category means leaving search. Without this the strip reappears while the
+    -- search field is still up and the page still shows results, so the category looks
+    -- selected but nothing under it is reachable.
+    if window._searching then
+        require(script.Parent.search).close(window, { showTabs = true })
+    end
+
     local first = nil
     for _, tab in ipairs(window.tabs) do
         if tab.topbarItem and not tab.neglectSelector then
@@ -405,11 +412,16 @@ function Rail:_applyTabs()
         end
     end
 
-    -- land on a tab that is actually in this category, rather than leaving the page showing
-    -- a subcategory that just got hidden
+    -- Land on a tab that is actually in this category. Checking "is the open tab now one of
+    -- the visible ones" rather than "does it belong to another category" matters: the
+    -- settings page has no category at all, so the narrower check left you stranded on
+    -- settings with the strip restored but the content unchanged.
     local open = window.selectedTab
-    local stale = open ~= nil and open.railCategory ~= nil and open.railCategory ~= self
-    if first and stale then
+    local openVisible = false
+    if open and open.topbarItem and not open.neglectSelector then
+        openVisible = open.railCategory == nil or open.railCategory == self
+    end
+    if first and not openVisible then
         first:Select()
     end
 end

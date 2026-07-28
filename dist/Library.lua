@@ -885,10 +885,11 @@ callback)=='function'then task.spawn(r.callback,r)end end)local u,v=t==s.top,q.a
 not s._hasActiveCategory then v=true end if u and v then s._hasActiveCategory=true end r:SetActive(v)return r end
 function ae.Select(p)if p.destroyed then return end local q=p.window.rail if not q then return end for r,s in ipairs(p.
 window.railItems)do if s~=p and not s.isProfile and s.main and s.main.Parent==q.top then s:SetActive(false)end end p:
-SetActive(true)p:_applyTabs()end function ae._applyTabs(p)local q=p.window if not q.tabs then return end local r for s,t
-in ipairs(q.tabs)do if t.topbarItem and not t.neglectSelector then local u=t.railCategory==nil or t.railCategory==p t.
-topbarItem.Visible=u if u and not r then r=t end end end local s=q.selectedTab local t=s~=nil and s.railCategory~=nil
-and s.railCategory~=p if r and t then r:Select()end end function ae.profile(p,q)q=if typeof(q)=='table'then q else{}
+SetActive(true)p:_applyTabs()end function ae._applyTabs(p)local q=p.window if not q.tabs then return end if q._searching
+then ac(ab.Parent.search).close(q,{showTabs=true})end local r for s,t in ipairs(q.tabs)do if t.topbarItem and not t.
+neglectSelector then local u=t.railCategory==nil or t.railCategory==p t.topbarItem.Visible=u if u and not r then r=t end
+end end local s,t=q.selectedTab,false if s and s.topbarItem and not s.neglectSelector then t=s.railCategory==nil or s.
+railCategory==p end if r and not t then r:Select()end end function ae.profile(p,q)q=if typeof(q)=='table'then q else{}
 local r=ag.localPlayer local s,t=setmetatable({window=assert(p,'Missing argument #1 (Window expected)'),userId=q.userId
 or q.UserId or(r and r.UserId)or 1,callback=q.callback or q.Callback,isProfile=true},ae),m(p)n(s,p,t.bottom,2,UDim.new(1
 ,0))s.iconImage=p:Create('ImageLabel',{Size=UDim2.new(1,-4,1,-4),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.
@@ -2245,17 +2246,17 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{28,1,{'utility'},{{42,2,{'log'}},{32,2,{'constants'}},{30,2,{'assetResolver'}},{52,2,{
-'persistenceWrite'}},{46,2,{'ordering'}},{55,2,{'textMetrics'}},{39,2,{'image'}},{56,2,{'variables'}},{41,2,{'locale'}},
-{54,2,{'services'}},{53,2,{'runtime'}},{34,2,{'filesystem'}},{51,2,{'persistenceSettings'}},{40,2,{'imageCache'}},{47,2,
-{'path'}},{36,2,{'flagNames'}},{29,2,{'HapticEngine'}},{45,2,{'odometer'}},{38,2,{'functions'}},{31,2,{'colors'}},{48,2,
-{'persistence'}},{44,2,{'network'}},{50,2,{'persistencePaths'}},{49,2,{'persistenceConfig'}},{43,2,{'moveable'}},{37,2,{
-'fontManager'}},{33,2,{'enums'}},{35,2,{'filesystemManager'}}}},{27,2,{'types'}},{25,1,{'themes'},{{26,2,{'default'}}}},
-{2,1,{'components'},{{20,2,{'tab'}},{11,2,{'input'}},{10,2,{'group'}},{7,2,{'descriptor'}},{17,2,{'section'}},{5,2,{
-'chrome'}},{9,2,{'dropdown'}},{3,2,{'action'}},{23,2,{'toggle'}},{24,2,{'window'}},{4,2,{'button'}},{6,2,{'colorpicker'}
-},{14,2,{'popup'}},{21,2,{'tag'}},{19,2,{'stat'}},{18,2,{'slider'}},{16,2,{'search'}},{8,2,{'drag'}},{22,2,{'toast'}},{
-12,2,{'keybind'}},{15,2,{'rail'}},{13,2,{'notification'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,
-table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.
+{{1,2,{'AFKTY'},{{25,1,{'themes'},{{26,2,{'default'}}}},{27,2,{'types'}},{2,1,{'components'},{{10,2,{'group'}},{21,2,{
+'tag'}},{3,2,{'action'}},{19,2,{'stat'}},{12,2,{'keybind'}},{22,2,{'toast'}},{24,2,{'window'}},{16,2,{'search'}},{9,2,{
+'dropdown'}},{5,2,{'chrome'}},{18,2,{'slider'}},{14,2,{'popup'}},{23,2,{'toggle'}},{20,2,{'tab'}},{13,2,{'notification'}
+},{8,2,{'drag'}},{11,2,{'input'}},{7,2,{'descriptor'}},{17,2,{'section'}},{15,2,{'rail'}},{6,2,{'colorpicker'}},{4,2,{
+'button'}}}},{28,1,{'utility'},{{29,2,{'HapticEngine'}},{50,2,{'persistencePaths'}},{39,2,{'image'}},{36,2,{'flagNames'}
+},{56,2,{'variables'}},{30,2,{'assetResolver'}},{33,2,{'enums'}},{34,2,{'filesystem'}},{42,2,{'log'}},{55,2,{
+'textMetrics'}},{54,2,{'services'}},{47,2,{'path'}},{51,2,{'persistenceSettings'}},{53,2,{'runtime'}},{43,2,{'moveable'}
+},{44,2,{'network'}},{35,2,{'filesystemManager'}},{45,2,{'odometer'}},{41,2,{'locale'}},{37,2,{'fontManager'}},{31,2,{
+'colors'}},{46,2,{'ordering'}},{52,2,{'persistenceWrite'}},{49,2,{'persistenceConfig'}},{38,2,{'functions'}},{32,2,{
+'constants'}},{48,2,{'persistence'}},{40,2,{'imageCache'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next
+,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.
 freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,
 '@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
 end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={
