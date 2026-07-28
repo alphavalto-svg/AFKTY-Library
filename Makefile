@@ -37,7 +37,7 @@ LUAU_LSP_REF ?= e27c8b37024818c0a3d60f341ae0aba87e6d58d1
 GLOBAL_TYPES_URL ?= https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/$(LUAU_LSP_REF)/scripts/globalTypes.d.luau
 COVERAGE_THRESHOLD ?= 70
 
-.PHONY: help install hooks ci check test test-verbose coverage coverage-baseline testez-model test-place format format-check lint typecheck build bundle serve sourcemap-watch dev clean
+.PHONY: help install hooks ci check test test-verbose coverage coverage-baseline testez-model test-place format format-check lint typecheck build bundle dist release serve sourcemap-watch dev clean
 
 help:
 	@echo AFKTY Library Make targets:
@@ -56,7 +56,9 @@ help:
 	@echo   lint       Lint Luau source with Selene
 	@echo   typecheck  Generate sourcemap and run luau-lsp analysis
 	@echo   build      Build the Rojo place file
-	@echo   bundle     Build the release Luau bundle
+	@echo   bundle     Bundle and publish dist/Library.lua
+	@echo   dist       bundle + Studio place file
+	@echo   release    lint + specs gate, then bundle + place
 	@echo   serve      Start the Rojo development server
 	@echo   clean      Remove generated local outputs
 	@echo   dev        Start Rojo serve and watch sourcemap generation
@@ -120,9 +122,19 @@ typecheck: $(GLOBAL_TYPES)
 build:
 	$(ROJO) build $(PROJECT_FILE) -o "$(PLACE_FILE)"
 
+# delegates to .lune/build.luau so make and the script cannot diverge. the old target
+# stopped at build/bundled.luau, which left dist/Library.lua -- the file HttpGet actually
+# fetches -- to be copied by hand.
 bundle:
-	$(MKDIR) "$(dir $(BUNDLE_FILE))"
-	$(LUNE) run wax bundle output="$(BUNDLE_FILE)" input="$(WAX_PROJECT)" minify=true
+	$(LUNE) run build
+
+# bundle + Studio place
+dist:
+	$(LUNE) run build -- --place
+
+# lint + specs gate, then bundle + place. nothing publishes if a check fails.
+release:
+	$(LUNE) run build -- --all
 
 serve:
 	$(ROJO) serve $(PROJECT_FILE)

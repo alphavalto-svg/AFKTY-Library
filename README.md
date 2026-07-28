@@ -53,13 +53,21 @@ Toolchain is managed by [Rokit](https://github.com/rojo-rbx/rokit) and pinned in
 `rokit.toml`.
 
 ```sh
-rokit install                                   # one time
-make bundle                                     # -> build/bundled.luau
-cp build/bundled.luau dist/Library.lua          # publish the artifact
-make test                                       # 169 specs
-make lint                                       # selene
-rojo build default.project.json -o "AFKTY Library.rbxlx"   # Studio test place
+rokit install                    # one time
+lune run build                   # bundle -> dist/Library.lua
+lune run build -- --place        # also build the Studio test place
+lune run build -- --all          # lint + specs gate, then bundle + place
 ```
+
+**Always build through the script.** It is the only path that publishes
+`dist/Library.lua`; bundling by hand stops at `build/bundled.luau` and leaves the shipped
+artifact stale. The script also refuses to publish a bundle under 100 KB, so a truncated
+build fails loudly instead of silently shipping.
+
+The bare `--` is required — lune consumes anything before it as its own flags.
+
+`make` targets (`bundle`, `dist`, `release`) delegate to the same script so the two cannot
+diverge, but GNU Make is not installed on Windows by default; prefer `lune run build`.
 
 `build/` is gitignored; **`dist/Library.lua` is committed on purpose** — it's what
 `HttpGet` fetches, so a rebuild isn't live until it's committed and pushed.
