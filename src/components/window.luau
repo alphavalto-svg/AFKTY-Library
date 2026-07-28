@@ -34,8 +34,8 @@ local revealInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingD
 -- restore button used to sit.
 -- Resting transparencies for the window's lit outer edge. Every reveal path uses these so
 -- the glow can't differ between first load and a reopen.
-local GLOW_IDLE = 0.55
-local EDGE_IDLE = 0.3
+local GLOW_IDLE = 0.72
+local EDGE_IDLE = 0.5
 
 local collapsedSize = UDim2.fromOffset(185, 50)
 local collapsedTop = UDim2.new(0.5, 0, 0, 20)

@@ -109,6 +109,39 @@ return function()
             expect(w.rail.main.Visible).to.equal(true)
         end)
 
+        it("selects the first category itself, and never the brand", function()
+            local w = makeWindow()
+
+            local first = w:CreateRailItem({ icon = 85628806611332, name = "Main" })
+            local second = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+
+            -- a hub should not have to remember to mark one active
+            expect(first.active).to.equal(true)
+            expect(second.active).to.equal(false)
+
+            -- the brand is a label, not a selectable item, so it cannot take the selection
+            expect(w.rail.brand).to.be.ok()
+            expect(w.rail.brand.ClassName).to.equal("ImageLabel")
+            expect(#w.railItems).to.equal(4) -- 2 categories + adopted search/settings
+        end)
+
+        it("moves the selection with Select and leaves controls alone", function()
+            local w = makeWindow()
+            local first = w:CreateRailItem({ icon = 85628806611332, name = "Main" })
+            local second = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+
+            second:Select()
+            expect(second.active).to.equal(true)
+            expect(first.active).to.equal(false)
+
+            first:Select()
+            expect(first.active).to.equal(true)
+            expect(second.active).to.equal(false)
+
+            -- search/settings live in the bottom stack and must not be cleared by a category
+            expect(w.rail.searchItem.main.Parent).to.equal(w.rail.bottom)
+        end)
+
         it("fires an item's callback when clicked", function()
             local w = makeWindow()
             local clicks = 0

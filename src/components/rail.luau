@@ -33,6 +33,9 @@ local EDGE_PADDING = 12
 local ICON_INSET = 9 -- icon is ITEM_SIZE - 2*ICON_INSET square, centred
 -- search + settings + avatar, stacked with padding between
 local BOTTOM_STACK_HEIGHT = ITEM_SIZE * 3 + ITEM_PADDING * 2
+local BRAND_SIZE = 28
+-- brand + its divider + the gap under it, reserved above the category stack
+local BRAND_BLOCK = BRAND_SIZE + 8 + 1 + ITEM_PADDING
 
 local hoverInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local activeInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -124,12 +127,39 @@ local function ensureRail(window)
         Parent = rail.main,
     }, { BackgroundColor3 = "SurfaceStroke" })
 
-    -- Category stack, from the top. This is the caller's space: CreateRailItem lands here,
+    -- Brand mark. Deliberately not a button and never selectable: it marks the product, and
+    -- letting it take the selection meant the menu opened on something that was not a page.
+    rail.brand = window:Create("ImageLabel", {
+        Name = "RailBrand",
+        Size = UDim2.fromOffset(BRAND_SIZE, BRAND_SIZE),
+        Position = UDim2.new(0.5, 0, 0, EDGE_PADDING),
+        AnchorPoint = Vector2.new(0.5, 0),
+        BackgroundTransparency = 1,
+        Image = image.resolve(window.icon or constants.icons.afkty),
+        ScaleType = Enum.ScaleType.Fit,
+        ZIndex = 4,
+
+        Parent = rail.main,
+    })
+
+    rail.brandDivider = window:Create("Frame", {
+        Name = "RailBrandDivider",
+        Size = UDim2.new(0, BRAND_SIZE, 0, 1),
+        Position = UDim2.new(0.5, 0, 0, EDGE_PADDING + BRAND_SIZE + 8),
+        AnchorPoint = Vector2.new(0.5, 0),
+        BackgroundTransparency = 0.8,
+        BorderSizePixel = 0,
+        ZIndex = 4,
+
+        Parent = rail.main,
+    }, { BackgroundColor3 = "SurfaceStroke" })
+
+    -- Category stack, below the brand. This is the caller's space: CreateRailItem lands here,
     -- so scripts can add their own sections without fighting the built-in controls below.
     rail.top = window:Create("Frame", {
         Name = "RailItems",
-        Size = UDim2.new(1, 0, 1, -(BOTTOM_STACK_HEIGHT + EDGE_PADDING * 2)),
-        Position = UDim2.new(0, 0, 0, EDGE_PADDING),
+        Size = UDim2.new(1, 0, 1, -(BOTTOM_STACK_HEIGHT + BRAND_BLOCK + EDGE_PADDING * 2)),
+        Position = UDim2.new(0, 0, 0, EDGE_PADDING + BRAND_BLOCK),
         BackgroundTransparency = 1,
         ZIndex = 3,
 
@@ -303,9 +333,38 @@ function Rail.new(window, properties)
         end
     end)
 
-    self:SetActive(properties.active == true or properties.Active == true)
+    -- The first category selects itself. A hub should not have to remember to mark one
+    -- active, and the brand is not a category, so the selection can never land on it.
+    local isCategory = slot == rail.top
+    local wantsActive = properties.active == true or properties.Active == true
+    if isCategory and not rail._hasActiveCategory then
+        wantsActive = true
+    end
+    if isCategory and wantsActive then
+        rail._hasActiveCategory = true
+    end
+
+    self:SetActive(wantsActive)
 
     return self
+end
+
+-- Select this category and clear every sibling, so callers get single-selection behaviour
+-- without tracking the previous item themselves.
+function Rail:Select()
+    if self.destroyed then
+        return
+    end
+    local rail = self.window.rail
+    if not rail then
+        return
+    end
+    for _, item in ipairs(self.window.railItems) do
+        if item ~= self and not item.isProfile and item.main and item.main.Parent == rail.top then
+            item:SetActive(false)
+        end
+    end
+    self:SetActive(true)
 end
 
 -- The player avatar, pinned bottom-left. properties: userId, callback.

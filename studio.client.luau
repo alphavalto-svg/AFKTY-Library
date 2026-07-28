@@ -30,26 +30,23 @@ Window:CreateTag({ text = "studio", color = Color3.fromRGB(144, 231, 68) })
 --
 -- No Search or Settings here either: the rail adopts both from the topbar itself, so adding
 -- them by hand would show each twice.
-local railMain, railConfigs
-
-railMain = Window:CreateRailItem({
+-- The library selects the first category automatically and :Select() clears the siblings,
+-- so a consuming script never tracks which one was previously active.
+Window:CreateRailItem({
     icon = 129180860773723,
     name = "Main",
-    active = true, -- matches the tab the window opens on
-    callback = function()
-        railConfigs:SetActive(false)
-        railMain:SetActive(true)
+    callback = function(item)
+        item:Select()
         Window:Navigate("Main")
         print("[AFKTY] rail: main")
     end,
 })
 
-railConfigs = Window:CreateRailItem({
+Window:CreateRailItem({
     icon = 125823673784681,
     name = "Configs",
-    callback = function()
-        railMain:SetActive(false)
-        railConfigs:SetActive(true)
+    callback = function(item)
+        item:Select()
         print("[AFKTY] rail: configs")
     end,
 })
