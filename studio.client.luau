@@ -35,35 +35,22 @@ local railHome = Window:CreateRailItem({
     end,
 })
 
-local railSettings = Window:CreateRailItem({
-    icon = 129180860773723,
-    name = "Settings",
-    callback = function()
-        print("[AFKTY] rail: settings")
-    end,
-})
-
-Window:CreateRailItem({
-    icon = 100604009889706,
-    name = "Search",
-    callback = function()
-        print("[AFKTY] rail: search")
-    end,
-})
-
-Window:CreateRailItem({
+-- No Search or Settings item here on purpose: the rail adopts both from the topbar itself,
+-- so adding them by hand would show each twice.
+local railConfigs = Window:CreateRailItem({
     icon = 125823673784681,
     name = "Configs",
     callback = function()
+        railHome:SetActive(false)
         print("[AFKTY] rail: configs")
     end,
 })
 
 -- Demonstrates the active state moving between items.
-railSettings.callback = function()
+railConfigs.callback = function()
     railHome:SetActive(false)
-    railSettings:SetActive(true)
-    print("[AFKTY] rail: settings active")
+    railConfigs:SetActive(true)
+    print("[AFKTY] rail: configs active")
 end
 
 -- Player avatar, pinned bottom. The library draws the headshot and reports the click; what
