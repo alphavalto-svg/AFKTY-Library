@@ -24,6 +24,62 @@ local Window = Library:CreateWindow({
 
 Window:CreateTag({ text = "studio", color = Color3.fromRGB(144, 231, 68) })
 
+-- Left icon rail. Items carry no built-in meaning; each is an icon plus a callback.
+local railHome = Window:CreateRailItem({
+    icon = 85628806611332,
+    name = "Home",
+    active = true,
+    callback = function()
+        Window:Navigate("Main")
+        print("[AFKTY] rail: home")
+    end,
+})
+
+local railSettings = Window:CreateRailItem({
+    icon = 129180860773723,
+    name = "Settings",
+    callback = function()
+        print("[AFKTY] rail: settings")
+    end,
+})
+
+Window:CreateRailItem({
+    icon = 100604009889706,
+    name = "Search",
+    callback = function()
+        print("[AFKTY] rail: search")
+    end,
+})
+
+Window:CreateRailItem({
+    icon = 125823673784681,
+    name = "Configs",
+    callback = function()
+        print("[AFKTY] rail: configs")
+    end,
+})
+
+-- Demonstrates the active state moving between items.
+railSettings.callback = function()
+    railHome:SetActive(false)
+    railSettings:SetActive(true)
+    print("[AFKTY] rail: settings active")
+end
+
+-- Player avatar, pinned bottom. The library draws the headshot and reports the click; what
+-- it shows about the account is up to this script.
+Window:CreateRailProfile({
+    callback = function(profile)
+        Window:Popup({
+            title = "Account",
+            content = ("UserId %d. Subscription state would be rendered here by the script, not the library."):format(
+                profile.userId
+            ),
+            options = { { text = "Close" } },
+        })
+    end,
+})
+
 local Tab = Window:CreateTab({ name = "Main", icon = 93364949241311 })
 
 Tab:CreateSection({ name = "Basics" })

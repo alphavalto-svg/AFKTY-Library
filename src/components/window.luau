@@ -193,6 +193,7 @@ function Window.new(properties)
         localeProperties = {},
         tabs = {},
         tags = {},
+        railItems = {},
         selectedTab = nil,
         theme = resolveTheme(properties.theme or properties.Theme),
 
@@ -748,6 +749,23 @@ function Window:CreateTag(properties)
     local newTag = require(script.Parent.tag).new(self, properties)
     table.insert(self.tags, newTag)
     return newTag
+end
+
+-- Left icon rail. The rail itself is built on the first call and insets the window's
+-- content; a window that never calls these keeps its original geometry.
+function Window:CreateRailItem(properties)
+    local newItem = require(script.Parent.rail).new(self, properties)
+    table.insert(self.railItems, newItem)
+    return newItem
+end
+
+-- The player avatar chip at the bottom of the rail. Draws the headshot and reports clicks;
+-- what gets shown about the account is the caller's business.
+function Window:CreateRailProfile(properties)
+    local newProfile = require(script.Parent.rail).profile(self, properties)
+    self.railProfile = newProfile
+    table.insert(self.railItems, newProfile)
+    return newProfile
 end
 
 -- Register a saveable control under its flag. Keeps flags unique so two same-named
