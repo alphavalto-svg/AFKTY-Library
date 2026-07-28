@@ -2013,7 +2013,7 @@ export type CacheSettledCallback=(failed:number)->()export type PreloadCallback=
 AvatarCallback=(uri:string)->()export type OnCachedCallback=(id:number)->()export type ThumbnailEntry={state:string?,
 imageUrl:string?}export type ThumbnailResponse={data:{ThumbnailEntry}?}local ai,aj,ak,b,c,d,e,f:{[number]:string}={},ag.
 fileSystemManager:getRootFolder(),ag.fileSystemManager:getAssetsFolder(),ag.assetResolver,
-[[https://raw.githubusercontent.com/SiriusSoftwareLtd/rayfield-gen2/main/assets/]],48,
+[[https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main/assets/]],48,
 [[https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%d&size=%dx%d&format=Png&isCircular=false]],{}for g,h
 in ah.icons do local i=h::number f[i]=c..tostring(i)..'.png'end local g=0 for h in f do g+=1 end ai.rewrites={}::
 RewriteMap ai.onCached=nil::OnCachedCallback?local h='\137PNG\r\n\26\n'local function i(j:string,k:string):string?if
@@ -2219,17 +2219,17 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{32,1,{'utility'},{{36,2,{'constants'}},{45,2,{'locale'}},{60,2,{'variables'}},{55,2,{
-'persistenceSettings'}},{41,2,{'fontManager'}},{40,2,{'flagNames'}},{56,2,{'persistenceWrite'}},{44,2,{'imageCache'}},{
-35,2,{'colors'}},{48,2,{'network'}},{52,2,{'persistence'}},{33,2,{'HapticEngine'}},{58,2,{'services'}},{57,2,{'runtime'}
-},{49,2,{'odometer'}},{51,2,{'path'}},{53,2,{'persistenceConfig'}},{34,2,{'assetResolver'}},{59,2,{'textMetrics'}},{39,2
-,{'filesystemManager'}},{50,2,{'ordering'}},{37,2,{'enums'}},{42,2,{'functions'}},{54,2,{'persistencePaths'}},{43,2,{
-'image'}},{46,2,{'log'}},{38,2,{'filesystem'}},{47,2,{'moveable'}}}},{31,2,{'types'}},{24,1,{'themes'},{{28,2,{'ember'}}
-,{25,2,{'amethyst'}},{29,2,{'frost'}},{30,2,{'rose'}},{27,2,{'default'}},{26,2,{'cobalt'}}}},{2,1,{'components'},{{4,2,{
-'button'}},{10,2,{'group'}},{16,2,{'section'}},{11,2,{'input'}},{13,2,{'notification'}},{7,2,{'descriptor'}},{9,2,{
-'dropdown'}},{12,2,{'keybind'}},{23,2,{'window'}},{20,2,{'tag'}},{3,2,{'action'}},{14,2,{'popup'}},{22,2,{'toggle'}},{15
-,2,{'search'}},{18,2,{'stat'}},{6,2,{'colorpicker'}},{21,2,{'toast'}},{19,2,{'tab'}},{17,2,{'slider'}},{5,2,{'chrome'}},
-{8,2,{'drag'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,type,require,
+{{1,2,{'AFKTY'},{{32,1,{'utility'},{{37,2,{'enums'}},{60,2,{'variables'}},{34,2,{'assetResolver'}},{59,2,{'textMetrics'}
+},{40,2,{'flagNames'}},{58,2,{'services'}},{50,2,{'ordering'}},{57,2,{'runtime'}},{56,2,{'persistenceWrite'}},{43,2,{
+'image'}},{55,2,{'persistenceSettings'}},{42,2,{'functions'}},{41,2,{'fontManager'}},{36,2,{'constants'}},{54,2,{
+'persistencePaths'}},{33,2,{'HapticEngine'}},{53,2,{'persistenceConfig'}},{44,2,{'imageCache'}},{52,2,{'persistence'}},{
+45,2,{'locale'}},{47,2,{'moveable'}},{49,2,{'odometer'}},{48,2,{'network'}},{51,2,{'path'}},{38,2,{'filesystem'}},{46,2,
+{'log'}},{35,2,{'colors'}},{39,2,{'filesystemManager'}}}},{2,1,{'components'},{{15,2,{'search'}},{13,2,{'notification'}}
+,{9,2,{'dropdown'}},{14,2,{'popup'}},{22,2,{'toggle'}},{10,2,{'group'}},{3,2,{'action'}},{23,2,{'window'}},{21,2,{
+'toast'}},{20,2,{'tag'}},{19,2,{'tab'}},{18,2,{'stat'}},{12,2,{'keybind'}},{17,2,{'slider'}},{4,2,{'button'}},{16,2,{
+'section'}},{8,2,{'drag'}},{6,2,{'colorpicker'}},{5,2,{'chrome'}},{11,2,{'input'}},{7,2,{'descriptor'}}}},{24,1,{
+'themes'},{{29,2,{'frost'}},{25,2,{'amethyst'}},{28,2,{'ember'}},{26,2,{'cobalt'}},{27,2,{'default'}},{30,2,{'rose'}}}},
+{31,2,{'types'}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,type,require,
 pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k end,b.wrap,ae.
 sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end end local r=af
 and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]=
