@@ -277,7 +277,7 @@ function Window.new(properties)
 
     self.windowStroke = self:Create("UIStroke", {
         -- Animations
-        Transparency = 1, -- In = 0.95
+        Transparency = 1, -- In = 0.45, revealed with the window (see Show)
 
         Parent = self.main,
     }, { Color = "SurfaceStroke" })
@@ -460,6 +460,11 @@ function Window.new(properties)
 
     -- Shadow (Transparency 1 here, tweened to 0.6 on show)
     self.windowShadow = self:CreateGlow(self.main, "ShadowColor", 20, 1)
+
+    -- A second, accent-coloured halo outside the dark shadow, so the window carries a lit
+    -- outer edge rather than only a drop shadow. Wider blur than the shadow so it reads as
+    -- light spilling off the frame instead of a second border.
+    self.windowGlow = self:CreateGlow(self.main, "AccentStroke", 34, 1)
 
     -- Elements Preparation
 
@@ -985,6 +990,8 @@ function Window:Hide()
     -- fade the window's own chrome out; main keeps its own background/gradient/corner the
     -- whole time, it just reshapes underneath - there's nothing to hand off to
     variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
+    variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
+    variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
     variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 1 }):Play()
 
     if self.title then
@@ -995,6 +1002,12 @@ function Window:Hide()
     end
     if self.topbarIcon then
         variables.tweenService:Create(self.topbarIcon, fadeInfo, { ImageTransparency = 1 }):Play()
+    end
+
+    -- the rail is parented to main, which reshapes rather than hides, so it has to be taken
+    -- down explicitly or it keeps drawing over the collapsed face
+    if self.rail then
+        require(script.Parent.rail).setShown(self, false, fadeInfo)
     end
 
     for _, action in ipairs(self.actionContainer:GetChildren()) do
@@ -1076,6 +1089,8 @@ function Window:ToggleMinimise()
 
         variables.tweenService:Create(self.main, sizeInfo, { Size = self.size }):Play()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.72 }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.45 }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         variables.tweenService
@@ -1138,6 +1153,8 @@ function Window:ToggleMinimise()
         end)
 
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 1 }):Play()
         variables.tweenService:Create(self.main, sizeInfo, { Size = UDim2.fromOffset(self.size.X.Offset, 66) }):Play()
 
@@ -1618,6 +1635,8 @@ function Window:_quickRestore()
         self.elements.Visible = true
 
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.72 }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.45 }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         if self.topbarIcon then
@@ -1628,6 +1647,10 @@ function Window:_quickRestore()
         end
         if self.subtitle then
             variables.tweenService:Create(self.subtitle, fadeInfo, { TextTransparency = 0.7 }):Play()
+        end
+
+        if self.rail then
+            require(script.Parent.rail).setShown(self, true, fadeInfo)
         end
 
         for _, action in ipairs(self.actionContainer:GetChildren()) do

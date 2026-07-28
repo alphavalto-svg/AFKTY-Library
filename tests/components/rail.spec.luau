@@ -60,9 +60,46 @@ return function()
 
             -- a second item reuses the rail; insetting twice would push content off-window
             w:CreateRailItem({ icon = 129180860773723, name = "Settings" })
-            expect(#w.railItems).to.equal(2)
             expect(w.tabList.Size.X.Offset).to.equal(tabWidth - railWidth)
             expect(w.topContainer.Position.X.Offset).to.equal(titleX + railWidth)
+
+            -- two of ours plus the search/settings pair the rail adopts from the topbar
+            expect(#w.railItems).to.equal(4)
+        end)
+
+        it("takes search and settings off the topbar instead of duplicating them", function()
+            local w = makeWindow()
+
+            expect(w.searchAction.action.Visible).to.equal(true)
+            expect(w.settingsAction.action.Visible).to.equal(true)
+
+            w:CreateRailItem({ icon = 85628806611332, name = "Home" })
+
+            -- the top right keeps only minimise and close
+            expect(w.searchAction.action.Visible).to.equal(false)
+            expect(w.settingsAction.action.Visible).to.equal(false)
+            expect(w.rail.searchItem).to.be.ok()
+            expect(w.rail.settingsItem).to.be.ok()
+
+            -- adopted items sort below whatever the caller added
+            expect(w.rail.searchItem.main.LayoutOrder > 0).to.equal(true)
+        end)
+
+        it("takes the rail down with the window and brings it back", function()
+            local rail = helpers.requireComponent("rail")
+            local w = makeWindow()
+            w:CreateRailItem({ icon = 85628806611332, name = "Home" })
+            w:CreateRailProfile({})
+
+            local info = TweenInfo.new(0, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+            -- the rail is parented to main, which reshapes rather than hides on collapse, so
+            -- without this it keeps drawing over the collapsed face
+            rail.setShown(w, false, info)
+            expect(w.rail._shownToken).to.be.ok()
+
+            rail.setShown(w, true, info)
+            expect(w.rail.main.Visible).to.equal(true)
         end)
 
         it("fires an item's callback when clicked", function()

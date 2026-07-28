@@ -70,13 +70,9 @@ end
 -- it shows about the account is up to this script.
 Window:CreateRailProfile({
     callback = function(profile)
-        Window:Popup({
-            title = "Account",
-            content = ("UserId %d. Subscription state would be rendered here by the script, not the library."):format(
-                profile.userId
-            ),
-            options = { { text = "Close" } },
-        })
+        -- deliberately silent: the library reports the click, the consuming script decides
+        -- whether anything is shown at all
+        print("[AFKTY] rail: profile", profile.userId)
     end,
 })
 

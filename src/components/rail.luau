@@ -21,6 +21,10 @@ local utility = script.Parent.Parent.utility
 
 local variables = require(utility.variables)
 local image = require(utility.image)
+local constants = require(utility.constants)
+
+local SURFACE_IDLE = 0.6 -- rail + its edge cover at rest
+local DIVIDER_IDLE = 0.85 -- the hairline on the rail's inner edge
 
 local RAIL_WIDTH = 56
 local ITEM_SIZE = 38
@@ -71,7 +75,7 @@ local function ensureRail(window)
         Name = "Rail",
         Size = UDim2.new(0, RAIL_WIDTH, 1, 0),
         Position = UDim2.fromScale(0, 0),
-        BackgroundTransparency = 0.6,
+        BackgroundTransparency = SURFACE_IDLE,
         BorderSizePixel = 0,
         ZIndex = 2,
 
@@ -90,7 +94,7 @@ local function ensureRail(window)
         Name = "RailEdge",
         Size = UDim2.new(0, 12, 1, 0),
         Position = UDim2.new(1, -12, 0, 0),
-        BackgroundTransparency = 0.6,
+        BackgroundTransparency = SURFACE_IDLE,
         BorderSizePixel = 0,
         ZIndex = 2,
 
@@ -102,7 +106,7 @@ local function ensureRail(window)
         Name = "RailDivider",
         Size = UDim2.new(0, 1, 1, 0),
         Position = UDim2.new(1, -1, 0, 0),
-        BackgroundTransparency = 0.85,
+        BackgroundTransparency = DIVIDER_IDLE,
         BorderSizePixel = 0,
         ZIndex = 3,
 
@@ -153,7 +157,42 @@ local function ensureRail(window)
 
     insetForRail(window)
 
+    -- assigned before the built-ins below are made, so their own ensureRail call short-circuits
     window.rail = rail
+
+    -- The rail takes search and settings over from the topbar rather than duplicating them,
+    -- leaving only minimise and close at the top right. High LayoutOrder keeps them below
+    -- whatever the caller adds, whichever order things happen to be created in.
+    if window.searchAction and window.searchAction.action then
+        window.searchAction.action.Visible = false
+        local item = Rail.new(window, {
+            icon = constants.icons.search,
+            name = "Search",
+            order = 1000,
+            callback = function()
+                require(script.Parent.search).toggle(window)
+            end,
+        })
+        table.insert(window.railItems, item)
+        rail.searchItem = item
+    end
+
+    if window.settingsAction and window.settingsAction.action then
+        window.settingsAction.action.Visible = false
+        local item = Rail.new(window, {
+            icon = constants.icons.settings,
+            name = "Settings",
+            order = 1001,
+            callback = function()
+                if window.rfSettings then
+                    window.rfSettings:Select()
+                end
+            end,
+        })
+        table.insert(window.railItems, item)
+        rail.settingsItem = item
+    end
+
     return rail
 end
 
@@ -338,6 +377,76 @@ function Rail:SetActive(active)
     variables.tweenService:Create(self.main, activeInfo, { BackgroundTransparency = fillTarget }):Play()
     variables.tweenService:Create(self.stroke, activeInfo, { Transparency = strokeTarget }):Play()
     variables.tweenService:Create(self.glow, activeInfo, { Transparency = glowTarget }):Play()
+end
+
+-- Fade one item's own parts. Split out so setShown can drive every item without knowing
+-- which are icons and which is the avatar.
+function Rail:_setShown(shown, info)
+    if self.destroyed or not self.main then
+        return
+    end
+
+    local fill = if not shown then 1 else (if self.active then 0.15 else 1)
+    local stroke = if not shown then 1 else (if self.active then 0 else (if self.isProfile then 0.35 else 1))
+    local glow = if not shown
+        then 1
+        else (if self.active
+            then (self.window.theme and self.window.theme.AccentGlow or 0.15)
+            else (if self.isProfile then 0.55 else 1))
+
+    variables.tweenService:Create(self.main, info, { BackgroundTransparency = fill }):Play()
+    variables.tweenService:Create(self.stroke, info, { Transparency = stroke }):Play()
+    variables.tweenService:Create(self.glow, info, { Transparency = glow }):Play()
+
+    if self.iconImage then
+        variables.tweenService:Create(self.iconImage, info, { ImageTransparency = if shown then 0 else 1 }):Play()
+    end
+end
+
+-- Fade the whole rail with the window.
+--
+-- The rail is parented to `main`, and Hide collapses main into a small pill rather than
+-- hiding it -- so without this the rail keeps drawing over the collapsed "Tap to show" face.
+-- Visible is only dropped once the fade has finished, so the collapse still animates.
+function Rail.setShown(window, shown, info)
+    local rail = window.rail
+    if not rail or not rail.main then
+        return
+    end
+
+    info = info or TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    -- token so a quick hide/show doesn't let a stale delayed Visible=false land on a rail
+    -- that has since been brought back
+    rail._shownToken = (rail._shownToken or 0) + 1
+    local token = rail._shownToken
+
+    if shown then
+        rail.main.Visible = true
+    end
+
+    variables.tweenService
+        :Create(rail.main, info, { BackgroundTransparency = if shown then SURFACE_IDLE else 1 })
+        :Play()
+    variables.tweenService
+        :Create(rail.edgeCover, info, { BackgroundTransparency = if shown then SURFACE_IDLE else 1 })
+        :Play()
+    variables.tweenService
+        :Create(rail.divider, info, { BackgroundTransparency = if shown then DIVIDER_IDLE else 1 })
+        :Play()
+
+    for _, item in ipairs(window.railItems) do
+        item:_setShown(shown, info)
+    end
+
+    if not shown then
+        task.delay(info.Time, function()
+            if rail._shownToken ~= token or not rail.main or not rail.main.Parent then
+                return
+            end
+            rail.main.Visible = false
+        end)
+    end
 end
 
 function Rail:Destroy()
