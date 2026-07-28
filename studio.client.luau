@@ -24,34 +24,35 @@ local Window = Library:CreateWindow({
 
 Window:CreateTag({ text = "studio", color = Color3.fromRGB(144, 231, 68) })
 
--- Left icon rail. Items carry no built-in meaning; each is an icon plus a callback.
-local railHome = Window:CreateRailItem({
-    icon = 85628806611332,
-    name = "Home",
-    active = true,
+-- Left icon rail: category buttons. The emblem is deliberately not one of these -- it reads
+-- as branding, and making it the default selection meant the menu opened on a button that
+-- did not correspond to the page actually being shown.
+--
+-- No Search or Settings here either: the rail adopts both from the topbar itself, so adding
+-- them by hand would show each twice.
+local railMain, railConfigs
+
+railMain = Window:CreateRailItem({
+    icon = 129180860773723,
+    name = "Main",
+    active = true, -- matches the tab the window opens on
     callback = function()
+        railConfigs:SetActive(false)
+        railMain:SetActive(true)
         Window:Navigate("Main")
-        print("[AFKTY] rail: home")
+        print("[AFKTY] rail: main")
     end,
 })
 
--- No Search or Settings item here on purpose: the rail adopts both from the topbar itself,
--- so adding them by hand would show each twice.
-local railConfigs = Window:CreateRailItem({
+railConfigs = Window:CreateRailItem({
     icon = 125823673784681,
     name = "Configs",
     callback = function()
-        railHome:SetActive(false)
+        railMain:SetActive(false)
+        railConfigs:SetActive(true)
         print("[AFKTY] rail: configs")
     end,
 })
-
--- Demonstrates the active state moving between items.
-railConfigs.callback = function()
-    railHome:SetActive(false)
-    railConfigs:SetActive(true)
-    print("[AFKTY] rail: configs active")
-end
 
 -- Player avatar, pinned bottom. The library draws the headshot and reports the click; what
 -- it shows about the account is up to this script.

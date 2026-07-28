@@ -32,6 +32,11 @@ local revealInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingD
 
 -- The collapsed "pill" main morphs into on Hide, top-anchored the way the old standalone
 -- restore button used to sit.
+-- Resting transparencies for the window's lit outer edge. Every reveal path uses these so
+-- the glow can't differ between first load and a reopen.
+local GLOW_IDLE = 0.55
+local EDGE_IDLE = 0.3
+
 local collapsedSize = UDim2.fromOffset(185, 50)
 local collapsedTop = UDim2.new(0.5, 0, 0, 20)
 
@@ -1089,8 +1094,8 @@ function Window:ToggleMinimise()
 
         variables.tweenService:Create(self.main, sizeInfo, { Size = self.size }):Play()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
-        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.3 }):Play()
-        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.15 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = GLOW_IDLE }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         variables.tweenService
@@ -1635,8 +1640,8 @@ function Window:_quickRestore()
         self.elements.Visible = true
 
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
-        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.3 }):Play()
-        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.15 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = GLOW_IDLE }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         if self.topbarIcon then
@@ -1719,6 +1724,23 @@ function Window:_firstShow()
             self.windowShadow,
             TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
             { Transparency = 0.6 }
+        )
+        :Play()
+    -- the lit edge belongs to the first reveal too. Hide/_quickRestore/ToggleMinimise each
+    -- drive these as well, and leaving them out here meant the window only ever glowed after
+    -- it had been collapsed and reopened once, never on the initial load.
+    variables.tweenService
+        :Create(
+            self.windowGlow,
+            TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+            { Transparency = GLOW_IDLE }
+        )
+        :Play()
+    variables.tweenService
+        :Create(
+            self.windowStroke,
+            TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+            { Transparency = EDGE_IDLE }
         )
         :Play()
     variables.tweenService
