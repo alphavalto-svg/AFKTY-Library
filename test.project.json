@@ -1,0 +1,24 @@
+{
+  "name": "AFKTY Library Tests",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "AFKTY": {
+        "$path": "src"
+      },
+      "Tests": {
+        "$path": "tests"
+      },
+      "TestEZ": {
+        "$path": "build/TestEZ.rbxm"
+      }
+    },
+
+    "ServerScriptService": {
+      "RunTests": {
+        "$path": "tests/run.server.luau"
+      }
+    }
+  }
+}

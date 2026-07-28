@@ -1,5 +1,26 @@
+# Project place files
+/AFKTY Library.rbxlx
+/AFKTY Library Tests.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Intermediate build output. NOTE: dist/ is deliberately NOT ignored --
+# dist/Library.lua is the artifact HttpGet fetches, so it must be committed.
+/build/
+/coverage/
+/sourcemap.json
+
+# Generated tooling defs (created in CI / locally on demand)
+/roblox.yml
+/globalTypes.d.luau
+
+# Node
 node_modules/
 npm-debug.log*
 .env
-.DS_Store
-Thumbs.db
