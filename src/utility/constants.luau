@@ -9,8 +9,9 @@
 
 local constants = {}
 
--- brand font asset (themes reference this too)
-constants.fontAsset = "rbxassetid://12187365364"
+-- Brand font family. A built-in Roblox family, so nothing has to be uploaded or downloaded
+-- at runtime, and it matches the typography of the original hand-built hub.
+constants.fontAsset = "rbxasset://fonts/families/GothamSSm.json"
 
 -- the input/keybind fields hug their text, tweening width instead of AutomaticSize so it animates
 constants.pillResizeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
@@ -35,15 +36,15 @@ constants.icons = {
 
 -- Accent used by the toggle switch + slider glow when active.
 constants.accent = {
-    on = Color3.fromRGB(23, 153, 110),
-    onStroke = Color3.fromRGB(32, 201, 144),
+    on = Color3.fromRGB(112, 190, 48),
+    onStroke = Color3.fromRGB(166, 250, 92),
 }
 
 -- Stat card accents per direction (fill drives the card + glow, stroke is the brighter edge).
 constants.statAccents = {
     positive = {
-        fill = ColorSequence.new(Color3.fromRGB(0, 170, 127), Color3.fromRGB(0, 134, 98)),
-        stroke = ColorSequence.new(Color3.fromRGB(0, 213, 156), Color3.fromRGB(0, 189, 135)),
+        fill = ColorSequence.new(Color3.fromRGB(122, 205, 54), Color3.fromRGB(94, 168, 36)),
+        stroke = ColorSequence.new(Color3.fromRGB(166, 250, 92), Color3.fromRGB(140, 224, 74)),
     },
     negative = {
         fill = ColorSequence.new(Color3.fromRGB(172, 47, 47), Color3.fromRGB(135, 37, 37)),
@@ -51,8 +52,8 @@ constants.statAccents = {
     },
     -- Neutral deliberately matches the positive accent
     neutral = {
-        fill = ColorSequence.new(Color3.fromRGB(0, 170, 127), Color3.fromRGB(0, 134, 98)),
-        stroke = ColorSequence.new(Color3.fromRGB(0, 213, 156), Color3.fromRGB(0, 189, 135)),
+        fill = ColorSequence.new(Color3.fromRGB(122, 205, 54), Color3.fromRGB(94, 168, 36)),
+        stroke = ColorSequence.new(Color3.fromRGB(166, 250, 92), Color3.fromRGB(140, 224, 74)),
     },
 }
 

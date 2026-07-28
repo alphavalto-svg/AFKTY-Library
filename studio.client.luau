@@ -19,11 +19,10 @@ task.wait(2)
 local Window = Library:CreateWindow({
     name = "AFKTY Hub",
     subtitle = "Grow a Garden 2",
-    theme = "v1hub",
     configuration = { autoSave = true, autoLoad = true, fileName = "AFKTY Hub" },
 })
 
-Window:CreateTag({ text = "studio", color = Color3.fromRGB(0, 200, 255) })
+Window:CreateTag({ text = "studio", color = Color3.fromRGB(144, 231, 68) })
 
 local Tab = Window:CreateTab({ name = "Main", icon = 93364949241311 })
 
@@ -102,7 +101,7 @@ Tab:CreateKeybind({
 
 Tab:CreateColorPicker({
     name = "ESP Color",
-    color = Color3.fromRGB(0, 200, 255),
+    color = Color3.fromRGB(144, 231, 68),
     flag = "Color",
     callback = function(v)
         print("Color:", v)
@@ -123,8 +122,8 @@ Tab:CreateSection({ name = "Themes + Feedback" })
 
 Tab:CreateDropdown({
     name = "Theme",
-    options = { "v1hub", "afkty", "default", "amethyst", "cobalt", "ember", "frost", "rose" },
-    value = "v1hub",
+    options = { "default" },
+    value = "default",
     forgetState = true,
     callback = function(v)
         Window:ChangeTheme(v)
