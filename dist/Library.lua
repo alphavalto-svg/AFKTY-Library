@@ -2219,28 +2219,28 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{32,1,{'utility'},{{37,2,{'enums'}},{60,2,{'variables'}},{34,2,{'assetResolver'}},{59,2,{'textMetrics'}
-},{40,2,{'flagNames'}},{58,2,{'services'}},{50,2,{'ordering'}},{57,2,{'runtime'}},{56,2,{'persistenceWrite'}},{43,2,{
-'image'}},{55,2,{'persistenceSettings'}},{42,2,{'functions'}},{41,2,{'fontManager'}},{36,2,{'constants'}},{54,2,{
-'persistencePaths'}},{33,2,{'HapticEngine'}},{53,2,{'persistenceConfig'}},{44,2,{'imageCache'}},{52,2,{'persistence'}},{
-45,2,{'locale'}},{47,2,{'moveable'}},{49,2,{'odometer'}},{48,2,{'network'}},{51,2,{'path'}},{38,2,{'filesystem'}},{46,2,
-{'log'}},{35,2,{'colors'}},{39,2,{'filesystemManager'}}}},{2,1,{'components'},{{15,2,{'search'}},{13,2,{'notification'}}
-,{9,2,{'dropdown'}},{14,2,{'popup'}},{22,2,{'toggle'}},{10,2,{'group'}},{3,2,{'action'}},{23,2,{'window'}},{21,2,{
-'toast'}},{20,2,{'tag'}},{19,2,{'tab'}},{18,2,{'stat'}},{12,2,{'keybind'}},{17,2,{'slider'}},{4,2,{'button'}},{16,2,{
-'section'}},{8,2,{'drag'}},{6,2,{'colorpicker'}},{5,2,{'chrome'}},{11,2,{'input'}},{7,2,{'descriptor'}}}},{24,1,{
-'themes'},{{29,2,{'frost'}},{25,2,{'amethyst'}},{28,2,{'ember'}},{26,2,{'cobalt'}},{27,2,{'default'}},{30,2,{'rose'}}}},
-{31,2,{'types'}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,type,require,
-pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k end,b.wrap,ae.
-sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end end local r=af
-and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]=
-'LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function(B)local C,D=B.Name,B.Parent
-while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)
-end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(
-C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C
-then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{
-'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent end end},WaitForChild={{
-'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,H=E[1],E[2],{}for I,J in
-ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
+{{1,2,{'AFKTY'},{{32,1,{'utility'},{{48,2,{'network'}},{42,2,{'functions'}},{44,2,{'imageCache'}},{49,2,{'odometer'}},{
+38,2,{'filesystem'}},{37,2,{'enums'}},{56,2,{'persistenceWrite'}},{41,2,{'fontManager'}},{59,2,{'textMetrics'}},{58,2,{
+'services'}},{46,2,{'log'}},{57,2,{'runtime'}},{36,2,{'constants'}},{43,2,{'image'}},{60,2,{'variables'}},{39,2,{
+'filesystemManager'}},{53,2,{'persistenceConfig'}},{51,2,{'path'}},{55,2,{'persistenceSettings'}},{54,2,{
+'persistencePaths'}},{50,2,{'ordering'}},{34,2,{'assetResolver'}},{52,2,{'persistence'}},{45,2,{'locale'}},{35,2,{
+'colors'}},{33,2,{'HapticEngine'}},{47,2,{'moveable'}},{40,2,{'flagNames'}}}},{31,2,{'types'}},{24,1,{'themes'},{{29,2,{
+'frost'}},{27,2,{'default'}},{25,2,{'amethyst'}},{28,2,{'ember'}},{26,2,{'cobalt'}},{30,2,{'rose'}}}},{2,1,{'components'
+},{{4,2,{'button'}},{3,2,{'action'}},{17,2,{'slider'}},{9,2,{'dropdown'}},{8,2,{'drag'}},{12,2,{'keybind'}},{15,2,{
+'search'}},{16,2,{'section'}},{11,2,{'input'}},{23,2,{'window'}},{5,2,{'chrome'}},{21,2,{'toast'}},{13,2,{'notification'
+}},{7,2,{'descriptor'}},{20,2,{'tag'}},{14,2,{'popup'}},{19,2,{'tab'}},{10,2,{'group'}},{6,2,{'colorpicker'}},{22,2,{
+'toggle'}},{18,2,{'stat'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,
+type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k
+end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end
+end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3
+]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function(B)local C,D=B.
+Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C={}for D in ai,
+A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F in ai,D:
+GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]for F in
+ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end end},
+FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent end end
+},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,H=E[1],
+E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
 "Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P=d(M),L[
 1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'and P)
 then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D(E,F,G

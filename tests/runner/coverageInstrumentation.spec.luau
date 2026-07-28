@@ -1,4 +1,4 @@
-local helpers = (_G :: any).__RAYFIELD_TEST_HELPERS
+local helpers = (_G :: any).__AFKTY_TEST_HELPERS
 
 return function()
     describe("coverage instrumentation", function()

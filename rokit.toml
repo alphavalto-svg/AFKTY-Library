@@ -1,4 +1,4 @@
-# Rokit for Rayfield Gen2
+# Rokit toolchain for AFKTY Library
 
 [tools]
 lune = "lune-org/lune@0.8.9"

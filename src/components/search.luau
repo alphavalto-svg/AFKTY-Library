@@ -8,7 +8,7 @@
 -- Search: a pill that takes over the tab strip and searches every page at once. The Search
 -- action toggles it; while open the tab selector hides and every content tab's elements are
 -- gathered into one results page, filtered live by name. Closing puts everything back exactly
--- where it was. Values ported from the RF2 design (Window.Search).
+-- where it was. Search box sizing values, tuned against the original design.
 
 local utility = script.Parent.Parent.utility
 local variables = require(utility.variables)

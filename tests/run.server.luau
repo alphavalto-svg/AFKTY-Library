@@ -8,7 +8,7 @@ end
 local TestEZ = require(TestEZModule)
 local testsRoot = ReplicatedStorage:WaitForChild("Tests")
 
-_G.__RAYFIELD_TEST_HELPERS = {
+_G.__AFKTY_TEST_HELPERS = {
     requireUtility = function(name)
         return require(ReplicatedStorage.AFKTY.utility[name])
     end,
@@ -22,13 +22,13 @@ _G.__RAYFIELD_TEST_HELPERS = {
         return require(ReplicatedStorage.AFKTY)
     end,
 }
-_G.__RAYFIELD_TEST_VERBOSE_LOGS = _G.__RAYFIELD_TEST_VERBOSE_LOGS == true
+_G.__AFKTY_TEST_VERBOSE_LOGS = _G.__AFKTY_TEST_VERBOSE_LOGS == true
 
 -- gag AFKTY's console output during test runs unless verbose logs are on. this is the
 -- runner's job, not the library's: src must not know about test environments.
 local log = require(ReplicatedStorage.AFKTY.utility.log)
 log.setSuppressPredicate(function()
-    return _G.__RAYFIELD_TEST_VERBOSE_LOGS ~= true
+    return _G.__AFKTY_TEST_VERBOSE_LOGS ~= true
 end)
 
 local results = TestEZ.TestBootstrap:run({ testsRoot }, TestEZ.Reporters.TextReporter, {

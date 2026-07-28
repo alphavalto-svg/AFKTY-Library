@@ -1,4 +1,4 @@
-local requireUtility = (_G :: any).__RAYFIELD_TEST_HELPERS.requireUtility
+local requireUtility = (_G :: any).__AFKTY_TEST_HELPERS.requireUtility
 
 return function()
     local flagNames = requireUtility("flagNames")
