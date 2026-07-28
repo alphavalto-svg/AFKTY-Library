@@ -28,9 +28,9 @@ constants.icons = {
     check = 125626312718314,
     dot = 91452555903853, -- unselected dropdown option (also the colorpicker "invisible" mark)
     colorpicker = 91452555903853, -- same hollow-box glyph as dot
-    banner = 111263549366178,
+    banner = 85628806611332, -- AFKTY emblem, shown while the window builds
     config = 125823673784681, -- saved-configurations picker
-    afkty = 80387863064905, -- default show icon on the sign-in toast
+    afkty = 85628806611332, -- default show icon on the sign-in toast
 }
 
 -- Accent used by the toggle switch + slider glow when active.

@@ -80,7 +80,10 @@ local function createBanner()
     banner.BorderSizePixel = 0
     banner.Image = image.resolve(constants.icons.banner)
     banner.Position = UDim2.fromScale(0.5, 0.5)
-    banner.Size = UDim2.fromOffset(262, 60)
+    -- square box + Fit, so the emblem letterboxes instead of stretching. the old 262x60 was
+    -- cut for a wordmark; Fit keeps this correct if the art is ever swapped for a wide one.
+    banner.ScaleType = Enum.ScaleType.Fit
+    banner.Size = UDim2.fromOffset(140, 140)
     banner.Parent = ui
 
     return ui

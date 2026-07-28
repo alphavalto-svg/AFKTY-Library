@@ -17,19 +17,19 @@ httpService:GenerateGUID(false)m.ClipToDeviceSafeArea=false m.DisplayOrder=i.dis
 ScreenInsets.DeviceSafeInsets m.ZIndexBehavior=Enum.ZIndexBehavior.Sibling m.Parent=f.guiContainer local n=Instance.new
 'ImageLabel'n.Name='Banner'n.AnchorPoint=Vector2.new(0.5,0.5)n.BackgroundColor3=Color3.fromRGB(255,255,255)n.
 BackgroundTransparency=1 n.BorderColor3=Color3.fromRGB(0,0,0)n.BorderSizePixel=0 n.Image=g.resolve(i.icons.banner)n.
-Position=UDim2.fromScale(0.5,0.5)n.Size=UDim2.fromOffset(262,60)n.Parent=m return m end function k.CreateWindow(m,n:j.
-WindowProps):j.Window local o,p:j.Window?,q:(()->())?=(l())if f.secureMode then g.preload(function(r)if r<=0 then return
-end local function s()if not p or p.unloaded then return end p:Notify{title=h.resolve'Secure mode',content=if r==1 then
-h.resolve"An asset couldn't be cached and won't appear."else h.resolve"Some assets couldn't be cached and won't appear."
-}end if p then s()else q=s end end)end local r,s=pcall(function()return(d(c.components.window)::WindowModule).new(n)end)
-if not r then o:Destroy()error(s,0)end local t=s::j.Window p=t if q then task.spawn(q)q=nil end if f.secureMode then
-task.spawn(function()local u,v=f.fontManager:loadFont(i.fontAsset,Enum.FontWeight.Medium),f.fontManager:loadFont(i.
-fontAsset,Enum.FontWeight.SemiBold)if not t.unloaded and u and v and u~=f.fallbackFont and v~=f.fallbackFont then t:
-ChangeTheme{Font=u,TitleFont=v}end end)end task.spawn(function()task.wait(0.5)o:Destroy()task.wait(0.5)if not t.unloaded
-then t:Show()end end)return t end return k end)()end,[3]=function()local b,c,d=a(3)local e return(function(...)local f={
-}f.__index=f f.__type='Action'local g=c.Parent.Parent.utility local h,i,j=d(g.variables),d(g.log),d(g.HapticEngine)
-function f.new(k,l)l=if typeof(l)=='table'then l else{}local m=setmetatable({window=assert(k,
-'Missing argument #1 (Window expected)'),name=l.name or l.Name or'Action',icon=assert(l.icon or l.Icon,
+Position=UDim2.fromScale(0.5,0.5)n.ScaleType=Enum.ScaleType.Fit n.Size=UDim2.fromOffset(140,140)n.Parent=m return m end
+function k.CreateWindow(m,n:j.WindowProps):j.Window local o,p:j.Window?,q:(()->())?=(l())if f.secureMode then g.preload(
+function(r)if r<=0 then return end local function s()if not p or p.unloaded then return end p:Notify{title=h.resolve
+'Secure mode',content=if r==1 then h.resolve"An asset couldn't be cached and won't appear."else h.resolve
+"Some assets couldn't be cached and won't appear."}end if p then s()else q=s end end)end local r,s=pcall(function()
+return(d(c.components.window)::WindowModule).new(n)end)if not r then o:Destroy()error(s,0)end local t=s::j.Window p=t if
+q then task.spawn(q)q=nil end if f.secureMode then task.spawn(function()local u,v=f.fontManager:loadFont(i.fontAsset,
+Enum.FontWeight.Medium),f.fontManager:loadFont(i.fontAsset,Enum.FontWeight.SemiBold)if not t.unloaded and u and v and u
+~=f.fallbackFont and v~=f.fallbackFont then t:ChangeTheme{Font=u,TitleFont=v}end end)end task.spawn(function()task.wait(
+0.5)o:Destroy()task.wait(0.5)if not t.unloaded then t:Show()end end)return t end return k end)()end,[3]=function()local
+b,c,d=a(3)local e return(function(...)local f={}f.__index=f f.__type='Action'local g=c.Parent.Parent.utility local h,i,j
+=d(g.variables),d(g.log),d(g.HapticEngine)function f.new(k,l)l=if typeof(l)=='table'then l else{}local m=setmetatable({
+window=assert(k,'Missing argument #1 (Window expected)'),name=l.name or l.Name or'Action',icon=assert(l.icon or l.Icon,
 'Missing argument (Icon expected)'),callback=assert(l.callback or l.Callback,'Missing argument (Function expected)'),
 linkedTab=l.linkedTab or l.LinkedTab},f)m.action=m.window:Create('Frame',{Name=m.name,BorderSizePixel=0,LayoutOrder=-(l.
 order or 0),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Parent=m.window.actionContainer})m.iconLabel=m.window:
@@ -1869,9 +1869,9 @@ fromRGB(255,255,255)end return ae end)()end,[36]=function()local aa,ab,ac=a(36)l
 ae.fontAsset='rbxassetid://12187365364'ae.pillResizeInfo=TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.
 EasingDirection.Out)ae.icons={close=83277910885129,minimise=108115485663409,maximise=88738500661569,settings=
 129180860773723,search=100604009889706,chevron=88479147175134,check=125626312718314,dot=91452555903853,colorpicker=
-91452555903853,banner=111263549366178,config=125823673784681,afkty=80387863064905}ae.accent={on=Color3.fromRGB(23,153,
-110),onStroke=Color3.fromRGB(32,201,144)}ae.statAccents={positive={fill=ColorSequence.new(Color3.fromRGB(0,170,127),
-Color3.fromRGB(0,134,98)),stroke=ColorSequence.new(Color3.fromRGB(0,213,156),Color3.fromRGB(0,189,135))},negative={fill=
+91452555903853,banner=85628806611332,config=125823673784681,afkty=85628806611332}ae.accent={on=Color3.fromRGB(23,153,110
+),onStroke=Color3.fromRGB(32,201,144)}ae.statAccents={positive={fill=ColorSequence.new(Color3.fromRGB(0,170,127),Color3.
+fromRGB(0,134,98)),stroke=ColorSequence.new(Color3.fromRGB(0,213,156),Color3.fromRGB(0,189,135))},negative={fill=
 ColorSequence.new(Color3.fromRGB(172,47,47),Color3.fromRGB(135,37,37)),stroke=ColorSequence.new(Color3.fromRGB(255,75,75
 ),Color3.fromRGB(244,67,67))},neutral={fill=ColorSequence.new(Color3.fromRGB(0,170,127),Color3.fromRGB(0,134,98)),stroke
 =ColorSequence.new(Color3.fromRGB(0,213,156),Color3.fromRGB(0,189,135))}}ae.zIndex={bottomFade=100,notification=1500,
@@ -2219,28 +2219,28 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{24,1,{'themes'},{{27,2,{'default'}},{25,2,{'amethyst'}},{30,2,{'rose'}},{26,2,{'cobalt'}},{29,2,{
-'frost'}},{28,2,{'ember'}}}},{2,1,{'components'},{{7,2,{'descriptor'}},{21,2,{'toast'}},{3,2,{'action'}},{11,2,{'input'}
-},{17,2,{'slider'}},{20,2,{'tag'}},{5,2,{'chrome'}},{14,2,{'popup'}},{10,2,{'group'}},{19,2,{'tab'}},{18,2,{'stat'}},{12
-,2,{'keybind'}},{15,2,{'search'}},{23,2,{'window'}},{8,2,{'drag'}},{16,2,{'section'}},{4,2,{'button'}},{22,2,{'toggle'}}
-,{6,2,{'colorpicker'}},{9,2,{'dropdown'}},{13,2,{'notification'}}}},{31,2,{'types'}},{32,1,{'utility'},{{40,2,{
-'flagNames'}},{60,2,{'variables'}},{39,2,{'filesystemManager'}},{35,2,{'colors'}},{38,2,{'filesystem'}},{36,2,{
-'constants'}},{42,2,{'functions'}},{59,2,{'textMetrics'}},{48,2,{'network'}},{44,2,{'imageCache'}},{58,2,{'services'}},{
-57,2,{'runtime'}},{51,2,{'path'}},{45,2,{'locale'}},{43,2,{'image'}},{55,2,{'persistenceSettings'}},{54,2,{
-'persistencePaths'}},{46,2,{'log'}},{50,2,{'ordering'}},{56,2,{'persistenceWrite'}},{53,2,{'persistenceConfig'}},{52,2,{
-'persistence'}},{41,2,{'fontManager'}},{37,2,{'enums'}},{33,2,{'HapticEngine'}},{47,2,{'moveable'}},{49,2,{'odometer'}},
-{34,2,{'assetResolver'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,
-type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k
-end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end
-end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3
-]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function(B)local C,D=B.
-Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C={}for D in ai,
-A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F in ai,D:
-GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]for F in
-ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end end},
-FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent end end
-},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,H=E[1],
-E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
+{{1,2,{'AFKTY'},{{32,1,{'utility'},{{36,2,{'constants'}},{45,2,{'locale'}},{60,2,{'variables'}},{55,2,{
+'persistenceSettings'}},{41,2,{'fontManager'}},{40,2,{'flagNames'}},{56,2,{'persistenceWrite'}},{44,2,{'imageCache'}},{
+35,2,{'colors'}},{48,2,{'network'}},{52,2,{'persistence'}},{33,2,{'HapticEngine'}},{58,2,{'services'}},{57,2,{'runtime'}
+},{49,2,{'odometer'}},{51,2,{'path'}},{53,2,{'persistenceConfig'}},{34,2,{'assetResolver'}},{59,2,{'textMetrics'}},{39,2
+,{'filesystemManager'}},{50,2,{'ordering'}},{37,2,{'enums'}},{42,2,{'functions'}},{54,2,{'persistencePaths'}},{43,2,{
+'image'}},{46,2,{'log'}},{38,2,{'filesystem'}},{47,2,{'moveable'}}}},{31,2,{'types'}},{24,1,{'themes'},{{28,2,{'ember'}}
+,{25,2,{'amethyst'}},{29,2,{'frost'}},{30,2,{'rose'}},{27,2,{'default'}},{26,2,{'cobalt'}}}},{2,1,{'components'},{{4,2,{
+'button'}},{10,2,{'group'}},{16,2,{'section'}},{11,2,{'input'}},{13,2,{'notification'}},{7,2,{'descriptor'}},{9,2,{
+'dropdown'}},{12,2,{'keybind'}},{23,2,{'window'}},{20,2,{'tag'}},{3,2,{'action'}},{14,2,{'popup'}},{22,2,{'toggle'}},{15
+,2,{'search'}},{18,2,{'stat'}},{6,2,{'colorpicker'}},{21,2,{'toast'}},{19,2,{'tab'}},{17,2,{'slider'}},{5,2,{'chrome'}},
+{8,2,{'drag'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,type,require,
+pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k end,b.wrap,ae.
+sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end end local r=af
+and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]=
+'LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function(B)local C,D=B.Name,B.Parent
+while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)
+end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(
+C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C
+then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{
+'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent end end},WaitForChild={{
+'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,H=E[1],E[2],{}for I,J in
+ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
 "Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P=d(M),L[
 1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'and P)
 then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D(E,F,G
