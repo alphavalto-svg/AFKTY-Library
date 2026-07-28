@@ -231,9 +231,23 @@ local function ensureRail(window)
             order = 1,
             slot = "bottom",
             callback = function()
-                if window.rfSettings then
-                    window.rfSettings:Select()
+                if not window.rfSettings then
+                    return
                 end
+                -- Settings is not a main category, so it has no subcategories. Leaving the
+                -- previous category's strip up made it look like you were still inside that
+                -- category while actually being in settings, with no way back to its pages.
+                for _, tab in ipairs(window.tabs or {}) do
+                    if tab.topbarItem and tab.railCategory ~= nil then
+                        tab.topbarItem.Visible = false
+                    end
+                end
+                for _, item in ipairs(window.railItems) do
+                    if item.main and item.main.Parent == rail.top then
+                        item:SetActive(false)
+                    end
+                end
+                window.rfSettings:Select()
             end,
         })
         table.insert(window.railItems, item)
