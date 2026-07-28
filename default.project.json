@@ -12,7 +12,7 @@
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "Client": {
-          "$path": "example.client.luau"
+          "$path": "studio.client.luau"
         }
       }
     },
