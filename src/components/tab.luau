@@ -70,6 +70,10 @@ function Tab.new(window, properties)
         name = properties.name or properties.Name,
         icon = properties.icon or properties.Icon,
         neglectSelector = properties.neglectSelector or properties.NeglectSelector or false,
+        -- Owning rail category, if any. A tab is a subcategory of exactly one main category,
+        -- so each category shows its own tab strip rather than one shared set. Tabs created
+        -- without a category stay visible under every category.
+        railCategory = properties.category or properties.Category,
         customOrder = properties.customOrder or properties.CustomOrder or 0,
         -- when true, controls on this tab default to not persisting to config (the settings tab)
         forgetState = properties.forgetState or properties.ForgetState or false,

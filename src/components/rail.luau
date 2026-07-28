@@ -365,6 +365,39 @@ function Rail:Select()
         end
     end
     self:SetActive(true)
+    self:_applyTabs()
+end
+
+-- Show only this category's subcategory tabs.
+--
+-- A tab belongs to exactly one main category, so each category carries its own strip rather
+-- than every category sharing one set. Tabs created with no category are treated as global
+-- and stay visible throughout, which keeps CreateTab working unchanged for hubs that never
+-- use the rail.
+function Rail:_applyTabs()
+    local window = self.window
+    if not window.tabs then
+        return
+    end
+
+    local first = nil
+    for _, tab in ipairs(window.tabs) do
+        if tab.topbarItem and not tab.neglectSelector then
+            local mine = tab.railCategory == nil or tab.railCategory == self
+            tab.topbarItem.Visible = mine
+            if mine and not first then
+                first = tab
+            end
+        end
+    end
+
+    -- land on a tab that is actually in this category, rather than leaving the page showing
+    -- a subcategory that just got hidden
+    local open = window.selectedTab
+    local stale = open ~= nil and open.railCategory ~= nil and open.railCategory ~= self
+    if first and stale then
+        first:Select()
+    end
 end
 
 -- The player avatar, pinned bottom-left. properties: userId, callback.

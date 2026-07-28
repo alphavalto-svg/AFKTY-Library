@@ -32,22 +32,21 @@ Window:CreateTag({ text = "studio", color = Color3.fromRGB(144, 231, 68) })
 -- them by hand would show each twice.
 -- The library selects the first category automatically and :Select() clears the siblings,
 -- so a consuming script never tracks which one was previously active.
-Window:CreateRailItem({
-    icon = 129180860773723,
+local mainCategory = Window:CreateRailItem({
+    icon = 93364949241311,
     name = "Main",
     callback = function(item)
         item:Select()
-        Window:Navigate("Main")
-        print("[AFKTY] rail: main")
+        print("[AFKTY] category: main")
     end,
 })
 
-Window:CreateRailItem({
+local toolsCategory = Window:CreateRailItem({
     icon = 125823673784681,
-    name = "Configs",
+    name = "Tools",
     callback = function(item)
         item:Select()
-        print("[AFKTY] rail: configs")
+        print("[AFKTY] category: tools")
     end,
 })
 
@@ -60,8 +59,22 @@ Window:CreateRailProfile({
         print("[AFKTY] rail: profile", profile.userId)
     end,
 })
+-- Subcategories. Each tab belongs to one main category, so the top strip changes with the
+-- rail selection instead of showing every tab under every category.
+local Tab = Window:CreateTab({ name = "Farm", icon = 93364949241311, category = mainCategory })
+local Tab2 = Window:CreateTab({ name = "Shop", icon = 125823673784681, category = mainCategory })
+local ToolsTab = Window:CreateTab({ name = "Utility", icon = 129180860773723, category = toolsCategory })
 
-local Tab = Window:CreateTab({ name = "Main", icon = 93364949241311 })
+Tab2:CreateSection({ name = "Shop" })
+Tab2:CreateButton({
+    name = "Buy Seeds",
+    callback = function()
+        print("buy")
+    end,
+})
+
+ToolsTab:CreateSection({ name = "Utility" })
+ToolsTab:CreateToggle({ name = "Noclip", flag = "Noclip" })
 
 Tab:CreateSection({ name = "Basics" })
 
@@ -187,5 +200,4 @@ Tab:CreateButton({
     end,
 })
 
-Window:Navigate("Main")
-print("[AFKTY] Studio test loaded.")
+Window:Navigate("Farm")

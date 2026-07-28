@@ -729,6 +729,13 @@ function Window:CreateTab(properties)
 
     table.insert(self.tabs, newTab)
 
+    -- A tab is a subcategory of one main category, and tabs are usually created after the
+    -- rail, so hide any that belong to a category other than the selected one. Tabs with no
+    -- category stay visible, which keeps CreateTab unchanged for hubs with no rail.
+    if newTab.railCategory and newTab.topbarItem and not newTab.railCategory.active then
+        newTab.topbarItem.Visible = false
+    end
+
     if not newTab.neglectSelector then
         local isFirstVisible = true
         for _, tab in self.tabs do
@@ -1095,6 +1102,9 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.main, sizeInfo, { Size = self.size }):Play()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
         variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = GLOW_IDLE }):Play()
+        if self.rail then
+            require(script.Parent.rail).setShown(self, true, fadeInfo)
+        end
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
@@ -1160,6 +1170,10 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
+        -- minimise shrinks main to just the topbar, so the rail has to come down with it
+        if self.rail then
+            require(script.Parent.rail).setShown(self, false, fadeInfo)
+        end
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 1 }):Play()
         variables.tweenService:Create(self.main, sizeInfo, { Size = UDim2.fromOffset(self.size.X.Offset, 66) }):Play()
 
