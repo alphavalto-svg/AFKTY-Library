@@ -28,7 +28,7 @@ return function()
         end)
 
         it("requires every built-in theme", function()
-            for _, name in { "default", "afkty", "amethyst", "cobalt", "ember", "frost", "rose" } do
+            for _, name in { "default", "v1hub", "afkty", "amethyst", "cobalt", "ember", "frost", "rose" } do
                 local theme = helpers.requireTheme(name)
                 expect(type(theme)).to.equal("table")
                 expect(theme.WindowColor).to.be.ok()

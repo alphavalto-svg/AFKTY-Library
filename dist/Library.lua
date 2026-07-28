@@ -1783,11 +1783,27 @@ ElementStrokeHover=Color3.fromRGB(88,66,74),TabBackground=ColorSequence.new(Colo
 Color3.fromRGB(220,60,116)),AccentColor=Color3.fromRGB(240,82,138),AccentStroke=Color3.fromRGB(255,134,178),
 ToggleKnobOff=Color3.fromRGB(236,220,226),StatBackground=Color3.fromRGB(28,20,24),DropdownHighlight=Color3.fromRGB(240,
 82,138),NeutralButton=Color3.fromRGB(50,38,44),NeutralButtonHover=Color3.fromRGB(64,50,56),NeutralButtonStroke=Color3.
-fromRGB(170,122,140)}end)()end,[32]=function()local aa,ab,ac=a(32)local ad return(function(...)export type Theme=string|
-{[string]:any}export type Translator=(source:string,localeId:string)->string?export type Translations={[string]:{[string
-]:string}}export type WindowConfiguration={autoSave:boolean?,autoLoad:boolean?,fileName:string?,customFolder:string?}
-export type WindowProps={name:string?,subtitle:string?,theme:Theme?,icon:(string|number)?,showName:string?,showIcon:(
-string|number)?,configuration:WindowConfiguration?,fallbackFont:(Font|Enum.Font)?,locale:string?,translations:
+fromRGB(170,122,140)}end)()end,[32]=function()local aa,ab,ac=a(32)local ad return(function(...)return{CornerRoundness=
+UDim.new(0,8),ElementCornerRadius=UDim.new(0,6),WindowColor=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.
+fromRGB(5,10,20)),ColorSequenceKeypoint.new(0.9999,Color3.fromRGB(8,12,22)),ColorSequenceKeypoint.new(1,Color3.fromRGB(
+15,25,40))},ShadowColor=Color3.fromRGB(2,5,12),ElementStroke=Color3.fromRGB(25,40,65),ElementGradient=ColorSequence.new{
+ColorSequenceKeypoint.new(0,Color3.fromRGB(15,24,38)),ColorSequenceKeypoint.new(0.9999,Color3.fromRGB(18,28,45)),
+ColorSequenceKeypoint.new(1,Color3.fromRGB(18,28,45))},ElementStrokeGradient=ColorSequence.new{ColorSequenceKeypoint.
+new(0,Color3.fromRGB(0,88,128)),ColorSequenceKeypoint.new(0.9999,Color3.fromRGB(0,162,212)),ColorSequenceKeypoint.new(1,
+Color3.fromRGB(0,88,128))},ElementStrokeHover=Color3.fromRGB(0,200,255),TabBackground=ColorSequence.new(Color3.fromRGB(0
+,150,220),Color3.fromRGB(25,40,65)),TabStroke=ColorSequence.new(Color3.fromRGB(0,200,255),Color3.fromRGB(25,40,65)),
+SliderBackground=Color3.fromRGB(25,40,65),SliderBackgroundHover=Color3.fromRGB(36,56,88),SliderProgress=ColorSequence.
+new(Color3.fromRGB(0,200,255),Color3.fromRGB(0,140,205)),AccentColor=Color3.fromRGB(0,150,220),AccentStroke=Color3.
+fromRGB(0,200,255),AccentGlow=0.25,StatBackground=Color3.fromRGB(12,20,34),DropdownHighlight=Color3.fromRGB(200,240,255)
+,FieldGlow=Color3.fromRGB(0,200,255),SurfaceStroke=Color3.fromRGB(0,200,255),ToggleKnobOff=Color3.fromRGB(60,80,100),
+ToggleKnobOffTransparency=0.35,TitlingColor=Color3.fromRGB(200,240,255),PlaceholderColor=Color3.fromRGB(110,145,175),
+NeutralButton=Color3.fromRGB(18,28,45),NeutralButtonHover=Color3.fromRGB(25,40,65),ErrorColor=Color3.fromRGB(190,48,48),
+ErrorStrokeColor=Color3.fromRGB(244,78,78),TitleFont=Font.fromEnum(Enum.Font.GothamBold),Font=Font.fromEnum(Enum.Font.
+Gotham),LiveAnimation=true}end)()end,[33]=function()local aa,ab,ac=a(33)local ad return(function(...)export type Theme=
+string|{[string]:any}export type Translator=(source:string,localeId:string)->string?export type Translations={[string]:{
+[string]:string}}export type WindowConfiguration={autoSave:boolean?,autoLoad:boolean?,fileName:string?,customFolder:
+string?}export type WindowProps={name:string?,subtitle:string?,theme:Theme?,icon:(string|number)?,showName:string?,
+showIcon:(string|number)?,configuration:WindowConfiguration?,fallbackFont:(Font|Enum.Font)?,locale:string?,translations:
 Translations?,translator:Translator?}export type TabProps={name:string?,icon:(string|number)?}export type TagProps={text
 :string?,title:string?,icon:(string|number)?,color:Color3?,order:number?}export type SectionProps={name:string?,icon:(
 string|number)?}export type GroupProps={direction:string?}export type ButtonProps={name:string?,description:string?,icon
@@ -1836,7 +1852,7 @@ self:Window,theme:Theme)->(),SetLocale:(self:Window,localeId:string)->(),SetTran
 Translator?)->(),RegisterTranslations:(self:Window,translations:Translations)->(),Save:(self:Window,name:string?)->
 boolean,Load:(self:Window,name:string?)->boolean,ListConfigs:(self:Window)->{string},DeleteConfig:(self:Window,name:
 string)->boolean,Unload:(self:Window)->()}export type AFKTY={CreateWindow:(self:AFKTY,props:WindowProps)->Window}return{
-}end)()end,[34]=function()local aa,ab,ac=a(34)local ad return(function(...)local ae,af=ac(ab.Parent.variables),{}af.
+}end)()end,[35]=function()local aa,ab,ac=a(35)local ad return(function(...)local ae,af=ac(ab.Parent.variables),{}af.
 enabled=false type HapticTypes={click:Enum.HapticEffectType?,notify:Enum.HapticEffectType?}local ag:HapticTypes,ah,ai={}
 ,pcall(function()Instance.new'HapticEffect':Destroy()return{click=Enum.HapticEffectType.UIHover,notify=Enum.
 HapticEffectType.UIClick}end)if ah then ag=ai end local aj:{[Enum.HapticEffectType]:Instance},ak:Instance?={}function af
@@ -1847,8 +1863,8 @@ if not f then return nil end local h=g::any h.Type=d local i=pcall(function()g.P
 return nil end aj[d]=g return g end local function d(e:Enum.HapticEffectType?)if not e or not af.enabled then return end
 local f=c(e)if f then local g=f::any pcall(g.Play,f)end end function af.click()d(ag.click)end function af.notify()d(ag.
 notify)end function af.setEnabled(e:boolean?)af.enabled=e and true or false if not af.enabled then af.teardown()end end
-function af.teardown()for e,f in aj do pcall(f.Destroy,f)aj[e]=nil end end return af end)()end,[35]=function()local aa,
-ab,ac=a(35)local ad return(function(...)local ae,af=ac(ab.Parent.network),ac(ab.Parent.log)export type AssetId=number|
+function af.teardown()for e,f in aj do pcall(f.Destroy,f)aj[e]=nil end end return af end)()end,[36]=function()local aa,
+ab,ac=a(36)local ad return(function(...)local ae,af=ac(ab.Parent.network),ac(ab.Parent.log)export type AssetId=number|
 string export type AssetDownloadUrl=string export type CacheKey=AssetId export type ResolvedAsset=AssetId export type
 AssetRequestPayload={Url:string,Method:string}local ag={Enum={AssetDownloadUrl={RobloxDownloadUrl=
 'https://assetdelivery.roblox.com/v1/asset/?id=%d'::AssetDownloadUrl,RoProxyDownloadUrl=
@@ -1874,12 +1890,12 @@ table.remove(j,1)else nil if k~=nil then d[k]=nil end end d[b]=i end elseif not 
 'Failed to download asset content for url: '..tostring(ak))end return h end function ag.getAssetContentFromId(aj:
 AssetResolver,ak:AssetId,b:boolean?):string?local c=aj:resolve(ak)if not c or type(c)~='number'then af.warn(
 'Invalid asset id: '..tostring(c))return nil end local d=string.format(aj.contentDownloadUrl,c)return aj:
-getAssetContentFromUrl(d,c,b)end return ag end)()end,[36]=function()local aa,ab,ac=a(36)local ad return(function(...)
+getAssetContentFromUrl(d,c,b)end return ag end)()end,[37]=function()local aa,ab,ac=a(37)local ad return(function(...)
 local ae={}function ae.contrastColor(af:Color3):Color3 local ag=0.299*af.R+0.587*af.G+0.114*af.B return if ag>0.5 then
 Color3.fromRGB(0,0,0)else Color3.fromRGB(255,255,255)end function ae.toColorSequence(af:Color3|ColorSequence):
 ColorSequence return if typeof(af)=='ColorSequence'then af else ColorSequence.new(af)end function ae.contrastText(af:
 Color3):Color3 local ag=0.299*af.R+0.587*af.G+0.114*af.B return if ag>0.6 then Color3.fromRGB(20,20,20)else Color3.
-fromRGB(255,255,255)end return ae end)()end,[37]=function()local aa,ab,ac=a(37)local ad return(function(...)local ae={}
+fromRGB(255,255,255)end return ae end)()end,[38]=function()local aa,ab,ac=a(38)local ad return(function(...)local ae={}
 ae.fontAsset='rbxassetid://12187365364'ae.pillResizeInfo=TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.
 EasingDirection.Out)ae.icons={close=83277910885129,minimise=108115485663409,maximise=88738500661569,settings=
 129180860773723,search=100604009889706,chevron=88479147175134,check=125626312718314,dot=91452555903853,colorpicker=
@@ -1890,10 +1906,10 @@ ColorSequence.new(Color3.fromRGB(172,47,47),Color3.fromRGB(135,37,37)),stroke=Co
 ),Color3.fromRGB(244,67,67))},neutral={fill=ColorSequence.new(Color3.fromRGB(0,170,127),Color3.fromRGB(0,134,98)),stroke
 =ColorSequence.new(Color3.fromRGB(0,213,156),Color3.fromRGB(0,189,135))}}ae.zIndex={bottomFade=100,notification=1500,
 drag=1000,toast=2000,toastContent=2001,restoreContent=100001,restoreInteract=100002}ae.displayOrder={window=99999,banner
-=100000,popup=100001}return ae end)()end,[38]=function()local aa,ab,ac=a(38)local ad return(function(...)local ae={}
+=100000,popup=100001}return ae end)()end,[39]=function()local aa,ab,ac=a(39)local ad return(function(...)local ae={}
 function ae.itemFromValue(af,ag)local ah,ai=pcall(function()return af:FromValue(ag)end)if ah and ai then return ai end
 local aj,ak=pcall(function()return af:GetEnumItems()end)if not aj then return nil end for b,c in ak do if c.Value==ag
-then return c end end return nil end return ae end)()end,[39]=function()local aa,ab,ac=a(39)local ad return(function(...
+then return c end end return nil end return ae end)()end,[40]=function()local aa,ab,ac=a(40)local ad return(function(...
 )local ae,af=ac(ab.Parent.services),{}local ag=ae.getService'RunService':IsStudio()local ah=not ag and typeof(writefile)
 =='function'if ah then function af.writefile(ai:string,aj:string)writefile(ai,aj)end function af.readfile(ai:string):
 string return readfile(ai)end function af.appendfile(ai:string,aj:string)appendfile(ai,aj)end function af.isfile(ai:
@@ -1924,20 +1940,20 @@ c)if#d==0 then return false end local e:Instance=ai for f,g in d do local h=e:Fi
 'Invalid path')local e=ak(d,false)assert(e,'Folder not found: '..c)local f=e:FindFirstChild(d[#d])assert(f and f:IsA
 'Folder','Folder not found: '..c)f:Destroy()end end function af.ensureFolder(ai:string)if not af.isfolder(ai)then af.
 makefolder(ai)end end function af.ensureDir(ai:string)local aj=''for ak in string.gmatch(ai,'[^/]+')do aj=if aj==''then
-ak else aj..'/'..ak if not af.isfolder(aj)then af.makefolder(aj)end end end return af end)()end,[40]=function()local aa,
-ab,ac=a(40)local ad return(function(...)local ae,af,ag,ah=ac(ab.Parent.filesystem),ac(ab.Parent.path),'AFKTY',{}ah.
+ak else aj..'/'..ak if not af.isfolder(aj)then af.makefolder(aj)end end end return af end)()end,[41]=function()local aa,
+ab,ac=a(41)local ad return(function(...)local ae,af,ag,ah=ac(ab.Parent.filesystem),ac(ab.Parent.path),'AFKTY',{}ah.
 __index=ah export type FileSystemManager={root:string,assets:string,getPath:(self:FileSystemManager,subpath:string?)->
 string,getAssetsFolder:(self:FileSystemManager,subfolder:string?)->string,getRootFolder:(self:FileSystemManager)->string
 }function ah.new(ai:string?):FileSystemManager local aj=ai or ag local ak=setmetatable({root=aj,assets=aj..'/Assets'},ah
 )::any pcall(ae.ensureFolder,ak.root)pcall(ae.ensureFolder,ak.assets)return ak end function ah.getPath(ai,aj:string?):
 string return af.join(ai.root,aj)end function ah.getAssetsFolder(ai,aj:string?):string if aj then local ak=af.join(ai.
 assets,aj)pcall(ae.ensureFolder,ak)return ak end return ai.assets end function ah.getRootFolder(ai):string return ai.
-root end return ah end)()end,[41]=function()local aa,ab,ac=a(41)local ad return(function(...)local ae,af,ag={},
+root end return ah end)()end,[42]=function()local aa,ab,ac=a(42)local ad return(function(...)local ae,af,ag={},
 2166136261,16777619 local function ah(ai:string):number local aj=af for ak=1,#ai do aj=bit32.bxor(aj,string.byte(ai,ak))
 local b=aj%65536 local c=(aj-b)/65536 aj=(((c*ag)%65536)*65536+b*ag)%4294967296 end return aj end function ae.
 deriveFlagFromName(ai:string):string local aj=ai:gsub('(%S+)',function(aj:string):string return aj:sub(1,1):upper()..aj:
 sub(2,-1)end):gsub('[^%w]','')if aj==''and ai~=''then return string.format('Flag%08x',ah(ai))end return aj end return ae
-end)()end,[42]=function()local aa,ab,ac=a(42)local ad return(function(...)local ae=ac(ab.Parent.services)local af,ag,ah,
+end)()end,[43]=function()local aa,ab,ac=a(43)local ad return(function(...)local ae=ac(ab.Parent.services)local af,ag,ah,
 ai,aj,ak=ae.getService'HttpService',ae.getService'RunService',ac(ab.Parent.filesystem),ac(ab.Parent.assetResolver),ac(ab
 .Parent.log),ac(ab.Parent.path)local function b(c:unknown):string?local d,e=pcall(function()return af:JSONEncode(c)end)
 if d and type(e)=='string'then return e else aj.warn('Failed to encode JSON:',e)return nil end end local function c(d:
@@ -1999,10 +2015,10 @@ loadedFromDisk=true,variants={[s]=G}}if k._debug then aj.print('Cached font for 
 function d.resolve(k:FontManager,l:number|string):Font?local m=j(l)if not m then return nil end local n=k.fontCache if n
 then local o=n[m]if o then if k._debug then aj.print('Resolved font for id: '..tostring(m))end for p,q in pairs(o.
 variants or{})do return q end end end return nil end function d.getFontFromId(k:FontManager,l:number|string):Font?return
-k:resolve(l)end return d end)()end,[43]=function()local aa,ab,ac=a(43)local ad return(function(...)local ae,af,ag,ah={},
+k:resolve(l)end return d end)()end,[44]=function()local aa,ab,ac=a(44)local ad return(function(...)local ae,af,ag,ah={},
 ac(ab.Parent.textMetrics),ac(ab.Parent.colors),ac(ab.Parent.flagNames)ae.textWidth=af.textWidth ae.textHeight=af.
 textHeight ae.deriveFlagFromName=ah.deriveFlagFromName ae.contrastColor=ag.contrastColor ae.toColorSequence=ag.
-toColorSequence ae.contrastText=ag.contrastText return ae end)()end,[44]=function()local aa,ab,ac=a(44)local ad return(
+toColorSequence ae.contrastText=ag.contrastText return ae end)()end,[45]=function()local aa,ab,ac=a(45)local ad return(
 function(...)local ae,af=ac(ab.Parent.imageCache),ac(ab.Parent.variables)type AvatarCallback=ae.AvatarCallback type
 PreloadCallback=ae.PreloadCallback local ag={}ag.rewrites=ae.rewrites ag.onBlock=nil::((unknown)->())?type
 PendingProperties={[string]:boolean}ag.pending={}::{[number]:{[Instance]:PendingProperties}}local ah,ai:{[string]:
@@ -2021,7 +2037,7 @@ string.sub(b,1,11)=='rbxasset://'then return b end if string.sub(b,1,11)=='rbxth
 ak(b)else b end end local c:number?if type(b)=='number'then c=b elseif type(b)=='string'then c=tonumber(string.match(b,
 '^rbxassetid://(%d+)$'))end local d=if c then ag.rewrites[c]else nil if d then return d end if af.secureMode then return
 ak(b)end if type(b)=='number'then return'rbxassetid://'..b end if type(b)=='string'then return b end return ak(b)end
-return ag end)()end,[45]=function()local aa,ab,ac=a(45)local ad return(function(...)local ae,af,ag,ah=ac(ab.Parent.
+return ag end)()end,[46]=function()local aa,ab,ac=a(46)local ad return(function(...)local ae,af,ag,ah=ac(ab.Parent.
 filesystem),ac(ab.Parent.path),ac(ab.Parent.variables),ac(ab.Parent.constants)export type RewriteMap={[number]:string}
 export type CacheSettledCallback=(failed:number)->()export type PreloadCallback=CacheSettledCallback export type
 AvatarCallback=(uri:string)->()export type OnCachedCallback=(id:number)->()export type ThumbnailEntry={state:string?,
@@ -2050,7 +2066,7 @@ nil end if w then o[t]=w else r+=1 q+=1 task.spawn(function()local x=i(v,u)if x 
 function ai.avatar(m:unknown,n:AvatarCallback?):string if type(m)~='number'then return''end if typeof(ae.isfile)~=
 'function'then return''end local o=j(m)if ae.isfile(o)then local p,q=pcall(getfenv().getcustomasset,o)if p and type(q)==
 'string'then return q end end if n then task.spawn(function()local p=l(m)if p then n(p)end end)end return''end return ai
-end)()end,[46]=function()local aa,ab,ac=a(46)local ad return(function(...)local ae,af,ag=ac(ab.Parent.variables),ac(ab.
+end)()end,[47]=function()local aa,ab,ac=a(47)local ad return(function(...)local ae,af,ag=ac(ab.Parent.variables),ac(ab.
 Parent.log),{}export type LocaleToken={[any]:string}export type Translator=(source:string,localeId:string)->string?
 export type TranslationTables={[string]:{[string]:string}}ag.strings={}::TranslationTables ag.current='en'ag.translator=
 nil::Translator?local ah={}local function ai(aj:string):string return string.match(aj,'^(%a+)')or aj end function ag.t(
@@ -2064,21 +2080,21 @@ type(ak)=='string'and type(b)=='table'then ak=string.lower(ak)local c=ag.strings
 end for d,e in b do if type(d)=='string'and type(e)=='string'then c[d]=e else af.warn(`AFKTY: skipping a '{ak}' translation, entries must be string to string.`
 )end end end end end function ag.setActive(aj:string?):string ag.current=if type(aj)=='string'and aj~=''then string.
 lower(aj)else'en'return ag.current end function ag.detect():string local aj=ae.localizationService.RobloxLocaleId if
-type(aj)=='string'and aj~=''then return string.lower(aj)end return'en'end return ag end)()end,[47]=function()local aa,ab
-,ac=a(47)local ad return(function(...)local ae,af=ac(ab.Parent.runtime),{}type SuppressPredicate=()->boolean
+type(aj)=='string'and aj~=''then return string.lower(aj)end return'en'end return ag end)()end,[48]=function()local aa,ab
+,ac=a(48)local ad return(function(...)local ae,af=ac(ab.Parent.runtime),{}type SuppressPredicate=()->boolean
 local function ag():boolean return ae.secureMode end local ah:SuppressPredicate,ai:SuppressPredicate?=ag function af.
 setSecureModeSource(aj:SuppressPredicate?)ah=if type(aj)=='function'then aj else ag end function af.setSuppressPredicate
 (aj:SuppressPredicate?)ai=if type(aj)=='function'then aj else nil end local function aj():boolean if ai and ai()then
 return true end return ah()end function af.warn(...)if aj()then return end warn(...)end function af.print(...)if aj()
-then return end print(...)end return af end)()end,[48]=function()local aa,ab,ac=a(48)local ad return(function(...)
+then return end print(...)end return af end)()end,[49]=function()local aa,ab,ac=a(49)local ad return(function(...)
 local function ae<T>(af:T):T local ag=af::any function ag.MoveTo(ah,ai:number)ah.tab:_moveElement(ah,ai)end function ag.
 MoveToTop(ah)ah.tab:_moveElement(ah,1)end function ag.MoveToBottom(ah)ah.tab:_moveElement(ah,#ah.tab.elements)end
 function ag.MoveUp(ah)local ai=table.find(ah.tab.elements,ah)if ai then ah.tab:_moveElement(ah,ai-1)end end function ag.
 MoveDown(ah)local ai=table.find(ah.tab.elements,ah)if ai then ah.tab:_moveElement(ah,ai+1)end end return af end return
-ae end)()end,[49]=function()local aa,ab,ac=a(49)local ad return(function(...)local ae={}ae.__index=ae export type
+ae end)()end,[50]=function()local aa,ab,ac=a(50)local ad return(function(...)local ae={}ae.__index=ae export type
 RequestFn=(...any)->any function ae.getRequestFn(af:any?):RequestFn?af=af or getfenv()return af.request or af.
 http_request or(af.http and af.http.request)or(af.syn and af.syn.request)or(af.fluxus and af.fluxus.request)end return
-ae end)()end,[50]=function()local aa,ab,ac=a(50)local ad return(function(...)local ae=ac(ab.Parent.variables)local af,ag
+ae end)()end,[51]=function()local aa,ab,ac=a(51)local ad return(function(...)local ae=ac(ab.Parent.variables)local af,ag
 =ae.textService,{}ag.__index=ag local ah=20 local function ai(aj,ak,b)local c=Instance.new'GetTextBoundsParams'c.Text=b
 c.Font=aj c.Size=ak c.Width=math.huge local d,e=pcall(af.GetTextBoundsAsync,af,c)return if d then e else Vector2.new(ak*
 0.6,ak)end local aj={}local function ak(b,c)local d=tostring(b.Family)..'|'..tostring(b.Weight)..'|'..tostring(b.Style)
@@ -2120,21 +2136,21 @@ then local j=g[h-i]if j:match'%d'then c:_putDigit(i,tonumber(j),f,e)else c:_putS
 length=h end function ag.to(c,d,e)c:_render(d,true,e)end function ag.snap(c,d)c:_render(d,false,true)end function ag.
 reveal(c,d,e,f)c.transparency=d for g,h in c.slots do if h.static and h.static.Visible then c.window:_reveal(h.static,{
 TextTransparency=d},e,f)end if h.reel then for i,j in h.reel.strip:GetChildren()do if j:IsA'TextLabel'then c.window:
-_reveal(j,{TextTransparency=d},e,f)end end end end end return ag end)()end,[51]=function()local aa,ab,ac=a(51)local ad
+_reveal(j,{TextTransparency=d},e,f)end end end end end return ag end)()end,[52]=function()local aa,ab,ac=a(52)local ad
 return(function(...)type OrderedElement={main:GuiObject,descriptor:{main:GuiObject}?}local function ae(af:OrderedElement
 ,ag:number)af.main.LayoutOrder=ag if af.descriptor then af.descriptor.main.LayoutOrder=ag+1 end end return ae end)()end,
-[52]=function()local aa,ab,ac=a(52)local ad return(function(...)local ae={}function ae.join(af:string,ag:string?):string
+[53]=function()local aa,ab,ac=a(53)local ad return(function(...)local ae={}function ae.join(af:string,ag:string?):string
 if not ag or ag==''then return af end return af..'/'..ag end local function af(ag:string):string local ah repeat ah=ag
 ag=ag:gsub('%.%.','')until ag==ah return ag end function ae.sanitizeFolder(ag:unknown):string local ah=tostring(ag):
 gsub('\\','/'):gsub('[:<>"|?*%c]','')ah=af(ah):gsub('/+','/')return(ah:gsub('^/+',''))end function ae.sanitizeFile(ag:
 unknown):string local ah=tostring(ag):gsub('[/\\]',''):gsub('[:<>"|?*%c]','')return af(ah)end function ae.basename(ag:
 unknown):string return tostring(ag):match'[^/\\]+$'or tostring(ag)end function ae.stripExtension(ag:unknown,ah:string?):
 string if ah and ah~=''then local ai=tostring(ag)if ai:sub(-#ah)==ah then return ai:sub(1,-#ah-1)end return ai end local
-ai=tostring(ag):match'^(.+)%.%w+$'return ai or tostring(ag)end return ae end)()end,[53]=function()local aa,ab,ac=a(53)
+ai=tostring(ag):match'^(.+)%.%w+$'return ai or tostring(ag)end return ae end)()end,[54]=function()local aa,ab,ac=a(54)
 local ad return(function(...)local ae,af,ag={},ac(ab.Parent.persistenceConfig),ac(ab.Parent.persistenceSettings)ae.
 getPath=af.getPath ae.save=af.save ae.load=af.load ae.applyTo=af.applyTo ae.list=af.list ae.delete=af.delete ae.
 getSettingsPath=ag.getSettingsPath ae.saveSettings=ag.saveSettings ae.loadSettings=ag.loadSettings return ae end)()end,[
-54]=function()local aa,ab,ac=a(54)local ad return(function(...)local ae,af,ag,ah,ai,aj,ak=ac(ab.Parent.variables),ac(ab.
+55]=function()local aa,ab,ac=a(55)local ad return(function(...)local ae,af,ag,ah,ai,aj,ak=ac(ab.Parent.variables),ac(ab.
 Parent.filesystem),ac(ab.Parent.log),ac(ab.Parent.path),ac(ab.Parent.persistencePaths),ac(ab.Parent.persistenceWrite),{}
 type PersistedControl={value:unknown,flag:string?,_canBeNil:boolean?,_serialize:((PersistedControl)->unknown)?,
 _deserialize:((PersistedControl,unknown)->())?,Set:(PersistedControl,unknown)->()}type ConfigWindow={controls:{[string]:
@@ -2166,14 +2182,14 @@ for i,j in h do local k=ah.basename(j)if k:sub(-5)=='.rfld'then local l=ah.strip
 not l:find' %(Incorrect Format[^%)]*%)$'then table.insert(f,l)end end end table.sort(f)return f end function ak.delete(d
 :ConfigWindow,e:unknown):boolean if type(e)~='string'or e==''then return false end local f,g=ak.getPath(d,e)if typeof(af
 .isfile)~='function'or not af.isfile(g)then return false end pcall(af.delfile,aj.tempPathFor(g))return(pcall(af.delfile,
-g))end return ak end)()end,[55]=function()local aa,ab,ac=a(55)local ad return(function(...)local ae,af,ag=ac(ab.Parent.
+g))end return ak end)()end,[56]=function()local aa,ab,ac=a(56)local ad return(function(...)local ae,af,ag=ac(ab.Parent.
 variables),ac(ab.Parent.path),{}type ConfigWindow={configuration:{fileName:string?,customFolder:string?},name:string}
 function ag.getConfigPath(ah:ConfigWindow,ai:unknown?):(string,string)local aj=ae.fileSystemManager:getPath
 'Configurations'if ah.configuration.customFolder then aj=af.join(aj,af.sanitizeFolder(ah.configuration.customFolder))end
 local ak=ai or ah.configuration.fileName or ah.name local b=af.sanitizeFile(ak)if b==''then b=af.sanitizeFile(ah.name)
 end if b==''then b='Configuration'end return aj,af.join(aj,b..'.rfld')end function ag.getSettingsPath():(string,string)
-local ah=ae.fileSystemManager:getPath'Settings'return ah,af.join(ah,'afkty.rfld')end return ag end)()end,[56]=function()
-local aa,ab,ac=a(56)local ad return(function(...)local ae,af,ag,ah,ai,aj=ac(ab.Parent.variables),ac(ab.Parent.filesystem
+local ah=ae.fileSystemManager:getPath'Settings'return ah,af.join(ah,'afkty.rfld')end return ag end)()end,[57]=function()
+local aa,ab,ac=a(57)local ad return(function(...)local ae,af,ag,ah,ai,aj=ac(ab.Parent.variables),ac(ab.Parent.filesystem
 ),ac(ab.Parent.persistencePaths),ac(ab.Parent.persistenceWrite),ac(ab.Parent.enums),{}type SettingsWindow={settings:{
 toggleKeybind:EnumItem,mouseOverride:boolean,keepOnScreen:boolean,welcomeToast:boolean,haptics:boolean}}type
 DecodedSettings={toggleKeybind:{[number]:unknown}?,mouseOverride:unknown?,keepOnScreen:unknown?,welcomeToast:unknown?,
@@ -2191,11 +2207,11 @@ false end if e.toggleKeybind then pcall(function()local f=tostring(e.toggleKeybi
 any)[f]if g then local h=ai.itemFromValue(g,e.toggleKeybind[2])if h then b.settings.toggleKeybind=h end end end)end if
 type(e.mouseOverride)=='boolean'then b.settings.mouseOverride=e.mouseOverride end if type(e.keepOnScreen)=='boolean'then
 b.settings.keepOnScreen=e.keepOnScreen end if type(e.welcomeToast)=='boolean'then b.settings.welcomeToast=e.welcomeToast
-end if type(e.haptics)=='boolean'then b.settings.haptics=e.haptics end return true end return aj end)()end,[57]=function
-()local aa,ab,ac=a(57)local ad return(function(...)local ae,af,ag=ac(ab.Parent.filesystem),{},'.saving'function af.
+end if type(e.haptics)=='boolean'then b.settings.haptics=e.haptics end return true end return aj end)()end,[58]=function
+()local aa,ab,ac=a(58)local ad return(function(...)local ae,af,ag=ac(ab.Parent.filesystem),{},'.saving'function af.
 tempPathFor(ah:string):string return ah..ag end function af.write(ah:string,ai:string,aj:string)local ak=af.tempPathFor(
 ai)ae.ensureDir(ah)ae.writefile(ak,aj)if ae.readfile(ak)~=aj then error'parked copy did not write cleanly'end ae.
-writefile(ai,aj)pcall(ae.delfile,ak)end return af end)()end,[58]=function()local aa,ab,ac=a(58)local ad return(function(
+writefile(ai,aj)pcall(ae.delfile,ak)end return af end)()end,[59]=function()local aa,ab,ac=a(59)local ad return(function(
 ...)local ae=ac(ab.Parent.services)export type RuntimeState={secureMode:boolean,coreGui:CoreGui,workspace:Workspace,
 runService:RunService,userInputService:UserInputService,guiService:GuiService,localPlayer:Player?,tweenService:
 TweenService,httpService:HttpService,textService:TextService,replicatedStorage:ReplicatedStorage,localizationService:
@@ -2208,9 +2224,9 @@ getService'TweenService'::TweenService af.httpService=ae.getService'HttpService'
 getService'TextService'::TextService af.replicatedStorage=ae.getService'ReplicatedStorage'::ReplicatedStorage af.
 localizationService=ae.getService'LocalizationService'::LocalizationService af.guiContainer=(function():Instance if af.
 runService:IsStudio()then return(af.localPlayer::Player).PlayerGui end if typeof(gethui)=='function'then local ag,ah=
-pcall(gethui)if ag and ah then return ah end end return af.coreGui end)()return af end)()end,[59]=function()local aa,ab,
-ac=a(59)local ad return(function(...)local ae={}function ae.getService(af)local ag=game:GetService(af)return if cloneref
-then cloneref(ag)else ag end return ae end)()end,[60]=function()local aa,ab,ac=a(60)local ad return(function(...)local
+pcall(gethui)if ag and ah then return ah end end return af.coreGui end)()return af end)()end,[60]=function()local aa,ab,
+ac=a(60)local ad return(function(...)local ae={}function ae.getService(af)local ag=game:GetService(af)return if cloneref
+then cloneref(ag)else ag end return ae end)()end,[61]=function()local aa,ab,ac=a(61)local ad return(function(...)local
 ae=ac(ab.Parent.variables)local af,ag,ah:{[string]:number},ai,aj=ae.textService,{},{},0,1024 local function ak(b:
 GetTextBoundsParams):unknown local c,d=pcall(function()return af:GetTextBoundsAsync(b)end)return if c then d else nil
 end local function b(c:unknown,d:'X'|'Y'):number?if typeof(c)=='Vector2'then return if d=='X'then c.X else c.Y end if
@@ -2220,7 +2236,7 @@ tostring(d)..'|'..e local g=ah[f]if g then return g end local h=Instance.new'Get
 Size=d h.Width=math.huge local i=b(ak(h),'X')if not i then local j=utf8.len(e)or#e return math.ceil(d*0.55*j)end local j
 =math.ceil(i)if ai>=aj then ah={}ai=0 end ah[f]=j ai+=1 return j end function ag.textHeight(c:Font,d:number,e:any,f:
 number):number local g=Instance.new'GetTextBoundsParams'g.Text=tostring(e)g.Font=c g.Size=d g.Width=f local h=b(ak(g),
-'Y')return if h then math.ceil(h)else d end return ag end)()end,[61]=function()local aa,ab,ac=a(61)local ad return(
+'Y')return if h then math.ceil(h)else d end return ag end)()end,[62]=function()local aa,ab,ac=a(62)local ad return(
 function(...)local ae,af,ag,ah,ai,aj=ac(ab.Parent.runtime),ac(ab.Parent.constants),ac(ab.Parent.log),ac(ab.Parent.
 filesystemManager),ac(ab.Parent.assetResolver),ac(ab.Parent.fontManager)type RuntimeState=ae.RuntimeState type
 FileSystemManager=ah.FileSystemManager type AssetResolver=ai.AssetResolver type FontManager=aj.FontManager export type
@@ -2233,33 +2249,33 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{24,1,{'themes'},{{27,2,{'cobalt'}},{25,2,{'afkty'}},{28,2,{'default'}},{26,2,{'amethyst'}},{29,2,{
-'ember'}},{30,2,{'frost'}},{31,2,{'rose'}}}},{32,2,{'types'}},{33,1,{'utility'},{{55,2,{'persistencePaths'}},{54,2,{
-'persistenceConfig'}},{38,2,{'enums'}},{51,2,{'ordering'}},{41,2,{'flagNames'}},{61,2,{'variables'}},{59,2,{'services'}}
-,{60,2,{'textMetrics'}},{58,2,{'runtime'}},{35,2,{'assetResolver'}},{57,2,{'persistenceWrite'}},{53,2,{'persistence'}},{
-56,2,{'persistenceSettings'}},{37,2,{'constants'}},{49,2,{'network'}},{34,2,{'HapticEngine'}},{46,2,{'locale'}},{40,2,{
-'filesystemManager'}},{44,2,{'image'}},{52,2,{'path'}},{50,2,{'odometer'}},{36,2,{'colors'}},{39,2,{'filesystem'}},{45,2
-,{'imageCache'}},{48,2,{'moveable'}},{43,2,{'functions'}},{47,2,{'log'}},{42,2,{'fontManager'}}}},{2,1,{'components'},{{
-14,2,{'popup'}},{5,2,{'chrome'}},{12,2,{'keybind'}},{9,2,{'dropdown'}},{17,2,{'slider'}},{16,2,{'section'}},{7,2,{
-'descriptor'}},{23,2,{'window'}},{22,2,{'toggle'}},{10,2,{'group'}},{21,2,{'toast'}},{15,2,{'search'}},{20,2,{'tag'}},{
-11,2,{'input'}},{19,2,{'tab'}},{18,2,{'stat'}},{3,2,{'action'}},{8,2,{'drag'}},{6,2,{'colorpicker'}},{13,2,{
-'notification'}},{4,2,{'button'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,
-script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)
-return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then
-af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]=
-'ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function
-(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C
-={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F
-in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]
-for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end
-end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent
-end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,
-H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
-"Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P=d(M),L[
-1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'and P)
-then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D(E,F,G
-)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3)end
-local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
+{{1,2,{'AFKTY'},{{34,1,{'utility'},{{56,2,{'persistencePaths'}},{44,2,{'functions'}},{39,2,{'enums'}},{57,2,{
+'persistenceSettings'}},{50,2,{'network'}},{62,2,{'variables'}},{52,2,{'ordering'}},{60,2,{'services'}},{59,2,{'runtime'
+}},{38,2,{'constants'}},{37,2,{'colors'}},{58,2,{'persistenceWrite'}},{55,2,{'persistenceConfig'}},{54,2,{'persistence'}
+},{36,2,{'assetResolver'}},{47,2,{'locale'}},{53,2,{'path'}},{41,2,{'filesystemManager'}},{46,2,{'imageCache'}},{45,2,{
+'image'}},{61,2,{'textMetrics'}},{40,2,{'filesystem'}},{51,2,{'odometer'}},{35,2,{'HapticEngine'}},{43,2,{'fontManager'}
+},{42,2,{'flagNames'}},{48,2,{'log'}},{49,2,{'moveable'}}}},{33,2,{'types'}},{24,1,{'themes'},{{31,2,{'rose'}},{27,2,{
+'cobalt'}},{32,2,{'v1hub'}},{25,2,{'afkty'}},{26,2,{'amethyst'}},{28,2,{'default'}},{29,2,{'ember'}},{30,2,{'frost'}}}},
+{2,1,{'components'},{{23,2,{'window'}},{10,2,{'group'}},{3,2,{'action'}},{15,2,{'search'}},{13,2,{'notification'}},{19,2
+,{'tab'}},{11,2,{'input'}},{20,2,{'tag'}},{6,2,{'colorpicker'}},{7,2,{'descriptor'}},{4,2,{'button'}},{9,2,{'dropdown'}}
+,{17,2,{'slider'}},{22,2,{'toggle'}},{21,2,{'toast'}},{18,2,{'stat'}},{5,2,{'chrome'}},{8,2,{'drag'}},{14,2,{'popup'}},{
+16,2,{'section'}},{12,2,{'keybind'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,
+coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or
+function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r
+and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[
+2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},
+function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B
+)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)
+for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)
+local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,
+true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end
+D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do
+local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]
+then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P
+=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'
+and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D
+(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3
+)end local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
 __metatable=false M.__index=function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'
 then return G elseif E=='StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai
 ,H do if P.Name==O then return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'
