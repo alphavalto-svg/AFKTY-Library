@@ -31,6 +31,8 @@ local ITEM_SIZE = 38
 local ITEM_PADDING = 8
 local EDGE_PADDING = 12
 local ICON_INSET = 9 -- icon is ITEM_SIZE - 2*ICON_INSET square, centred
+-- search + settings + avatar, stacked with padding between
+local BOTTOM_STACK_HEIGHT = ITEM_SIZE * 3 + ITEM_PADDING * 2
 
 local hoverInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local activeInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -54,6 +56,15 @@ local function insetForRail(window)
         window.elements.Size = UDim2.new(size.X.Scale, size.X.Offset - RAIL_WIDTH, size.Y.Scale, size.Y.Offset)
         local pos = window.elements.Position
         window.elements.Position = UDim2.new(pos.X.Scale, pos.X.Offset + half, pos.Y.Scale, pos.Y.Offset)
+    end
+
+    -- the search field is centre-anchored and full width like tabList, so without this it
+    -- runs straight under the rail icons when search opens
+    if window.searchPill then
+        local size = window.searchPill.Size
+        window.searchPill.Size = UDim2.new(size.X.Scale, size.X.Offset - RAIL_WIDTH, size.Y.Scale, size.Y.Offset)
+        local pos = window.searchPill.Position
+        window.searchPill.Position = UDim2.new(pos.X.Scale, pos.X.Offset + half, pos.Y.Scale, pos.Y.Offset)
     end
 
     -- the title block is left-anchored, so it only needs the full offset, not half
@@ -113,10 +124,11 @@ local function ensureRail(window)
         Parent = rail.main,
     }, { BackgroundColor3 = "SurfaceStroke" })
 
-    -- icon stack, from the top
+    -- Category stack, from the top. This is the caller's space: CreateRailItem lands here,
+    -- so scripts can add their own sections without fighting the built-in controls below.
     rail.top = window:Create("Frame", {
         Name = "RailItems",
-        Size = UDim2.new(1, 0, 1, -(ITEM_SIZE + EDGE_PADDING * 2)),
+        Size = UDim2.new(1, 0, 1, -(BOTTOM_STACK_HEIGHT + EDGE_PADDING * 2)),
         Position = UDim2.new(0, 0, 0, EDGE_PADDING),
         BackgroundTransparency = 1,
         ZIndex = 3,
@@ -134,10 +146,12 @@ local function ensureRail(window)
         Parent = rail.top,
     })
 
-    -- avatar slot, pinned to the bottom
+    -- Built-in controls, pinned bottom: search, settings, then the avatar last so it sits
+    -- in the corner. Kept apart from the caller's stack so adding categories above never
+    -- pushes these around.
     rail.bottom = window:Create("Frame", {
-        Name = "RailProfile",
-        Size = UDim2.new(1, 0, 0, ITEM_SIZE),
+        Name = "RailControls",
+        Size = UDim2.new(1, 0, 0, BOTTOM_STACK_HEIGHT),
         Position = UDim2.new(0, 0, 1, -EDGE_PADDING),
         AnchorPoint = Vector2.new(0, 1),
         BackgroundTransparency = 1,
@@ -147,6 +161,7 @@ local function ensureRail(window)
     })
 
     window:Create("UIListLayout", {
+        Padding = UDim.new(0, ITEM_PADDING),
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         VerticalAlignment = Enum.VerticalAlignment.Bottom,
@@ -161,14 +176,15 @@ local function ensureRail(window)
     window.rail = rail
 
     -- The rail takes search and settings over from the topbar rather than duplicating them,
-    -- leaving only minimise and close at the top right. High LayoutOrder keeps them below
-    -- whatever the caller adds, whichever order things happen to be created in.
+    -- leaving only minimise and close at the top right. They live in the bottom stack above
+    -- the avatar, so the top of the rail stays free for the caller's categories.
     if window.searchAction and window.searchAction.action then
         window.searchAction.action.Visible = false
         local item = Rail.new(window, {
             icon = constants.icons.search,
             name = "Search",
-            order = 1000,
+            order = 0,
+            slot = "bottom",
             callback = function()
                 require(script.Parent.search).toggle(window)
             end,
@@ -182,7 +198,8 @@ local function ensureRail(window)
         local item = Rail.new(window, {
             icon = constants.icons.settings,
             name = "Settings",
-            order = 1001,
+            order = 1,
+            slot = "bottom",
             callback = function()
                 if window.rfSettings then
                     window.rfSettings:Select()
@@ -259,7 +276,9 @@ function Rail.new(window, properties)
     assert(self.icon, "A rail item requires an icon.")
 
     local rail = ensureRail(window)
-    buildButton(self, window, rail.top, properties.order or properties.Order or 0, UDim.new(0, 10))
+    -- "bottom" is reserved for the built-in controls; callers land in the category stack
+    local slot = if properties.slot == "bottom" then rail.bottom else rail.top
+    buildButton(self, window, slot, properties.order or properties.Order or 0, UDim.new(0, 10))
 
     self.iconImage = window:Create("ImageLabel", {
         Size = UDim2.new(1, -ICON_INSET * 2, 1, -ICON_INSET * 2),
@@ -304,7 +323,7 @@ function Rail.profile(window, properties)
     }, Rail)
 
     local rail = ensureRail(window)
-    buildButton(self, window, rail.bottom, 0, UDim.new(1, 0)) -- circular
+    buildButton(self, window, rail.bottom, 2, UDim.new(1, 0)) -- circular, last in the stack
 
     self.iconImage = window:Create("ImageLabel", {
         Size = UDim2.new(1, -4, 1, -4),

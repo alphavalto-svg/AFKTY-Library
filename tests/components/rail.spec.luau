@@ -81,8 +81,15 @@ return function()
             expect(w.rail.searchItem).to.be.ok()
             expect(w.rail.settingsItem).to.be.ok()
 
-            -- adopted items sort below whatever the caller added
-            expect(w.rail.searchItem.main.LayoutOrder > 0).to.equal(true)
+            -- they live in the bottom stack with the avatar, so the top of the rail stays
+            -- free for the caller's category buttons
+            expect(w.rail.searchItem.main.Parent).to.equal(w.rail.bottom)
+            expect(w.rail.settingsItem.main.Parent).to.equal(w.rail.bottom)
+            expect(w.railProfile == nil).to.equal(true)
+
+            -- and a caller's item still lands in the top stack
+            local mine = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+            expect(mine.main.Parent).to.equal(w.rail.top)
         end)
 
         it("takes the rail down with the window and brings it back", function()

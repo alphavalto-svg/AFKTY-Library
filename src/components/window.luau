@@ -464,7 +464,7 @@ function Window.new(properties)
     -- A second, accent-coloured halo outside the dark shadow, so the window carries a lit
     -- outer edge rather than only a drop shadow. Wider blur than the shadow so it reads as
     -- light spilling off the frame instead of a second border.
-    self.windowGlow = self:CreateGlow(self.main, "AccentStroke", 34, 1)
+    self.windowGlow = self:CreateGlow(self.main, "AccentStroke", 48, 1)
 
     -- Elements Preparation
 
@@ -1089,8 +1089,8 @@ function Window:ToggleMinimise()
 
         variables.tweenService:Create(self.main, sizeInfo, { Size = self.size }):Play()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
-        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.72 }):Play()
-        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.45 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.3 }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.15 }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         variables.tweenService
@@ -1635,8 +1635,8 @@ function Window:_quickRestore()
         self.elements.Visible = true
 
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 0.6 }):Play()
-        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.72 }):Play()
-        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.45 }):Play()
+        variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 0.3 }):Play()
+        variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 0.15 }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
         if self.topbarIcon then
