@@ -216,7 +216,29 @@ local function ensureRail(window)
             order = 0,
             slot = "bottom",
             callback = function()
-                require(script.Parent.search).toggle(window)
+                local searchModule = require(script.Parent.search)
+                if window._searching then
+                    -- closing search: go back to whichever category was open before it
+                    searchModule.close(window, { showTabs = true })
+                    local last = rail._lastCategory
+                    if last and not last.destroyed then
+                        last:Select()
+                    end
+                    return
+                end
+                -- Opening search is leaving the category, so drop the highlight. Otherwise
+                -- the rail keeps showing a category as selected while search is what is
+                -- actually on screen.
+                rail._lastCategory = nil
+                for _, entry in ipairs(window.railItems) do
+                    if entry.main and entry.main.Parent == rail.top then
+                        if entry.active then
+                            rail._lastCategory = entry
+                        end
+                        entry:SetActive(false)
+                    end
+                end
+                searchModule.toggle(window)
             end,
         })
         table.insert(window.railItems, item)
@@ -242,8 +264,12 @@ local function ensureRail(window)
                         tab.topbarItem.Visible = false
                     end
                 end
+                rail._lastCategory = nil
                 for _, item in ipairs(window.railItems) do
                     if item.main and item.main.Parent == rail.top then
+                        if item.active then
+                            rail._lastCategory = item
+                        end
                         item:SetActive(false)
                     end
                 end

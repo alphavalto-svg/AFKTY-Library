@@ -862,13 +862,16 @@ Size=UDim2.new(1,0,0,g),Position=UDim2.new(0,0,1,-e),AnchorPoint=Vector2.new(0,1
 Parent=o.main})n:Create('UIListLayout',{Padding=UDim.new(0,d),FillDirection=Enum.FillDirection.Vertical,
 HorizontalAlignment=Enum.HorizontalAlignment.Center,VerticalAlignment=Enum.VerticalAlignment.Bottom,SortOrder=Enum.
 SortOrder.LayoutOrder,Parent=o.bottom})l(n)n.rail=o if n.searchAction and n.searchAction.action then n.searchAction.
-action.Visible=false local p=ae.new(n,{icon=ai.icons.search,name='Search',order=0,slot='bottom',callback=function()ac(ab
-.Parent.search).toggle(n)end})table.insert(n.railItems,p)o.searchItem=p end if n.settingsAction and n.settingsAction.
-action then n.settingsAction.action.Visible=false local p=ae.new(n,{icon=ai.icons.settings,name='Settings',order=1,slot=
-'bottom',callback=function()if not n.rfSettings then return end for p,q in ipairs(n.tabs or{})do if q.topbarItem and q.
-railCategory~=nil then q.topbarItem.Visible=false end end for p,q in ipairs(n.railItems)do if q.main and q.main.Parent==
-o.top then q:SetActive(false)end end n.rfSettings:Select()end})table.insert(n.railItems,p)o.settingsItem=p end return o
-end local function n(o,p,q,r,s)o.main=p:Create('TextButton',{Name=ae.__type,Size=UDim2.fromOffset(c,c),
+action.Visible=false local p=ae.new(n,{icon=ai.icons.search,name='Search',order=0,slot='bottom',callback=function()local
+p=ac(ab.Parent.search)if n._searching then p.close(n,{showTabs=true})local q=o._lastCategory if q and not q.destroyed
+then q:Select()end return end o._lastCategory=nil for q,r in ipairs(n.railItems)do if r.main and r.main.Parent==o.top
+then if r.active then o._lastCategory=r end r:SetActive(false)end end p.toggle(n)end})table.insert(n.railItems,p)o.
+searchItem=p end if n.settingsAction and n.settingsAction.action then n.settingsAction.action.Visible=false local p=ae.
+new(n,{icon=ai.icons.settings,name='Settings',order=1,slot='bottom',callback=function()if not n.rfSettings then return
+end for p,q in ipairs(n.tabs or{})do if q.topbarItem and q.railCategory~=nil then q.topbarItem.Visible=false end end o.
+_lastCategory=nil for p,q in ipairs(n.railItems)do if q.main and q.main.Parent==o.top then if q.active then o.
+_lastCategory=q end q:SetActive(false)end end n.rfSettings:Select()end})table.insert(n.railItems,p)o.settingsItem=p end
+return o end local function n(o,p,q,r,s)o.main=p:Create('TextButton',{Name=ae.__type,Size=UDim2.fromOffset(c,c),
 BackgroundTransparency=1,AutoButtonColor=false,Text='',LayoutOrder=r,ZIndex=4,Parent=q},{BackgroundColor3='AccentColor'}
 )p:Create('UICorner',{CornerRadius=s,Parent=o.main})o.stroke=p:Create('UIStroke',{Thickness=1,Transparency=1,Parent=o.
 main},{Color='AccentStroke'})o.glow=p:CreateGlow(o.main,'AccentStroke',14,1)o.hover=p:CreateHoverOverlay(o.main)end
@@ -2246,43 +2249,42 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{25,1,{'themes'},{{26,2,{'default'}}}},{27,2,{'types'}},{2,1,{'components'},{{10,2,{'group'}},{21,2,{
-'tag'}},{3,2,{'action'}},{19,2,{'stat'}},{12,2,{'keybind'}},{22,2,{'toast'}},{24,2,{'window'}},{16,2,{'search'}},{9,2,{
-'dropdown'}},{5,2,{'chrome'}},{18,2,{'slider'}},{14,2,{'popup'}},{23,2,{'toggle'}},{20,2,{'tab'}},{13,2,{'notification'}
-},{8,2,{'drag'}},{11,2,{'input'}},{7,2,{'descriptor'}},{17,2,{'section'}},{15,2,{'rail'}},{6,2,{'colorpicker'}},{4,2,{
-'button'}}}},{28,1,{'utility'},{{29,2,{'HapticEngine'}},{50,2,{'persistencePaths'}},{39,2,{'image'}},{36,2,{'flagNames'}
-},{56,2,{'variables'}},{30,2,{'assetResolver'}},{33,2,{'enums'}},{34,2,{'filesystem'}},{42,2,{'log'}},{55,2,{
-'textMetrics'}},{54,2,{'services'}},{47,2,{'path'}},{51,2,{'persistenceSettings'}},{53,2,{'runtime'}},{43,2,{'moveable'}
-},{44,2,{'network'}},{35,2,{'filesystemManager'}},{45,2,{'odometer'}},{41,2,{'locale'}},{37,2,{'fontManager'}},{31,2,{
-'colors'}},{46,2,{'ordering'}},{52,2,{'persistenceWrite'}},{49,2,{'persistenceConfig'}},{38,2,{'functions'}},{32,2,{
-'constants'}},{48,2,{'persistence'}},{40,2,{'imageCache'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next
-,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.
-freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,
-'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
-end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={
-GetFullName={{},function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},
-GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}
-for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string',
-'boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do
-return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.
-Name==C then return D end D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)
-end}},{}for D,E in ai,B do local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=
-function(I,...)if not A[I]then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H
-do local M=J[K]local N,O,P=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'
-and N~=O and not(N=='nil'and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...
-)end end local function D(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..
-' is not a valid (virtual) member of '..E..' "'..F..'"',3)end local function K(L)ah(
-'Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.__metatable=false M.__index=
-function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'then return G elseif E==
-'StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai,H do if P.Name==O then
-return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'then F=P elseif O==
-'Parent'then if P==L then return end if G~=nil then A[G][L]=nil end G=P if P~=nil then A[P][L]=true end elseif E==
-'StringValue'and O=='Value'then I=P else J(O)end end M.__tostring=function()return F end ag(L,M)A[L]=H if G~=nil then A[
-G][L]=true end return L end local function E(F,G)local H,I,J,K=F[1],F[2],F[3],F[4]local L=t[I]local M=J and l(J,1)or L
-local N=D(L,M,G)u[H]=N if J then for O,P in ai,J do N[O]=P end end if K then for O,P in ai,K do E(P,N)end end return N
-end local F=D('Folder','['..ad..']')for G,H in ai,ab do E(H,F)end for G,H in ai,aa do local I=u[G]v[I]=H w[I]=G local J=
-I.ClassName if J=='LocalScript'or J=='Script'then k(y,I)end end local function G(H)local I,J=H.ClassName,x[H]if J and I
-=='ModuleScript'then return ak(J)end local K=v[H]local function L(M)M=g(M)local N,O,P=H:GetFullName(),p(M,
+{{1,2,{'AFKTY'},{{25,1,{'themes'},{{26,2,{'default'}}}},{27,2,{'types'}},{28,1,{'utility'},{{53,2,{'runtime'}},{37,2,{
+'fontManager'}},{31,2,{'colors'}},{50,2,{'persistencePaths'}},{41,2,{'locale'}},{55,2,{'textMetrics'}},{54,2,{'services'
+}},{32,2,{'constants'}},{29,2,{'HapticEngine'}},{52,2,{'persistenceWrite'}},{30,2,{'assetResolver'}},{51,2,{
+'persistenceSettings'}},{56,2,{'variables'}},{49,2,{'persistenceConfig'}},{48,2,{'persistence'}},{39,2,{'image'}},{33,2,
+{'enums'}},{35,2,{'filesystemManager'}},{44,2,{'network'}},{40,2,{'imageCache'}},{46,2,{'ordering'}},{45,2,{'odometer'}}
+,{43,2,{'moveable'}},{34,2,{'filesystem'}},{36,2,{'flagNames'}},{42,2,{'log'}},{38,2,{'functions'}},{47,2,{'path'}}}},{2
+,1,{'components'},{{6,2,{'colorpicker'}},{3,2,{'action'}},{22,2,{'toast'}},{12,2,{'keybind'}},{4,2,{'button'}},{16,2,{
+'search'}},{11,2,{'input'}},{24,2,{'window'}},{14,2,{'popup'}},{23,2,{'toggle'}},{5,2,{'chrome'}},{15,2,{'rail'}},{17,2,
+{'section'}},{10,2,{'group'}},{8,2,{'drag'}},{21,2,{'tag'}},{18,2,{'slider'}},{13,2,{'notification'}},{19,2,{'stat'}},{9
+,2,{'dropdown'}},{20,2,{'tab'}},{7,2,{'descriptor'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table
+,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze
+or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if
+r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder'
+,[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},
+function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B
+)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)
+for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)
+local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,
+true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end
+D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do
+local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]
+then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P
+=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'
+and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D
+(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3
+)end local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
+__metatable=false M.__index=function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'
+then return G elseif E=='StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai
+,H do if P.Name==O then return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'
+then F=P elseif O=='Parent'then if P==L then return end if G~=nil then A[G][L]=nil end G=P if P~=nil then A[P][L]=true
+end elseif E=='StringValue'and O=='Value'then I=P else J(O)end end M.__tostring=function()return F end ag(L,M)A[L]=H if
+G~=nil then A[G][L]=true end return L end local function E(F,G)local H,I,J,K=F[1],F[2],F[3],F[4]local L=t[I]local M=J
+and l(J,1)or L local N=D(L,M,G)u[H]=N if J then for O,P in ai,J do N[O]=P end end if K then for O,P in ai,K do E(P,N)end
+end return N end local F=D('Folder','['..ad..']')for G,H in ai,ab do E(H,F)end for G,H in ai,aa do local I=u[G]v[I]=H w[
+I]=G local J=I.ClassName if J=='LocalScript'or J=='Script'then k(y,I)end end local function G(H)local I,J=H.ClassName,x[
+H]if J and I=='ModuleScript'then return ak(J)end local K=v[H]local function L(M)M=g(M)local N,O,P=H:GetFullName(),p(M,
 '[^:]+:(%d+): (.+)')if not O or not j then return N..':*: '..(P or M)end O=h(O)local Q=w[H]local R=j[Q]local S=O-R+1 if
 S<0 then S='?'end return N..':'..S..': '..P end if I=='LocalScript'or I=='Script'then local M,N=f(K)if not M then ah(L(N
 ),0)end else local M={f(K)}local N=l(M,1)if not N then local O=l(M,1)ah(L(O),0)end x[H]=M return ak(M)end end function a
