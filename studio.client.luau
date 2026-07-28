@@ -19,6 +19,7 @@ task.wait(2)
 local Window = Library:CreateWindow({
     name = "AFKTY Hub",
     subtitle = "Grow a Garden 2",
+    theme = "afkty",
     configuration = { autoSave = true, autoLoad = true, fileName = "AFKTY Hub" },
 })
 
@@ -122,8 +123,8 @@ Tab:CreateSection({ name = "Themes + Feedback" })
 
 Tab:CreateDropdown({
     name = "Theme",
-    options = { "default", "amethyst", "cobalt", "ember", "frost", "rose" },
-    value = "default",
+    options = { "afkty", "default", "amethyst", "cobalt", "ember", "frost", "rose" },
+    value = "afkty",
     forgetState = true,
     callback = function(v)
         Window:ChangeTheme(v)
