@@ -87,10 +87,19 @@ set and is not cached. In secure mode those resolve blank, and the library raise
 saying so. A hub that wants its own artwork in secure mode has to cache it itself and pass the
 resulting `getcustomasset` string.
 
-**The demos are consumers, and their art is still upstream.** `example.client.luau`,
-`studio.client.luau`, `studio.tour.client.luau` and `docs/TUTORIAL.md` pass assorted ids as
-illustrative icons — some that used to be in this set, plus others (`93364949241311`,
-`84750991656135`, `85925158736685`) that never were. They were left alone in the swap: they are
-stand-ins for "whatever a hub supplies", they still render, and repointing only the overlapping
-subset would remove nothing while looking like it had. Making the demos fully self-owned means
-uploading that art too, and is a separate job.
+**The demos are consumers.** `example.client.luau`, `studio.client.luau`,
+`studio.tour.client.luau` and `docs/TUTORIAL.md` pass ids as illustrative icons. Everything they
+used that overlapped with this set has been repointed at the owned ids, so the only art in the
+repo that is not AlphaValto's is three icons uploaded by `shlexr` (Roblox user 304343782, the
+upstream author):
+
+| Id | Called | Used for |
+|---|---|---|
+| 93364949241311 | `leaf` | Farm / Home / Main tabs, notification and button icons |
+| 84750991656135 | `sword` | Combat / Layout tabs |
+| 85925158736685 | `chart` | Stats tab |
+
+All three resolve and render — they are a live dependency, not a broken one. Replacing them needs
+new uploads; there is no owned glyph that stands in sensibly (a Combat tab with a chevron on it is
+worse than one with someone else's sword). Until then they are the last thing here that could
+disappear without warning, and only the demos would break, never the library.

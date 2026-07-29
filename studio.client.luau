@@ -46,7 +46,7 @@ local mainCategory = Window:CreateRailItem({
 })
 
 local toolsCategory = Window:CreateRailItem({
-    icon = 125823673784681,
+    icon = 139478662436110,
     name = "Tools",
     callback = function(item)
         item:Select()
@@ -66,8 +66,8 @@ Window:CreateRailProfile({
 -- Subcategories. Each tab belongs to one main category, so the top strip changes with the
 -- rail selection instead of showing every tab under every category.
 local Tab = Window:CreateTab({ name = "Farm", icon = 93364949241311, category = mainCategory })
-local Tab2 = Window:CreateTab({ name = "Shop", icon = 125823673784681, category = mainCategory })
-local ToolsTab = Window:CreateTab({ name = "Utility", icon = 129180860773723, category = toolsCategory })
+local Tab2 = Window:CreateTab({ name = "Shop", icon = 139478662436110, category = mainCategory })
+local ToolsTab = Window:CreateTab({ name = "Utility", icon = 123873302071776, category = toolsCategory })
 
 Tab2:CreateSection({ name = "Shop" })
 Tab2:CreateButton({

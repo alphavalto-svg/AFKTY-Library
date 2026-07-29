@@ -94,27 +94,27 @@ home:CreateButton({
         window:Notify({
             title = "Auto-saved",
             content = "Your configuration was saved.",
-            icon = 125823673784681,
+            icon = 139478662436110,
         })
     end,
 })
 
 home:CreateButton({
     name = "Send Toast",
-    icon = 125823673784681,
+    icon = 139478662436110,
     callback = function()
-        window:Toast({ title = "Saved", icon = 125823673784681 })
+        window:Toast({ title = "Saved", icon = 139478662436110 })
     end,
 })
 
 home:CreateButton({
     name = "Open Popup",
-    icon = 83277910885129,
+    icon = 90172788330629,
     callback = function()
         window:Popup({
             title = "Reset everything?",
             content = "This clears every saved value and puts the menu back to its defaults. You can't undo it.",
-            icon = 83277910885129,
+            icon = 90172788330629,
             options = {
                 { text = "Cancel" },
                 { text = "Reset", style = "danger" },
@@ -142,7 +142,7 @@ combat:CreateDropdown({
 })
 
 -- Fields --------------------------------------------------------------------
-local fields = window:CreateTab({ name = "Fields", icon = 100604009889706 })
+local fields = window:CreateTab({ name = "Fields", icon = 102529133382626 })
 
 fields:CreateSection({ name = "Setup" })
 
@@ -202,7 +202,7 @@ rightColumn:CreateToggle({ name = "ESP", value = true })
 rightColumn:CreateToggle({ name = "Tracers" })
 
 -- Language ------------------------------------------------------------------
-local language = window:CreateTab({ name = "Language", icon = 100604009889706 })
+local language = window:CreateTab({ name = "Language", icon = 102529133382626 })
 
 language:CreateSection({ name = "Localization" })
 

@@ -59,7 +59,7 @@ return function()
             expect(w.topContainer.Position.X.Offset).to.equal(titleX + railWidth)
 
             -- a second item reuses the rail; insetting twice would push content off-window
-            w:CreateRailItem({ icon = 129180860773723, name = "Settings" })
+            w:CreateRailItem({ icon = 123873302071776, name = "Settings" })
             expect(w.tabList.Size.X.Offset).to.equal(tabWidth - railWidth)
             expect(w.topContainer.Position.X.Offset).to.equal(titleX + railWidth)
 
@@ -88,7 +88,7 @@ return function()
             expect(w.railProfile == nil).to.equal(true)
 
             -- and a caller's item still lands in the top stack
-            local mine = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+            local mine = w:CreateRailItem({ icon = 139478662436110, name = "Configs" })
             expect(mine.main.Parent).to.equal(w.rail.top)
         end)
 
@@ -113,7 +113,7 @@ return function()
             local w = makeWindow()
 
             local first = w:CreateRailItem({ icon = 85628806611332, name = "Main" })
-            local second = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+            local second = w:CreateRailItem({ icon = 139478662436110, name = "Configs" })
 
             -- a hub should not have to remember to mark one active
             expect(first.active).to.equal(true)
@@ -128,7 +128,7 @@ return function()
         it("moves the selection with Select and leaves controls alone", function()
             local w = makeWindow()
             local first = w:CreateRailItem({ icon = 85628806611332, name = "Main" })
-            local second = w:CreateRailItem({ icon = 125823673784681, name = "Configs" })
+            local second = w:CreateRailItem({ icon = 139478662436110, name = "Configs" })
 
             second:Select()
             expect(second.active).to.equal(true)

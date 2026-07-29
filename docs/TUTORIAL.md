@@ -270,7 +270,7 @@ local main = Window:CreateRailItem({
     end,
 })
 
-local tools = Window:CreateRailItem({ icon = 125823673784681, name = "Tools" })
+local tools = Window:CreateRailItem({ icon = 139478662436110, name = "Tools" })
 
 Window:CreateTab({ name = "Farm",    category = main })
 Window:CreateTab({ name = "Shop",    category = main })
@@ -388,10 +388,10 @@ If you recolour a surface but don't set its stroke, a sensible stroke is derived
 Window:Notify({
     title = "Auto-saved",
     content = "Your configuration was saved.",
-    icon = 125823673784681,
+    icon = 139478662436110,
 })
 
-Window:Toast({ title = "Saved", icon = 125823673784681 })
+Window:Toast({ title = "Saved", icon = 139478662436110 })
 
 Window:Popup({
     title = "Reset everything?",
@@ -444,7 +444,7 @@ Window:CreateTag({ text = "v1", color = Color3.fromRGB(144, 231, 68) })
 
 -- Categories (left rail)
 local farming = Window:CreateRailItem({ icon = 93364949241311, name = "Farming" })
-local tools   = Window:CreateRailItem({ icon = 125823673784681, name = "Tools" })
+local tools   = Window:CreateRailItem({ icon = 139478662436110, name = "Tools" })
 
 -- Subcategories (top strip)
 local Seeds   = Window:CreateTab({ name = "Seeds",   category = farming })
