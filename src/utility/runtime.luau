@@ -28,15 +28,40 @@ export type RuntimeState = {
 
 local runtime = {} :: RuntimeState
 
+-- Secure mode is ON by default wherever it can actually do its job.
+--
+-- getgenv lives in the executor's script environment, not _G, same as gethui below. Its absence
+-- means Studio or the test harness, where secure mode cannot work at all and where silencing the
+-- library's own console output would only make the demos harder to read.
+--
+--   AFKTY_SECURE = false  opt out, whatever the executor can do
+--   AFKTY_SECURE = true   opt in strictly, honoured even where icons cannot be cached: someone
+--                         who asked for it by name would rather have blank icons than leaked ids
+--   unset                 on, but only where the icon cache can actually be served
+--
+-- That last branch is the point. An uncached icon resolves to "" in secure mode, so defaulting it
+-- on unconditionally would blank every icon in the UI on an executor without getcustomasset --
+-- a far worse default than rendering asset ids. Degrading beats bricking when nobody asked.
 runtime.secureMode = (function()
-    -- getgenv lives in the executor's script environment, not _G, same as gethui below
     if typeof(getgenv) ~= "function" then
         return false
     end
-    local ok, val = pcall(function()
+    local ok, value = pcall(function()
         return getgenv().AFKTY_SECURE
     end)
-    return ok and val == true
+    if not ok or value == false then
+        return false
+    end
+    if value == true then
+        return true
+    end
+
+    -- these are the two the icon cache needs; imageCache.preload bails without them
+    local envOk, env = pcall(getfenv)
+    if not envOk or type(env) ~= "table" then
+        return false
+    end
+    return type(env.getcustomasset) == "function" and type(env.isfile) == "function"
 end)()
 
 runtime.coreGui = services.getService("CoreGui") :: CoreGui

@@ -1703,9 +1703,9 @@ in A.tags do C:_setShown(true,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enu
 if A.selectedTab==C then'selected'else'unselected',TweenInfo.new(0.4,Enum.EasingStyle.Quint,Enum.EasingDirection.Out))C:
 _spinGradients()task.wait(0.15)end end end)A:_revealElements(0.03,2)task.wait(1)A.animating=false A._revealing=false
 local B=e.localPlayer if B and A.settings.welcomeToast and c.isNewUser()then A:Toast{title=B.DisplayName,subtitle=aj.
-resolve'Signed in as',subtitleAbove=true,avatar=B.UserId,minWidth=220}end end function g.GetPath(A)return ah.getPath(A)
-end function g.Save(A,B)if B~=nil and(type(B)~='string'or B=='')then return false end return ah.save(A,B)end function g.
-Load(A,B)if B~=nil and(type(B)~='string'or B=='')then return false end return ah.load(A,B)end function g.
+resolve'Signed in as',subtitleAbove=true,avatar=B.UserId,minWidth=220}end end function g.GetPath(A)local B,C=ah.getPath(
+A)return C end function g.Save(A,B)if B~=nil and(type(B)~='string'or B=='')then return false end return ah.save(A,B)end
+function g.Load(A,B)if B~=nil and(type(B)~='string'or B=='')then return false end return ah.load(A,B)end function g.
 _applyNamedConfig(A,B)if not A:Load(B)then return false end A:Save()return true end function g.ListConfigs(A)return ah.
 list(A)end function g.DeleteConfig(A,B)return ah.delete(A,B)end function g.Get(A,B)local C=A.controls[B]return C and C.
 value end function g.Set(A,B,C)local D=A.controls[B]if not D then return false end D:Set(C)return true end function g.
@@ -2229,65 +2229,67 @@ runService:RunService,userInputService:UserInputService,guiService:GuiService,lo
 TweenService,httpService:HttpService,textService:TextService,replicatedStorage:ReplicatedStorage,localizationService:
 LocalizationService,guiContainer:Instance,guiContainerHidden:boolean,resolveProtect:()->((Instance)->())?,parentGui:(gui
 :Instance)->()}local af={}::RuntimeState af.secureMode=(function()if typeof(getgenv)~='function'then return false end
-local ag,ah=pcall(function()return getgenv().AFKTY_SECURE end)return ag and ah==true end)()af.coreGui=ae.getService
-'CoreGui'::CoreGui af.workspace=ae.getService'Workspace'::Workspace af.runService=ae.getService'RunService'::RunService
-af.userInputService=ae.getService'UserInputService'::UserInputService af.guiService=ae.getService'GuiService'::
-GuiService af.localPlayer=(ae.getService'Players'::Players).LocalPlayer af.tweenService=ae.getService'TweenService'::
-TweenService af.httpService=ae.getService'HttpService'::HttpService af.textService=ae.getService'TextService'::
-TextService af.replicatedStorage=ae.getService'ReplicatedStorage'::ReplicatedStorage af.localizationService=ae.
-getService'LocalizationService'::LocalizationService local ag=false af.guiContainer=(function():Instance if af.
-runService:IsStudio()then return(af.localPlayer::Player).PlayerGui end if typeof(gethui)=='function'then local ah,ai=
-pcall(gethui)if ah and ai then ag=true return ai end end local ah=af.coreGui:FindFirstChild'RobloxGui'if ah then return
-ah end return af.coreGui end)()af.guiContainerHidden=ag function af.resolveProtect():((Instance)->())?local ah,ai=pcall(
-getfenv)if not ah or type(ai)~='table'then return nil end local aj=ai.syn if type(aj)=='table'and type(aj.protect_gui)==
-'function'then return aj.protect_gui end if type(ai.protectgui)=='function'then return ai.protectgui end return nil end
-function af.parentGui(ah:Instance)if not af.guiContainerHidden then local ai=af.resolveProtect()if ai then pcall(ai,ah)
-end end ah.Parent=af.guiContainer end return af end)()end,[54]=function()local aa,ab,ac=a(54)local ad return(function(
-...)local ae={}function ae.getService(af)local ag=game:GetService(af)return if cloneref then cloneref(ag)else ag end
-return ae end)()end,[55]=function()local aa,ab,ac=a(55)local ad return(function(...)local ae=ac(ab.Parent.variables)
-local af,ag,ah:{[string]:number},ai,aj=ae.textService,{},{},0,1024 local function ak(b:GetTextBoundsParams):unknown
-local c,d=pcall(function()return af:GetTextBoundsAsync(b)end)return if c then d else nil end local function b(c:unknown,
-d:'X'|'Y'):number?if typeof(c)=='Vector2'then return if d=='X'then c.X else c.Y end if type(c)=='table'and type((c::any)
-[d])=='number'then return(c::any)[d]end return nil end function ag.textWidth(c:Font,d:number,e:any):number e=tostring(e)
-local f=tostring(c.Family)..'|'..tostring(c.Weight)..'|'..tostring(c.Style)..'|'..tostring(d)..'|'..e local g=ah[f]if g
-then return g end local h=Instance.new'GetTextBoundsParams'h.Text=e h.Font=c h.Size=d h.Width=math.huge local i=b(ak(h),
-'X')if not i then local j=utf8.len(e)or#e return math.ceil(d*0.55*j)end local j=math.ceil(i)if ai>=aj then ah={}ai=0 end
-ah[f]=j ai+=1 return j end function ag.textHeight(c:Font,d:number,e:any,f:number):number local g=Instance.new
-'GetTextBoundsParams'g.Text=tostring(e)g.Font=c g.Size=d g.Width=f local h=b(ak(g),'Y')return if h then math.ceil(h)else
-d end return ag end)()end,[56]=function()local aa,ab,ac=a(56)local ad return(function(...)local ae,af,ag,ah,ai,aj=ac(ab.
-Parent.runtime),ac(ab.Parent.constants),ac(ab.Parent.log),ac(ab.Parent.filesystemManager),ac(ab.Parent.assetResolver),
-ac(ab.Parent.fontManager)type RuntimeState=ae.RuntimeState type FileSystemManager=ah.FileSystemManager type
-AssetResolver=ai.AssetResolver type FontManager=aj.FontManager export type VariablesState=RuntimeState&{fallbackFont:
-Font,fileSystemManager:FileSystemManager,assetResolver:AssetResolver,fontManager:FontManager,setFallbackFont:(font:Enum.
-Font|Font)->(),brandFont:(weight:Enum.FontWeight?)->Font}local ak=table.clone(ae)::VariablesState ag.
-setSecureModeSource(function()return ak.secureMode end)ak.fallbackFont=Font.fromEnum(Enum.Font.BuilderSans)ak.
-fileSystemManager=ah.new()ak.assetResolver=ai.new(true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl)::AssetResolver ak.
-fontManager=aj.new(ak.fileSystemManager:getAssetsFolder'fonts',false,true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl,{
-saveToDisk=true,skipCache=false,fallbackFont=ak.fallbackFont})::FontManager function ak.setFallbackFont(b:Enum.Font|Font
-)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then ak.fallbackFont=b ak.fontManager.
-defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if ak.secureMode then return Font.
-new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},{{1,2,{'AFKTY'},{{28,1,{
-'utility'},{{36,2,{'flagNames'}},{33,2,{'enums'}},{56,2,{'variables'}},{40,2,{'imageCache'}},{35,2,{'filesystemManager'}
-},{44,2,{'network'}},{45,2,{'odometer'}},{32,2,{'constants'}},{55,2,{'textMetrics'}},{37,2,{'fontManager'}},{48,2,{
-'persistence'}},{29,2,{'HapticEngine'}},{53,2,{'runtime'}},{52,2,{'persistenceWrite'}},{50,2,{'persistencePaths'}},{41,2
-,{'locale'}},{34,2,{'filesystem'}},{47,2,{'path'}},{43,2,{'moveable'}},{51,2,{'persistenceSettings'}},{49,2,{
-'persistenceConfig'}},{30,2,{'assetResolver'}},{54,2,{'services'}},{38,2,{'functions'}},{46,2,{'ordering'}},{31,2,{
-'colors'}},{42,2,{'log'}},{39,2,{'image'}}}},{27,2,{'types'}},{25,1,{'themes'},{{26,2,{'default'}}}},{2,1,{'components'}
-,{{18,2,{'slider'}},{14,2,{'rail'}},{13,2,{'popup'}},{12,2,{'notification'}},{7,2,{'descriptor'}},{9,2,{'group'}},{4,2,{
-'button'}},{19,2,{'stat'}},{22,2,{'toast'}},{24,2,{'window'}},{15,2,{'resize'}},{23,2,{'toggle'}},{20,2,{'tab'}},{21,2,{
-'tag'}},{6,2,{'colorpicker'}},{10,2,{'input'}},{17,2,{'section'}},{8,2,{'dropdown'}},{5,2,{'chrome'}},{3,2,{'action'}},{
-16,2,{'search'}},{11,2,{'keybind'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine
-,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)
-return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then
-af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]=
-'ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function
-(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C
-={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F
-in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]
-for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end
-end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent
-end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,
-H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
+local ag,ah=pcall(function()return getgenv().AFKTY_SECURE end)if not ag or ah==false then return false end if ah==true
+then return true end local ai,aj=pcall(getfenv)if not ai or type(aj)~='table'then return false end return type(aj.
+getcustomasset)=='function'and type(aj.isfile)=='function'end)()af.coreGui=ae.getService'CoreGui'::CoreGui af.workspace=
+ae.getService'Workspace'::Workspace af.runService=ae.getService'RunService'::RunService af.userInputService=ae.
+getService'UserInputService'::UserInputService af.guiService=ae.getService'GuiService'::GuiService af.localPlayer=(ae.
+getService'Players'::Players).LocalPlayer af.tweenService=ae.getService'TweenService'::TweenService af.httpService=ae.
+getService'HttpService'::HttpService af.textService=ae.getService'TextService'::TextService af.replicatedStorage=ae.
+getService'ReplicatedStorage'::ReplicatedStorage af.localizationService=ae.getService'LocalizationService'::
+LocalizationService local ag=false af.guiContainer=(function():Instance if af.runService:IsStudio()then return(af.
+localPlayer::Player).PlayerGui end if typeof(gethui)=='function'then local ah,ai=pcall(gethui)if ah and ai then ag=true
+return ai end end local ah=af.coreGui:FindFirstChild'RobloxGui'if ah then return ah end return af.coreGui end)()af.
+guiContainerHidden=ag function af.resolveProtect():((Instance)->())?local ah,ai=pcall(getfenv)if not ah or type(ai)~=
+'table'then return nil end local aj=ai.syn if type(aj)=='table'and type(aj.protect_gui)=='function'then return aj.
+protect_gui end if type(ai.protectgui)=='function'then return ai.protectgui end return nil end function af.parentGui(ah:
+Instance)if not af.guiContainerHidden then local ai=af.resolveProtect()if ai then pcall(ai,ah)end end ah.Parent=af.
+guiContainer end return af end)()end,[54]=function()local aa,ab,ac=a(54)local ad return(function(...)local ae={}function
+ae.getService(af)local ag=game:GetService(af)return if cloneref then cloneref(ag)else ag end return ae end)()end,[55]=
+function()local aa,ab,ac=a(55)local ad return(function(...)local ae=ac(ab.Parent.variables)local af,ag,ah:{[string]:
+number},ai,aj=ae.textService,{},{},0,1024 local function ak(b:GetTextBoundsParams):unknown local c,d=pcall(function()
+return af:GetTextBoundsAsync(b)end)return if c then d else nil end local function b(c:unknown,d:'X'|'Y'):number?if
+typeof(c)=='Vector2'then return if d=='X'then c.X else c.Y end if type(c)=='table'and type((c::any)[d])=='number'then
+return(c::any)[d]end return nil end function ag.textWidth(c:Font,d:number,e:any):number e=tostring(e)local f=tostring(c.
+Family)..'|'..tostring(c.Weight)..'|'..tostring(c.Style)..'|'..tostring(d)..'|'..e local g=ah[f]if g then return g end
+local h=Instance.new'GetTextBoundsParams'h.Text=e h.Font=c h.Size=d h.Width=math.huge local i=b(ak(h),'X')if not i then
+local j=utf8.len(e)or#e return math.ceil(d*0.55*j)end local j=math.ceil(i)if ai>=aj then ah={}ai=0 end ah[f]=j ai+=1
+return j end function ag.textHeight(c:Font,d:number,e:any,f:number):number local g=Instance.new'GetTextBoundsParams'g.
+Text=tostring(e)g.Font=c g.Size=d g.Width=f local h=b(ak(g),'Y')return if h then math.ceil(h)else d end return ag end)()
+end,[56]=function()local aa,ab,ac=a(56)local ad return(function(...)local ae,af,ag,ah,ai,aj=ac(ab.Parent.runtime),ac(ab.
+Parent.constants),ac(ab.Parent.log),ac(ab.Parent.filesystemManager),ac(ab.Parent.assetResolver),ac(ab.Parent.fontManager
+)type RuntimeState=ae.RuntimeState type FileSystemManager=ah.FileSystemManager type AssetResolver=ai.AssetResolver type
+FontManager=aj.FontManager export type VariablesState=RuntimeState&{fallbackFont:Font,fileSystemManager:
+FileSystemManager,assetResolver:AssetResolver,fontManager:FontManager,setFallbackFont:(font:Enum.Font|Font)->(),
+brandFont:(weight:Enum.FontWeight?)->Font}local ak=table.clone(ae)::VariablesState ag.setSecureModeSource(function()
+return ak.secureMode end)ak.fallbackFont=Font.fromEnum(Enum.Font.BuilderSans)ak.fileSystemManager=ah.new()ak.
+assetResolver=ai.new(true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl)::AssetResolver ak.fontManager=aj.new(ak.
+fileSystemManager:getAssetsFolder'fonts',false,true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,
+skipCache=false,fallbackFont=ak.fallbackFont})::FontManager function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)==
+'EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then ak.fallbackFont=b ak.fontManager.defaultOptions.
+fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if ak.secureMode then return Font.new(ak.
+fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},{{1,2,{'AFKTY'},{{27,2,{'types'}},{25,
+1,{'themes'},{{26,2,{'default'}}}},{2,1,{'components'},{{24,2,{'window'}},{13,2,{'popup'}},{12,2,{'notification'}},{5,2,
+{'chrome'}},{19,2,{'stat'}},{16,2,{'search'}},{15,2,{'resize'}},{11,2,{'keybind'}},{9,2,{'group'}},{3,2,{'action'}},{6,2
+,{'colorpicker'}},{23,2,{'toggle'}},{22,2,{'toast'}},{21,2,{'tag'}},{14,2,{'rail'}},{20,2,{'tab'}},{18,2,{'slider'}},{4,
+2,{'button'}},{8,2,{'dropdown'}},{17,2,{'section'}},{7,2,{'descriptor'}},{10,2,{'input'}}}},{28,1,{'utility'},{{33,2,{
+'enums'}},{41,2,{'locale'}},{55,2,{'textMetrics'}},{37,2,{'fontManager'}},{39,2,{'image'}},{42,2,{'log'}},{56,2,{
+'variables'}},{36,2,{'flagNames'}},{38,2,{'functions'}},{44,2,{'network'}},{29,2,{'HapticEngine'}},{53,2,{'runtime'}},{
+43,2,{'moveable'}},{46,2,{'ordering'}},{40,2,{'imageCache'}},{45,2,{'odometer'}},{35,2,{'filesystemManager'}},{51,2,{
+'persistenceSettings'}},{30,2,{'assetResolver'}},{32,2,{'constants'}},{50,2,{'persistencePaths'}},{47,2,{'path'}},{31,2,
+{'colors'}},{34,2,{'filesystem'}},{49,2,{'persistenceConfig'}},{52,2,{'persistenceWrite'}},{54,2,{'services'}},{48,2,{
+'persistence'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine,script,type,require
+,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)return k end,b.wrap,ae
+.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then af=s end end local r=af
+and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]=
+'LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function(B)local C,D=B.Name,B.Parent
+while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)
+end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(
+C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C
+then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{
+'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent end end},WaitForChild={{
+'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,H=E[1],E[2],{}for I,J in
+ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
 "Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P=d(M),L[
 1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'and P)
 then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D(E,F,G

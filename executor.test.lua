@@ -13,23 +13,27 @@
 	  thing that has never actually been verified.
 
 	SECURE MODE
-	  Flip SECURE to true below. It must be set BEFORE the library loads - runtime.luau
-	  reads getgenv().AFKTY_SECURE once at module load, so setting it afterwards does
-	  nothing. In secure mode the library caches icons to disk instead of using asset ids,
-	  and downloads the brand font in the background. Expect a brief plain-font moment.
+	  The library defaults it ON in any executor that can serve the icon cache (getcustomasset
+	  plus isfile), so SECURE is true here to match. Set it false to opt out and compare.
+
+	  It must be set BEFORE the library loads either way - runtime.luau reads
+	  getgenv().AFKTY_SECURE once at module load, so setting it afterwards does nothing. In
+	  secure mode the library caches icons to disk instead of using asset ids, and downloads
+	  the brand font in the background. Expect a brief plain-font moment, and a quiet console:
+	  secure mode gags the library's own warn/print.
 ]]
 
-local SECURE = false -- <-- flip to true to test secure mode
+local SECURE = true -- <-- set false to compare against normal mode
 
-if SECURE then
-    -- guarded the same way runtime.luau checks it, so flipping this outside an executor
-    -- fails with a clear message instead of "attempt to call a nil value"
-    if typeof(getgenv) ~= "function" then
-        warn("[AFKTY TEST] no getgenv() here - secure mode needs a real executor")
-        return
-    end
-    getgenv().AFKTY_SECURE = true
+-- guarded the same way runtime.luau checks it, so running this outside an executor fails
+-- with a clear message instead of "attempt to call a nil value"
+if typeof(getgenv) ~= "function" then
+    warn("[AFKTY TEST] no getgenv() here - this script needs a real executor")
+    return
 end
+
+-- set explicitly either way rather than relying on the default, so the run is unambiguous
+getgenv().AFKTY_SECURE = SECURE
 
 local URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main/dist/Library.lua"
 

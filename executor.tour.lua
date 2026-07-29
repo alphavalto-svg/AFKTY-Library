@@ -13,30 +13,41 @@
 	     control that prints a [TOUR] line naming the method that ran.
 
 	HOW TO USE
-	  Run once with SECURE = false and click through. Then set SECURE = true and run again --
-	  the Checks tab reports different things in each mode, and both matter.
+	  Run it. SECURE is true by default, matching what a shipped hub now gets. Set it false and
+	  run again to compare -- the Checks tab reports different things in each mode.
 
 	  For the persistence round trip: change some flagged controls, hit "Save config", REJOIN
 	  the game, and run again. autoLoad should bring your values back.
 
 	SECURE MODE
-	  Must be set BEFORE the library loads. runtime.luau reads getgenv().AFKTY_SECURE once at
-	  module load, so setting it afterwards does nothing at all.
+	  The library defaults it ON in any executor that can serve the icon cache (getcustomasset
+	  plus isfile). Set getgenv().AFKTY_SECURE = false to opt out, or = true to force it even
+	  where caching is unavailable, which blanks uncached icons rather than leaking asset ids.
+
+	  It must be set BEFORE the library loads either way. runtime.luau reads it once at module
+	  load, so setting it afterwards does nothing at all.
+
+	  Expect a quieter console: secure mode gags the library's own warn/print. That is the
+	  point, but it does mean a misconfiguration says nothing. Run with SECURE = false if you
+	  are chasing something and want the library talking.
 
 	WHAT THIS SUPERSEDES
 	  executor.test.lua is the short smoke test -- secure mode and persistence only. This file
 	  is the exhaustive one. Either is fine; this one tells you more.
 ]]
 
-local SECURE = false -- <-- flip to true and re-run to exercise secure mode
+-- The library now defaults secure mode ON in any executor that can serve the icon cache, so
+-- leaving this true matches what a shipped hub actually gets. Set it false to compare.
+local SECURE = true
 
-if SECURE then
-    if typeof(getgenv) ~= "function" then
-        warn("[AFKTY TOUR] no getgenv() here - secure mode needs a real executor")
-        return
-    end
-    getgenv().AFKTY_SECURE = true
+if typeof(getgenv) ~= "function" then
+    warn("[AFKTY TOUR] no getgenv() here - this script needs a real executor")
+    return
 end
+
+-- Set explicitly either way rather than relying on the default, so the run is unambiguous:
+-- true is the strict opt-in, false is the opt-out.
+getgenv().AFKTY_SECURE = SECURE
 
 local URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main/dist/Library.lua"
 
