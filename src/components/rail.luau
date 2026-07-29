@@ -111,7 +111,10 @@ local function ensureRail(window)
         return window.rail
     end
 
-    local rail = {}
+    -- annotated open rather than left to inference: _lastCategory is only ever assigned from
+    -- inside the search and settings callbacks, and Luau seals the literal before it sees
+    -- them, so reading it back reported the key as missing.
+    local rail: { [string]: any } = {}
 
     rail.main = window:Create("Frame", {
         Name = "Rail",

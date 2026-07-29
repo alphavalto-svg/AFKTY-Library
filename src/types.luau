@@ -42,6 +42,39 @@ export type WindowProps = {
 export type TabProps = {
     name: string?,
     icon: (string | number)?,
+    -- Owning rail category. A tab is a subcategory of exactly one main category, so each
+    -- category carries its own tab strip. Omit it and the tab stays visible under every
+    -- category, which keeps CreateTab unchanged for hubs that never build a rail.
+    category: RailItem?,
+}
+
+-- Left rail ----------------------------------------------------------------
+-- An icon button in the rail's category stack. The icon is not optional: rail.new asserts
+-- on it, so a table without one throws rather than rendering blank.
+export type RailItemProps = {
+    icon: string | number,
+    name: string?, -- shown as the hover tooltip
+    callback: ((item: RailItem) -> ())?,
+    active: boolean?, -- start selected; the first category selects itself regardless
+    order: number?,
+}
+
+-- The player avatar chip, pinned to the bottom of the rail. The library draws the headshot
+-- and reports the click; what gets shown about the account is the caller's business.
+export type RailProfileProps = {
+    userId: number?, -- defaults to the local player
+    callback: ((profile: RailItem) -> ())?,
+}
+
+-- One handle covers both, since a profile chip is a rail item that draws an avatar.
+-- SetUserId is only meaningful on the chip.
+export type RailItem = {
+    active: boolean,
+    userId: number?, -- profile chips only
+    Select: (self: RailItem) -> (), -- take the selection and clear every sibling
+    SetActive: (self: RailItem, active: boolean) -> (), -- set the highlight without clearing siblings
+    SetUserId: (self: RailItem, userId: number) -> (),
+    Destroy: (self: RailItem) -> (),
 }
 
 export type TagProps = {
@@ -222,6 +255,9 @@ export type Slider = Moveable & {
 export type Dropdown = Moveable & {
     value: { string }, -- always stored pruned to the current options, even single-select
     Set: (self: Dropdown, value: string | { string }, skipCallback: boolean?) -> (),
+    Refresh: (self: Dropdown, options: { string }) -> (), -- replace the list; selections no longer in it are pruned
+    Add: (self: Dropdown, option: string) -> (),
+    Remove: (self: Dropdown, option: string) -> (),
 }
 
 export type Input = Moveable & {
@@ -277,6 +313,9 @@ export type Group = Moveable & {
 }
 
 export type Tab = {
+    Select: (self: Tab, noAnimation: boolean?) -> (),
+    Deselect: (self: Tab, noAnimation: boolean?) -> (),
+    Remove: (self: Tab) -> (), -- drops the tab, its page and its connections
     CreateButton: (self: Tab, props: ButtonProps) -> Button,
     CreateToggle: (self: Tab, props: ToggleProps) -> Toggle,
     CreateSwitch: (self: Tab, props: ToggleProps) -> Toggle,
@@ -294,6 +333,10 @@ export type Window = {
     unloaded: boolean, -- true once Unload has run; the handle is spent
     CreateTab: (self: Window, props: TabProps) -> Tab,
     CreateTag: (self: Window, props: TagProps) -> Tag,
+    -- The rail is built on the first of these calls and insets the window's content; a
+    -- window that never calls them keeps its original geometry.
+    CreateRailItem: (self: Window, props: RailItemProps) -> RailItem,
+    CreateRailProfile: (self: Window, props: RailProfileProps?) -> RailItem,
     Notify: (self: Window, props: NotifyProps) -> (),
     Toast: (self: Window, props: ToastProps) -> (),
     Popup: (self: Window, props: PopupProps) -> Popup,
@@ -310,6 +353,15 @@ export type Window = {
     Load: (self: Window, name: string?) -> boolean,
     ListConfigs: (self: Window) -> { string },
     DeleteConfig: (self: Window, name: string) -> boolean,
+    GetPath: (self: Window) -> string,
+    -- The library's own settings (theme, menu keybind, window size and position), kept in a
+    -- separate file from the caller's configs.
+    SaveSettings: (self: Window) -> boolean,
+    LoadSettings: (self: Window) -> boolean,
+    -- Reach any registered control by its flag. Get returns nil when nothing is registered;
+    -- Set routes through the control, so the UI updates and the callback fires.
+    Get: (self: Window, flag: string) -> any,
+    Set: (self: Window, flag: string, value: any) -> boolean,
     Unload: (self: Window) -> (),
 }
 

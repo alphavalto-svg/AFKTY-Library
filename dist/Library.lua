@@ -2,12 +2,13 @@ local a local aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,b,c,d,e,f,g,h,i,j={function()loca
 local f,g,h,i,j=d(c.utility.variables),d(c.utility.image),d(c.utility.locale),d(c.utility.constants),d(c.types)export
 type Theme=j.Theme export type Translator=j.Translator export type Translations=j.Translations export type
 WindowConfiguration=j.WindowConfiguration export type WindowProps=j.WindowProps export type TabProps=j.TabProps export
-type TagProps=j.TagProps export type SectionProps=j.SectionProps export type GroupProps=j.GroupProps export type
-ButtonProps=j.ButtonProps export type ToggleProps=j.ToggleProps export type SliderProps=j.SliderProps export type
-DropdownProps=j.DropdownProps export type InputProps=j.InputProps export type KeybindProps=j.KeybindProps export type
-ColorPickerProps=j.ColorPickerProps export type StatProps=j.StatProps export type NotifyProps=j.NotifyProps export type
-ToastProps=j.ToastProps export type PopupBox=j.PopupBox export type PopupOption=j.PopupOption export type PopupProps=j.
-PopupProps export type Moveable=j.Moveable export type Window=j.Window export type Tab=j.Tab export type Group=j.Group
+type RailItemProps=j.RailItemProps export type RailProfileProps=j.RailProfileProps export type TagProps=j.TagProps
+export type SectionProps=j.SectionProps export type GroupProps=j.GroupProps export type ButtonProps=j.ButtonProps export
+type ToggleProps=j.ToggleProps export type SliderProps=j.SliderProps export type DropdownProps=j.DropdownProps export
+type InputProps=j.InputProps export type KeybindProps=j.KeybindProps export type ColorPickerProps=j.ColorPickerProps
+export type StatProps=j.StatProps export type NotifyProps=j.NotifyProps export type ToastProps=j.ToastProps export type
+PopupBox=j.PopupBox export type PopupOption=j.PopupOption export type PopupProps=j.PopupProps export type Moveable=j.
+Moveable export type Window=j.Window export type Tab=j.Tab export type RailItem=j.RailItem export type Group=j.Group
 export type Button=j.Button export type Toggle=j.Toggle export type Slider=j.Slider export type Dropdown=j.Dropdown
 export type Input=j.Input export type Keybind=j.Keybind export type ColorPicker=j.ColorPicker export type Stat=j.Stat
 export type Section=j.Section export type Tag=j.Tag export type Popup=j.Popup export type AFKTY=j.AFKTY type
@@ -815,10 +816,10 @@ Scale,r.Y.Offset)end if o.searchPill then local q=o.searchPill.Size o.searchPill
 .Y.Scale,q.Y.Offset)local r=o.searchPill.Position o.searchPill.Position=UDim2.new(r.X.Scale,r.X.Offset+p,r.Y.Scale,r.Y.
 Offset)end if o.topContainer then local q=o.topContainer.Position o._titleBaseX=q.X.Offset o._titleExpanded=true o.
 topContainer.Position=UDim2.new(q.X.Scale,q.X.Offset+b,q.Y.Scale,q.Y.Offset)end end local function o(p)if p.rail then
-return p.rail end local q={}q.main=p:Create('Frame',{Name='Rail',Size=UDim2.new(0,b,1,0),Position=UDim2.fromScale(0,0),
-BackgroundTransparency=aj,BorderSizePixel=0,ZIndex=2,Parent=p.main},{BackgroundColor3='StatBackground'})p:Create(
-'UICorner',{CornerRadius=p.theme and p.theme.CornerRoundness or UDim.new(0,8),Parent=q.main})q.edgeCover=p:Create(
-'Frame',{Name='RailEdge',Size=UDim2.new(0,12,1,0),Position=UDim2.new(1,-12,0,0),BackgroundTransparency=aj,
+return p.rail end local q:{[string]:any}={}q.main=p:Create('Frame',{Name='Rail',Size=UDim2.new(0,b,1,0),Position=UDim2.
+fromScale(0,0),BackgroundTransparency=aj,BorderSizePixel=0,ZIndex=2,Parent=p.main},{BackgroundColor3='StatBackground'})p
+:Create('UICorner',{CornerRadius=p.theme and p.theme.CornerRoundness or UDim.new(0,8),Parent=q.main})q.edgeCover=p:
+Create('Frame',{Name='RailEdge',Size=UDim2.new(0,12,1,0),Position=UDim2.new(1,-12,0,0),BackgroundTransparency=aj,
 BorderSizePixel=0,ZIndex=2,Parent=q.main},{BackgroundColor3='StatBackground'})q.divider=p:Create('Frame',{Name=
 'RailDivider',Size=UDim2.new(0,1,1,0),Position=UDim2.new(1,-1,0,0),BackgroundTransparency=ak,BorderSizePixel=0,ZIndex=3,
 Parent=q.main},{BackgroundColor3='SurfaceStroke'})q.brand=p:Create('ImageLabel',{Name='RailBrand',Size=UDim2.fromOffset(
@@ -1797,53 +1798,61 @@ type Theme=string|{[string]:any}export type Translator=(source:string,localeId:s
 customFolder:string?}export type WindowProps={name:string?,subtitle:string?,theme:Theme?,icon:(string|number)?,showName:
 string?,showIcon:(string|number)?,configuration:WindowConfiguration?,resize:boolean?,fallbackFont:(Font|Enum.Font)?,
 locale:string?,translations:Translations?,translator:Translator?}export type TabProps={name:string?,icon:(string|number)
-?}export type TagProps={text:string?,title:string?,icon:(string|number)?,color:Color3?,order:number?}export type
-SectionProps={name:string?,icon:(string|number)?}export type GroupProps={direction:string?}export type ButtonProps={name
-:string?,description:string?,icon:(string|number)?,callback:(()->())?}export type ToggleProps={name:string?,description:
-string?,icon:(string|number)?,flag:string?,value:boolean?,forgetState:boolean?,callback:((value:boolean)->())?}export
-type SliderProps={name:string?,description:string?,icon:(string|number)?,flag:string?,range:{number}?,increment:number?,
-value:number?,suffix:string?,minimal:boolean?,forgetState:boolean?,callback:((value:number)->())?}export type
-DropdownProps={name:string?,description:string?,icon:(string|number)?,flag:string?,options:{string}?,value:(string|{
-string})?,multiSelect:boolean?,placeholder:string?,forgetState:boolean?,callback:((value:any)->())?}export type
-InputProps={name:string?,description:string?,icon:(string|number)?,flag:string?,value:string?,placeholder:string?,
-numeric:boolean?,clearOnFocus:boolean?,forgetState:boolean?,callback:((value:string)->())?}export type KeybindProps={
-name:string?,description:string?,icon:(string|number)?,flag:string?,value:(EnumItem|string)?,forgetState:boolean?,
-isMenuToggle:boolean?,hold:boolean?,holdThreshold:number?,callback:((value:EnumItem|boolean)->())?,onChanged:((key:
-EnumItem)->())?}export type ColorPickerProps={name:string?,description:string?,icon:(string|number)?,flag:string?,color:
-Color3?,alpha:number?,forgetState:boolean?,callback:((value:Color3,alpha:number)->())?}export type StatProps={name:
-string?,description:string?,icon:(string|number)?,prefix:string?,suffix:string?,value:number?,display:string?,compact:
-boolean?,changeMode:string?,changeBaseline:string?,numberEasing:boolean?}export type NotifyProps={title:string?,content:
-string?,icon:(string|number)?,duration:number?}export type ToastProps={title:string?,subtitle:string?,subtitleAbove:
-boolean?,icon:(string|number)?,avatar:number?,minWidth:number?,duration:number?,position:'Top'|'Bottom'?}export type
-PopupBox={title:string?,description:string?,icon:(string|number)?}export type PopupOption={text:string?,style:string?,
-callback:(()->())?}export type PopupProps={title:string?,subtitle:string?,icon:(string|number)?,content:string?,boxes:{
-PopupBox}?,options:{PopupOption}?,dismissable:boolean?}export type Moveable={MoveTo:(self:any,index:number)->(),
-MoveToTop:(self:any)->(),MoveToBottom:(self:any)->(),MoveUp:(self:any)->(),MoveDown:(self:any)->()}export type Button=
-Moveable&{}export type Toggle=Moveable&{value:boolean,Set:(self:Toggle,value:boolean,skipCallback:boolean?)->()}export
-type Slider=Moveable&{value:number,Set:(self:Slider,value:number,skipCallback:boolean?)->()}export type Dropdown=
-Moveable&{value:{string},Set:(self:Dropdown,value:string|{string},skipCallback:boolean?)->()}export type Input=Moveable&
-{value:string,Set:(self:Input,value:string,skipCallback:boolean?)->()}export type Keybind=Moveable&{value:EnumItem,Set:(
-self:Keybind,value:EnumItem|string,skipChanged:boolean?)->()}export type ColorPicker=Moveable&{value:Color3,alpha:number
-,Set:(self:ColorPicker,value:Color3|string,skipCallback:boolean?)->(),SetAlpha:(self:ColorPicker,alpha:number,
-skipCallback:boolean?)->()}export type Stat=Moveable&{value:number,Set:(self:Stat,value:number)->(),ResetBaseline:(self:
-Stat,value:number?)->()}export type Section=Moveable&{}export type Tag={Set:(self:Tag,props:TagProps)->(),SetColor:(self
-:Tag,color:Color3)->(),SetText:(self:Tag,text:string?)->(),SetIcon:(self:Tag,icon:(string|number)?)->(),Remove:(self:Tag
-)->()}export type Popup={Close:(self:Popup)->()}export type Group=Moveable&{CreateButton:(self:Group,props:ButtonProps
-)->Button,CreateToggle:(self:Group,props:ToggleProps)->Toggle,CreateSwitch:(self:Group,props:ToggleProps)->Toggle,
-CreateStat:(self:Group,props:StatProps)->Stat,CreateSlider:(self:Group,props:SliderProps)->Slider,CreateDropdown:(self:
-Group,props:DropdownProps)->Dropdown,CreateSection:(self:Group,props:SectionProps)->Section,CreateGroup:(self:Group,
-props:GroupProps?)->Group}export type Tab={CreateButton:(self:Tab,props:ButtonProps)->Button,CreateToggle:(self:Tab,
-props:ToggleProps)->Toggle,CreateSwitch:(self:Tab,props:ToggleProps)->Toggle,CreateSlider:(self:Tab,props:SliderProps)->
-Slider,CreateDropdown:(self:Tab,props:DropdownProps)->Dropdown,CreateInput:(self:Tab,props:InputProps)->Input,
-CreateKeybind:(self:Tab,props:KeybindProps)->Keybind,CreateColorPicker:(self:Tab,props:ColorPickerProps)->ColorPicker,
-CreateStat:(self:Tab,props:StatProps)->Stat,CreateSection:(self:Tab,props:SectionProps)->Section,CreateGroup:(self:Tab,
-props:GroupProps?)->Group}export type Window={unloaded:boolean,CreateTab:(self:Window,props:TabProps)->Tab,CreateTag:(
-self:Window,props:TagProps)->Tag,Notify:(self:Window,props:NotifyProps)->(),Toast:(self:Window,props:ToastProps)->(),
-Popup:(self:Window,props:PopupProps)->Popup,Show:(self:Window)->(),Hide:(self:Window)->(),ToggleHide:(self:Window)->(),
-ToggleMinimise:(self:Window)->(),Navigate:(self:Window,tab:string|Tab)->(),ChangeTheme:(self:Window,theme:Theme)->(),
-SetLocale:(self:Window,localeId:string)->(),SetTranslator:(self:Window,translator:Translator?)->(),RegisterTranslations:
-(self:Window,translations:Translations)->(),Save:(self:Window,name:string?)->boolean,Load:(self:Window,name:string?)->
-boolean,ListConfigs:(self:Window)->{string},DeleteConfig:(self:Window,name:string)->boolean,Unload:(self:Window)->()}
+?,category:RailItem?}export type RailItemProps={icon:string|number,name:string?,callback:((item:RailItem)->())?,active:
+boolean?,order:number?}export type RailProfileProps={userId:number?,callback:((profile:RailItem)->())?}export type
+RailItem={active:boolean,userId:number?,Select:(self:RailItem)->(),SetActive:(self:RailItem,active:boolean)->(),
+SetUserId:(self:RailItem,userId:number)->(),Destroy:(self:RailItem)->()}export type TagProps={text:string?,title:string?
+,icon:(string|number)?,color:Color3?,order:number?}export type SectionProps={name:string?,icon:(string|number)?}export
+type GroupProps={direction:string?}export type ButtonProps={name:string?,description:string?,icon:(string|number)?,
+callback:(()->())?}export type ToggleProps={name:string?,description:string?,icon:(string|number)?,flag:string?,value:
+boolean?,forgetState:boolean?,callback:((value:boolean)->())?}export type SliderProps={name:string?,description:string?,
+icon:(string|number)?,flag:string?,range:{number}?,increment:number?,value:number?,suffix:string?,minimal:boolean?,
+forgetState:boolean?,callback:((value:number)->())?}export type DropdownProps={name:string?,description:string?,icon:(
+string|number)?,flag:string?,options:{string}?,value:(string|{string})?,multiSelect:boolean?,placeholder:string?,
+forgetState:boolean?,callback:((value:any)->())?}export type InputProps={name:string?,description:string?,icon:(string|
+number)?,flag:string?,value:string?,placeholder:string?,numeric:boolean?,clearOnFocus:boolean?,forgetState:boolean?,
+callback:((value:string)->())?}export type KeybindProps={name:string?,description:string?,icon:(string|number)?,flag:
+string?,value:(EnumItem|string)?,forgetState:boolean?,isMenuToggle:boolean?,hold:boolean?,holdThreshold:number?,callback
+:((value:EnumItem|boolean)->())?,onChanged:((key:EnumItem)->())?}export type ColorPickerProps={name:string?,description:
+string?,icon:(string|number)?,flag:string?,color:Color3?,alpha:number?,forgetState:boolean?,callback:((value:Color3,
+alpha:number)->())?}export type StatProps={name:string?,description:string?,icon:(string|number)?,prefix:string?,suffix:
+string?,value:number?,display:string?,compact:boolean?,changeMode:string?,changeBaseline:string?,numberEasing:boolean?}
+export type NotifyProps={title:string?,content:string?,icon:(string|number)?,duration:number?}export type ToastProps={
+title:string?,subtitle:string?,subtitleAbove:boolean?,icon:(string|number)?,avatar:number?,minWidth:number?,duration:
+number?,position:'Top'|'Bottom'?}export type PopupBox={title:string?,description:string?,icon:(string|number)?}export
+type PopupOption={text:string?,style:string?,callback:(()->())?}export type PopupProps={title:string?,subtitle:string?,
+icon:(string|number)?,content:string?,boxes:{PopupBox}?,options:{PopupOption}?,dismissable:boolean?}export type Moveable
+={MoveTo:(self:any,index:number)->(),MoveToTop:(self:any)->(),MoveToBottom:(self:any)->(),MoveUp:(self:any)->(),MoveDown
+:(self:any)->()}export type Button=Moveable&{}export type Toggle=Moveable&{value:boolean,Set:(self:Toggle,value:boolean,
+skipCallback:boolean?)->()}export type Slider=Moveable&{value:number,Set:(self:Slider,value:number,skipCallback:boolean?
+)->()}export type Dropdown=Moveable&{value:{string},Set:(self:Dropdown,value:string|{string},skipCallback:boolean?)->(),
+Refresh:(self:Dropdown,options:{string})->(),Add:(self:Dropdown,option:string)->(),Remove:(self:Dropdown,option:string
+)->()}export type Input=Moveable&{value:string,Set:(self:Input,value:string,skipCallback:boolean?)->()}export type
+Keybind=Moveable&{value:EnumItem,Set:(self:Keybind,value:EnumItem|string,skipChanged:boolean?)->()}export type
+ColorPicker=Moveable&{value:Color3,alpha:number,Set:(self:ColorPicker,value:Color3|string,skipCallback:boolean?)->(),
+SetAlpha:(self:ColorPicker,alpha:number,skipCallback:boolean?)->()}export type Stat=Moveable&{value:number,Set:(self:
+Stat,value:number)->(),ResetBaseline:(self:Stat,value:number?)->()}export type Section=Moveable&{}export type Tag={Set:(
+self:Tag,props:TagProps)->(),SetColor:(self:Tag,color:Color3)->(),SetText:(self:Tag,text:string?)->(),SetIcon:(self:Tag,
+icon:(string|number)?)->(),Remove:(self:Tag)->()}export type Popup={Close:(self:Popup)->()}export type Group=Moveable&{
+CreateButton:(self:Group,props:ButtonProps)->Button,CreateToggle:(self:Group,props:ToggleProps)->Toggle,CreateSwitch:(
+self:Group,props:ToggleProps)->Toggle,CreateStat:(self:Group,props:StatProps)->Stat,CreateSlider:(self:Group,props:
+SliderProps)->Slider,CreateDropdown:(self:Group,props:DropdownProps)->Dropdown,CreateSection:(self:Group,props:
+SectionProps)->Section,CreateGroup:(self:Group,props:GroupProps?)->Group}export type Tab={Select:(self:Tab,noAnimation:
+boolean?)->(),Deselect:(self:Tab,noAnimation:boolean?)->(),Remove:(self:Tab)->(),CreateButton:(self:Tab,props:
+ButtonProps)->Button,CreateToggle:(self:Tab,props:ToggleProps)->Toggle,CreateSwitch:(self:Tab,props:ToggleProps)->Toggle
+,CreateSlider:(self:Tab,props:SliderProps)->Slider,CreateDropdown:(self:Tab,props:DropdownProps)->Dropdown,CreateInput:(
+self:Tab,props:InputProps)->Input,CreateKeybind:(self:Tab,props:KeybindProps)->Keybind,CreateColorPicker:(self:Tab,props
+:ColorPickerProps)->ColorPicker,CreateStat:(self:Tab,props:StatProps)->Stat,CreateSection:(self:Tab,props:SectionProps
+)->Section,CreateGroup:(self:Tab,props:GroupProps?)->Group}export type Window={unloaded:boolean,CreateTab:(self:Window,
+props:TabProps)->Tab,CreateTag:(self:Window,props:TagProps)->Tag,CreateRailItem:(self:Window,props:RailItemProps)->
+RailItem,CreateRailProfile:(self:Window,props:RailProfileProps?)->RailItem,Notify:(self:Window,props:NotifyProps)->(),
+Toast:(self:Window,props:ToastProps)->(),Popup:(self:Window,props:PopupProps)->Popup,Show:(self:Window)->(),Hide:(self:
+Window)->(),ToggleHide:(self:Window)->(),ToggleMinimise:(self:Window)->(),Navigate:(self:Window,tab:string|Tab)->(),
+ChangeTheme:(self:Window,theme:Theme)->(),SetLocale:(self:Window,localeId:string)->(),SetTranslator:(self:Window,
+translator:Translator?)->(),RegisterTranslations:(self:Window,translations:Translations)->(),Save:(self:Window,name:
+string?)->boolean,Load:(self:Window,name:string?)->boolean,ListConfigs:(self:Window)->{string},DeleteConfig:(self:Window
+,name:string)->boolean,GetPath:(self:Window)->string,SaveSettings:(self:Window)->boolean,LoadSettings:(self:Window)->
+boolean,Get:(self:Window,flag:string)->any,Set:(self:Window,flag:string,value:any)->boolean,Unload:(self:Window)->()}
 export type AFKTY={CreateWindow:(self:AFKTY,props:WindowProps)->Window}return{}end)()end,[29]=function()local aa,ab,ac=
 a(29)local ad return(function(...)local ae,af=ac(ab.Parent.variables),{}af.enabled=false type HapticTypes={click:Enum.
 HapticEffectType?,notify:Enum.HapticEffectType?}local ag:HapticTypes,ah,ai={},pcall(function()Instance.new'HapticEffect'
@@ -2244,19 +2253,19 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{2,1,{'components'},{{6,2,{'colorpicker'}},{18,2,{'slider'}},{7,2,{'descriptor'}},{14,2,{'rail'}},{3,2,
-{'action'}},{4,2,{'button'}},{17,2,{'section'}},{20,2,{'tab'}},{5,2,{'chrome'}},{23,2,{'toggle'}},{13,2,{'popup'}},{16,2
-,{'search'}},{19,2,{'stat'}},{24,2,{'window'}},{15,2,{'resize'}},{22,2,{'toast'}},{21,2,{'tag'}},{8,2,{'dropdown'}},{9,2
-,{'group'}},{11,2,{'keybind'}},{10,2,{'input'}},{12,2,{'notification'}}}},{27,2,{'types'}},{28,1,{'utility'},{{30,2,{
-'assetResolver'}},{43,2,{'moveable'}},{47,2,{'path'}},{31,2,{'colors'}},{40,2,{'imageCache'}},{36,2,{'flagNames'}},{42,2
-,{'log'}},{56,2,{'variables'}},{35,2,{'filesystemManager'}},{32,2,{'constants'}},{46,2,{'ordering'}},{29,2,{
-'HapticEngine'}},{55,2,{'textMetrics'}},{44,2,{'network'}},{51,2,{'persistenceSettings'}},{39,2,{'image'}},{45,2,{
-'odometer'}},{37,2,{'fontManager'}},{50,2,{'persistencePaths'}},{52,2,{'persistenceWrite'}},{53,2,{'runtime'}},{49,2,{
-'persistenceConfig'}},{54,2,{'services'}},{34,2,{'filesystem'}},{48,2,{'persistence'}},{41,2,{'locale'}},{33,2,{'enums'}
-},{38,2,{'functions'}}}},{25,1,{'themes'},{{26,2,{'default'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,
-next,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove
-,aj.freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,
-'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
+{{1,2,{'AFKTY'},{{25,1,{'themes'},{{26,2,{'default'}}}},{27,2,{'types'}},{28,1,{'utility'},{{42,2,{'log'}},{31,2,{
+'colors'}},{56,2,{'variables'}},{48,2,{'persistence'}},{38,2,{'functions'}},{52,2,{'persistenceWrite'}},{47,2,{'path'}},
+{53,2,{'runtime'}},{54,2,{'services'}},{29,2,{'HapticEngine'}},{35,2,{'filesystemManager'}},{37,2,{'fontManager'}},{49,2
+,{'persistenceConfig'}},{40,2,{'imageCache'}},{50,2,{'persistencePaths'}},{55,2,{'textMetrics'}},{30,2,{'assetResolver'}
+},{51,2,{'persistenceSettings'}},{46,2,{'ordering'}},{45,2,{'odometer'}},{44,2,{'network'}},{34,2,{'filesystem'}},{43,2,
+{'moveable'}},{41,2,{'locale'}},{36,2,{'flagNames'}},{39,2,{'image'}},{33,2,{'enums'}},{32,2,{'constants'}}}},{2,1,{
+'components'},{{6,2,{'colorpicker'}},{14,2,{'rail'}},{9,2,{'group'}},{5,2,{'chrome'}},{3,2,{'action'}},{12,2,{
+'notification'}},{8,2,{'dropdown'}},{15,2,{'resize'}},{10,2,{'input'}},{24,2,{'window'}},{20,2,{'tab'}},{7,2,{
+'descriptor'}},{13,2,{'popup'}},{21,2,{'tag'}},{23,2,{'toggle'}},{17,2,{'section'}},{19,2,{'stat'}},{22,2,{'toast'}},{18
+,2,{'slider'}},{11,2,{'keybind'}},{16,2,{'search'}},{4,2,{'button'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,
+error,next,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.
+remove,aj.freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e
+,'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
 end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={
 GetFullName={{},function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},
 GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}

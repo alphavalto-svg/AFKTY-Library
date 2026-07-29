@@ -19,6 +19,8 @@ export type WindowConfiguration = types.WindowConfiguration
 
 export type WindowProps = types.WindowProps
 export type TabProps = types.TabProps
+export type RailItemProps = types.RailItemProps
+export type RailProfileProps = types.RailProfileProps
 export type TagProps = types.TagProps
 export type SectionProps = types.SectionProps
 export type GroupProps = types.GroupProps
@@ -39,6 +41,7 @@ export type PopupProps = types.PopupProps
 export type Moveable = types.Moveable
 export type Window = types.Window
 export type Tab = types.Tab
+export type RailItem = types.RailItem
 export type Group = types.Group
 export type Button = types.Button
 export type Toggle = types.Toggle
