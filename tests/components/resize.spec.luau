@@ -225,6 +225,40 @@ return function()
                 expect(w.main.Size.Y.Offset).to.equal(66)
             end)
 
+            it("pulls the title in beside the emblem while collapsed", function()
+                local w = shown(makeWindow())
+                w:CreateRailItem({ icon = 85628806611332, name = "Home" })
+                local expanded = w.topContainer.Position.X.Offset
+
+                w:ToggleMinimise()
+
+                -- the rail is down, so the full rail-width inset would leave the title floating
+                -- in an empty gap - and at a 300px bar it lands under the action icons
+                expect(w.topContainer.Position.X.Offset < expanded).to.equal(true)
+                expect(w.topContainer.Position.X.Offset).to.equal(52)
+
+                w.animating = false
+                w:ToggleMinimise()
+                expect(w.topContainer.Position.X.Offset).to.equal(expanded)
+            end)
+
+            it("keeps the emblem on the bar, but not on the collapsed pill", function()
+                local w = shown(makeWindow())
+                w:CreateRailItem({ icon = 85628806611332, name = "Home" })
+
+                w:ToggleMinimise()
+                -- the bar still reads as the product, so the mark stays
+                expect(w.rail.brand.ImageTransparency).to.equal(0)
+
+                w.animating = false
+                w:ToggleMinimise()
+                w.animating = false
+                w:Hide()
+
+                -- the pill draws its own face, so the rail mark goes with the rest of the rail
+                expect(w.rail.brand.ImageTransparency).to.equal(1)
+            end)
+
             it("restores to the resized size, not the default", function()
                 local w = shown(makeWindow())
                 w:_applySize(700, 640)

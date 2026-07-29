@@ -1201,9 +1201,10 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
-        -- minimise shrinks main to just the topbar, so the rail has to come down with it
+        -- minimise shrinks main to just the topbar, so the rail has to come down with it - all
+        -- but the emblem, which stays so the collapsed bar still reads as the product
         if self.rail then
-            require(script.Parent.rail).setShown(self, false, fadeInfo)
+            require(script.Parent.rail).setShown(self, false, fadeInfo, true)
         end
         if self.resize then
             self.resize:SetShown(false)

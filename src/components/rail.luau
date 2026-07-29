@@ -40,6 +40,31 @@ local BRAND_BLOCK = BRAND_SIZE + 8 + 1 + ITEM_PADDING
 local hoverInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local activeInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
+-- Where the title sits while the window is collapsed to the minimise bar. Only the emblem is
+-- left of it there, so the full rail-width inset would strand it in an empty gap - and on a
+-- 300px bar it lands under the action icons.
+local COLLAPSED_TITLE_X = RAIL_WIDTH / 2 + BRAND_SIZE / 2 + 10
+
+-- Slide the title between its expanded home (inset past the whole rail) and its collapsed one
+-- (tucked just clear of the emblem). Idempotent, so repeated show/hide can't walk it away.
+local function setTitleInset(window, expanded, info)
+    if not window.topContainer or window._titleExpanded == nil then
+        return -- no rail was ever built, so the title was never inset
+    end
+    if window._titleExpanded == expanded then
+        return
+    end
+    window._titleExpanded = expanded
+
+    local position = window.topContainer.Position
+    local target = if expanded then window._titleBaseX + RAIL_WIDTH else COLLAPSED_TITLE_X
+    variables.tweenService
+        :Create(window.topContainer, info, {
+            Position = UDim2.new(position.X.Scale, target, position.Y.Scale, position.Y.Offset),
+        })
+        :Play()
+end
+
 -- Shift a container right by the rail width, keeping whatever anchoring it already had.
 -- Called once, when the rail first appears.
 local function insetForRail(window)
@@ -73,6 +98,9 @@ local function insetForRail(window)
     -- the title block is left-anchored, so it only needs the full offset, not half
     if window.topContainer then
         local pos = window.topContainer.Position
+        -- remembered so collapse can put it back without re-deriving where it started
+        window._titleBaseX = pos.X.Offset
+        window._titleExpanded = true
         window.topContainer.Position = UDim2.new(pos.X.Scale, pos.X.Offset + RAIL_WIDTH, pos.Y.Scale, pos.Y.Offset)
     end
 end
@@ -571,13 +599,31 @@ end
 -- The rail is parented to `main`, and Hide collapses main into a small pill rather than
 -- hiding it -- so without this the rail keeps drawing over the collapsed "Tap to show" face.
 -- Visible is only dropped once the fade has finished, so the collapse still animates.
-function Rail.setShown(window, shown, info)
+--- `keepBrand` collapses everything except the emblem, for minimise: the bar still has to read
+--- as the product. Hide passes it up, because the collapsed pill draws its own face.
+function Rail.setShown(window, shown, info, keepBrand)
     local rail = window.rail
     if not rail or not rail.main then
         return
     end
 
     info = info or TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    local brandStays = not shown and keepBrand == true
+    setTitleInset(window, shown, info)
+
+    if rail.brand then
+        local brandFade = if shown or brandStays then 0 else 1
+        variables.tweenService:Create(rail.brand, info, { ImageTransparency = brandFade }):Play()
+    end
+
+    -- the divider under the emblem separates it from the category stack, and there is no stack
+    -- while collapsed - so it goes even when the mark stays
+    if rail.brandDivider then
+        variables.tweenService
+            :Create(rail.brandDivider, info, { BackgroundTransparency = if shown then 0.8 else 1 })
+            :Play()
+    end
 
     -- token so a quick hide/show doesn't let a stale delayed Visible=false land on a rail
     -- that has since been brought back
@@ -602,7 +648,9 @@ function Rail.setShown(window, shown, info)
         item:_setShown(shown, info)
     end
 
-    if not shown then
+    -- keeping the emblem means the rail frame has to stay up to carry it; everything else on it
+    -- has already been faded out above
+    if not shown and not brandStays then
         task.delay(info.Time, function()
             if rail._shownToken ~= token or not rail.main or not rail.main.Parent then
                 return
