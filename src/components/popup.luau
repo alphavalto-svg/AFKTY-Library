@@ -134,9 +134,9 @@ function Popup:_build()
         Enabled = true,
         DisplayOrder = constants.displayOrder.popup,
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
-
-        Parent = variables.guiContainer,
+        -- parented via parentGui, same as the window: protect first, then parent
     })
+    variables.parentGui(self.screenGui)
 
     -- Dim backdrop, also the click-to-dismiss surface and the input sink for everything below.
     -- A plain Active frame, not a button - it only needs to swallow input, so a frame is the

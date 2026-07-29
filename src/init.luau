@@ -72,7 +72,8 @@ local function createBanner()
     ui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.None
     ui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
     ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ui.Parent = variables.guiContainer
+    -- the banner is on screen before the window exists, so it needs the same protection
+    variables.parentGui(ui)
 
     local banner = Instance.new("ImageLabel")
     banner.Name = "Banner"
@@ -96,8 +97,18 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
     local banner = createBanner()
 
     local window: types.Window? -- forward declared so the settle callback below can reach it
-    -- preload can settle before the window is built; hold the notify until it is
-    local queuedNotify: (() -> ())?
+    -- these can fire before the window is built; hold them until it is. a list rather than one
+    -- slot, because caching and icon-blocking can both have something to say and the second
+    -- would otherwise silently replace the first
+    local queuedNotifies: { () -> () } = {}
+
+    local function notifyWhenReady(notify: () -> ())
+        if window then
+            notify()
+        else
+            table.insert(queuedNotifies, notify)
+        end
+    end
 
     if variables.secureMode then
         -- cache icons locally so secureMode doesnt leak asset ids. non-blocking: whats already on
@@ -118,12 +129,44 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
                         else locale.resolve("Some assets couldn't be cached and won't appear."),
                 })
             end
-            if window then
-                notify()
-            else
-                queuedNotify = notify
-            end
+            notifyWhenReady(notify)
         end)
+
+        -- Secure mode blanks any icon it cannot serve from disk, which is every asset id a hub
+        -- passes in beyond the library's own built-ins. That used to happen silently, so the
+        -- only symptom was missing artwork with nothing saying why.
+        --
+        -- Only a non-built-in id is worth reporting. The library's own chrome resolves blank too
+        -- until its download lands, so reporting those would fire on every cold start and tell
+        -- the dev to cache icons that are about to appear on their own.
+        local builtInIcon = {}
+        for _, id in constants.icons do
+            builtInIcon[id] = true
+        end
+
+        local warnedBlocked = false
+        image.onBlock = function(value)
+            if warnedBlocked then
+                return
+            end
+            local id = if type(value) == "number" then value else tonumber(string.match(tostring(value), "%d+"))
+            if id and builtInIcon[id] then
+                return -- ours, and it appears as soon as the cache warms
+            end
+            warnedBlocked = true
+            notifyWhenReady(function()
+                if not window or window.unloaded then
+                    return
+                end
+                window:Notify({
+                    title = locale.resolve("Secure mode"),
+                    content = locale.resolve(
+                        "Custom icons are hidden in secure mode. Cache them yourself and pass the result."
+                    ),
+                    duration = 8,
+                })
+            end)
+        end
     end
 
     -- the banner is only torn down once the window is up, so a throw in here (bad props) would
@@ -139,10 +182,10 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
     local built = result :: types.Window
     window = built
 
-    if queuedNotify then
-        task.spawn(queuedNotify)
-        queuedNotify = nil
+    for _, notify in queuedNotifies do
+        task.spawn(notify)
     end
+    table.clear(queuedNotifies)
 
     if variables.secureMode then
         -- secure mode renders the fallback up front (variables.brandFont), then downloads the real

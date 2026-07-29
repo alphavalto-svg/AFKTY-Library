@@ -15,90 +15,95 @@ export type Section=j.Section export type Tag=j.Tag export type Popup=j.Popup ex
 WindowModule={new:(j.WindowProps)->j.Window}local k={}::AFKTY local function l()local m=Instance.new'ScreenGui'm.Name=f.
 httpService:GenerateGUID(false)m.ClipToDeviceSafeArea=false m.DisplayOrder=i.displayOrder.banner m.IgnoreGuiInset=true m
 .ResetOnSpawn=false m.Enabled=true m.SafeAreaCompatibility=Enum.SafeAreaCompatibility.None m.ScreenInsets=Enum.
-ScreenInsets.DeviceSafeInsets m.ZIndexBehavior=Enum.ZIndexBehavior.Sibling m.Parent=f.guiContainer local n=Instance.new
+ScreenInsets.DeviceSafeInsets m.ZIndexBehavior=Enum.ZIndexBehavior.Sibling f.parentGui(m)local n=Instance.new
 'ImageLabel'n.Name='Banner'n.AnchorPoint=Vector2.new(0.5,0.5)n.BackgroundColor3=Color3.fromRGB(255,255,255)n.
 BackgroundTransparency=1 n.BorderColor3=Color3.fromRGB(0,0,0)n.BorderSizePixel=0 n.Image=g.resolve(i.icons.banner)n.
 Position=UDim2.fromScale(0.5,0.5)n.ScaleType=Enum.ScaleType.Fit n.Size=UDim2.fromOffset(140,140)n.Parent=m return m end
-function k.CreateWindow(m,n:j.WindowProps):j.Window local o,p:j.Window?,q:(()->())?=(l())if f.secureMode then g.preload(
-function(r)if r<=0 then return end local function s()if not p or p.unloaded then return end p:Notify{title=h.resolve
-'Secure mode',content=if r==1 then h.resolve"An asset couldn't be cached and won't appear."else h.resolve
-"Some assets couldn't be cached and won't appear."}end if p then s()else q=s end end)end local r,s=pcall(function()
-return(d(c.components.window)::WindowModule).new(n)end)if not r then o:Destroy()error(s,0)end local t=s::j.Window p=t if
-q then task.spawn(q)q=nil end if f.secureMode then task.spawn(function()local u,v=f.fontManager:loadFont(i.fontAsset,
-Enum.FontWeight.Medium),f.fontManager:loadFont(i.fontAsset,Enum.FontWeight.SemiBold)if not t.unloaded and u and v and u
-~=f.fallbackFont and v~=f.fallbackFont then t:ChangeTheme{Font=u,TitleFont=v}end end)end task.spawn(function()task.wait(
-0.5)o:Destroy()task.wait(0.5)if not t.unloaded then t:Show()end end)return t end return k end)()end,[3]=function()local
-b,c,d=a(3)local e return(function(...)local f={}f.__index=f f.__type='Action'local g=c.Parent.Parent.utility local h,i,j
-=d(g.variables),d(g.log),d(g.HapticEngine)function f.new(k,l)l=if typeof(l)=='table'then l else{}local m=setmetatable({
-window=assert(k,'Missing argument #1 (Window expected)'),name=l.name or l.Name or'Action',icon=assert(l.icon or l.Icon,
-'Missing argument (Icon expected)'),callback=assert(l.callback or l.Callback,'Missing argument (Function expected)'),
-linkedTab=l.linkedTab or l.LinkedTab},f)m.action=m.window:Create('Frame',{Name=m.name,BorderSizePixel=0,LayoutOrder=-(l.
-order or 0),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Parent=m.window.actionContainer})m.iconLabel=m.window:
-Create('ImageLabel',{Image=m.icon,Size=UDim2.fromOffset(20,20),BorderSizePixel=0,AnchorPoint=Vector2.new(0.5,0.5),
-Position=UDim2.fromScale(0.5,0.5),BackgroundTransparency=1,ImageTransparency=1,Parent=m.action},{ImageColor3=
-'ActionColor'})m.interact=m.window:Create('TextButton',{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),
-BorderSizePixel=0,Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),TextTransparency=1,Parent=m.action}
-)local function n()if not m.window:_settled()then return end if m.linkedTab and m.window.selectedTab==m.linkedTab then
-return end if m.isLit and m:isLit()then return end h.tweenService:Create(m.iconLabel,TweenInfo.new(0.25,Enum.EasingStyle
-.Quint,Enum.EasingDirection.Out),{ImageTransparency=0.6}):Play()end m.window:Connect(m.interact.MouseButton1Click,
-function()j.click()task.spawn(function()local o,p=pcall(m.callback)if not o then i.warn(`AFKTY encountered an error, with the callback for a {
-m.__type} component named '{m.name}':`)i.print(p)end n()end)end)m.window:Connect(m.interact.MouseEnter,function()if not
-m.window:_interactive()then return end h.tweenService:Create(m.iconLabel,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.
-EasingDirection.Out),{ImageTransparency=0.2}):Play()end)m.window:Connect(m.interact.MouseLeave,n)return m end return f
-end)()end,[4]=function()local b,c,d=a(4)local e return(function(...)local f={}f.__index=f f.__type='Button'local g=c.
-Parent.Parent.utility local h,i,j,k,l=d(g.variables),d(g.functions),d(g.moveable),d(g.locale),d(g.HapticEngine)function
-f.new(m,n)n=if typeof(n)=='table'then n else{}local o=setmetatable({tab=assert(m,'Missing argument #1 (Tab expected)'),
-window=m.window,name=n.name or n.Name or'Button',icon=n.icon or n.Icon,description=n.description or n.Description,
-compact=m.compact or false,callback=n.callback or n.Callback or function()end},f)if o.compact then o:_buildCompact()else
-o:_buildFull()end if o.description and not o.compact then o.descriptor=d(c.Parent.descriptor).new(o.tab,{description=o.
-description})end return o end function f._runCallback(m)m.window:_runGuarded(m,m.callback)end function f._buildFull(m)m.
-main=m.window:Create('Frame',{Size=UDim2.new(1,-20,0,43),BorderSizePixel=0,Name=m.name,BackgroundColor3=Color3.fromRGB(
-255,255,255),BackgroundTransparency=1,Parent=m.tab.tabPage},{BackgroundTransparency='ElementTransparency'})m.stroke=m.
-window:StyleElementBody(m.main)m.hoverOverlay=m.window:CreateHoverOverlay(m.main)m.container=m.window:Create('Frame',{
-BorderSizePixel=0,Parent=m.main,Size=UDim2.new(0,170,0,16),Position=UDim2.new(0,20,0.5,0),AnchorPoint=Vector2.new(0,0.5)
-,BackgroundTransparency=1})m.containerLayout=m.window:Create('UIListLayout',{Padding=UDim.new(0,5),FillDirection=Enum.
-FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.
-Left,Parent=m.container})if m.icon then m.iconLabel=m.window:Create('ImageLabel',{Image=m.icon,Size=UDim2.fromOffset(16,
-16),BorderSizePixel=0,BackgroundTransparency=1,ImageTransparency=1,Parent=m.container},{ImageColor3='ContentColor'})end
-m.title=m.window:Create('TextLabel',{Text=k.t(m.name),Size=UDim2.fromOffset(250,16),BorderSizePixel=0,
-BackgroundTransparency=1,TextSize=16,AutomaticSize=Enum.AutomaticSize.X,TextXAlignment=Enum.TextXAlignment.Left,
-TextWrapped=true,LayoutOrder=1,TextTransparency=1,Parent=m.container},{TextColor3='ContentColor',FontFace='Font'})m.
-interact=m.window:Create('TextButton',{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),BorderSizePixel=0,Position=
-UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),TextTransparency=1,Parent=m.main})m.window:_wireElementHover(m
-)m.window:ConnectFor(m,m.interact.MouseButton1Click,function()l.click()h.tweenService:Create(m.stroke,TweenInfo.new(0.25
-,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=1}):Play()h.tweenService:Create(m.main,TweenInfo.new(0.6
-,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(1,-26,0,43)}):Play()m:_runCallback()task.wait(
-0.11)h.tweenService:Create(m.main,TweenInfo.new(0.25,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.
-new(1,-20,0,43)}):Play()h.tweenService:Create(m.stroke,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.
-Out),{Transparency=m.window.theme.ElementStrokeRestTransparency}):Play()end)end function f._buildCompact(m)local n=m.
-window m.main,m.stroke,m.interact=n:_buildCompactRow(m.tab,m.name)m.hoverOverlay=m.interact n:Create('UIPadding',{
-PaddingLeft=UDim.new(0,16),PaddingRight=UDim.new(0,16),Parent=m.interact})n:Create('UIListLayout',{FillDirection=Enum.
-FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.
-Center,Padding=UDim.new(0,6),Parent=m.interact})if m.icon then m.iconLabel=n:Create('ImageLabel',{Image=m.icon,Size=
-UDim2.fromOffset(16,16),BorderSizePixel=0,BackgroundTransparency=1,LayoutOrder=0,ImageTransparency=1,Parent=m.interact},
-{ImageColor3='ContentColor'})end m.title=n:Create('TextLabel',{Text=k.t(m.name),Size=UDim2.fromOffset(0,16),
-AutomaticSize=Enum.AutomaticSize.X,BorderSizePixel=0,BackgroundTransparency=1,TextSize=16,TextXAlignment=Enum.
-TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd,LayoutOrder=1,TextTransparency=1,Parent=m.interact},{TextColor3
-='ContentColor',FontFace='Font'})n:Create('UIFlexItem',{FlexMode=Enum.UIFlexMode.Shrink,Parent=m.title})m.window:
-_wireElementHover(m)m.window:ConnectFor(m,m.interact.MouseButton1Click,function()l.click()h.tweenService:Create(m.stroke
-,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=1}):Play()m:_runCallback()task.wait(
-0.11)h.tweenService:Create(m.stroke,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=m.
-window.theme.ElementStrokeRestTransparency}):Play()end)end function f._setShown(m,n,o)if n then m.window:_revealCommon(m
-,o)else m.window:_hideCommon(m,o)end end function f._minWidth(m)local n=32 if m.icon then n+=22 end n+=i.textWidth(m.
-window.theme.Font,16,m.name)return n end j(f)return f end)()end,[5]=function()local b,c,d=a(5)local e return(function(
-...)local f=c.Parent.Parent.utility local g,h,i,j,k,l=d(f.variables),d(f.filesystem),d(f.constants),d(f.locale),d(f.
-HapticEngine),{}function l.buildCollapsedFace(m)m.collapsedIcon=m:Create('ImageLabel',{Name='CollapsedIcon',AnchorPoint=
-Vector2.new(0,0.5),Position=UDim2.new(0,16,0.5,0),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Image=m.showIcon
-,ZIndex=i.zIndex.restoreContent,ImageTransparency=1,Parent=m.main},{ImageColor3='TitlingColor'})m:Create('UICorner',{
-Parent=m.collapsedIcon},{CornerRadius='PillCornerRadius'})local n=m:Create('Frame',{Name='CollapsedText',AnchorPoint=
-Vector2.new(0,0.5),Position=UDim2.new(0,50,0.5,0),Size=UDim2.new(1,-60,0,32),BackgroundTransparency=1,ZIndex=i.zIndex.
-restoreContent,Parent=m.main})m:Create('UIListLayout',{Padding=UDim.new(0,1),VerticalAlignment=Enum.VerticalAlignment.
-Center,SortOrder=Enum.SortOrder.LayoutOrder,Parent=n})m.collapsedTitle=m:Create('TextLabel',{Name='Title',Text=m.
-showName,Size=UDim2.new(1,0,0,16),BackgroundTransparency=1,FontFace=g.brandFont(Enum.FontWeight.Medium),RichText=true,
-TextSize=16,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=1,ZIndex=i.zIndex.restoreContent,
-TextTransparency=1,Parent=n},{TextColor3='TitlingColor'})m.collapsedSubtitle=m:Create('TextLabel',{Name='Subtitle',Text=
-j.t'Tap to show',Size=UDim2.new(1,0,0,14),BackgroundTransparency=1,FontFace=g.brandFont(Enum.FontWeight.Medium),TextSize
-=14,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=2,ZIndex=i.zIndex.restoreContent,TextTransparency=1,Parent=n},{
+function k.CreateWindow(m,n:j.WindowProps):j.Window local o,p:{()->()},q:j.Window?=l(),{}local function r(s:()->())if q
+then s()else table.insert(p,s)end end if f.secureMode then g.preload(function(s)if s<=0 then return end local function t
+()if not q or q.unloaded then return end q:Notify{title=h.resolve'Secure mode',content=if s==1 then h.resolve
+"An asset couldn't be cached and won't appear."else h.resolve"Some assets couldn't be cached and won't appear."}end r(t)
+end)local s={}for t,u in i.icons do s[u]=true end local t=false g.onBlock=function(u)if t then return end local v=if
+type(u)=='number'then u else tonumber(string.match(tostring(u),'%d+'))if v and s[v]then return end t=true r(function()if
+not q or q.unloaded then return end q:Notify{title=h.resolve'Secure mode',content=h.resolve
+[[Custom icons are hidden in secure mode. Cache them yourself and pass the result.]],duration=8}end)end end local s,t=
+pcall(function()return(d(c.components.window)::WindowModule).new(n)end)if not s then o:Destroy()error(t,0)end local u=t
+::j.Window q=u for v,w in p do task.spawn(w)end table.clear(p)if f.secureMode then task.spawn(function()local v,w=f.
+fontManager:loadFont(i.fontAsset,Enum.FontWeight.Medium),f.fontManager:loadFont(i.fontAsset,Enum.FontWeight.SemiBold)if
+not u.unloaded and v and w and v~=f.fallbackFont and w~=f.fallbackFont then u:ChangeTheme{Font=v,TitleFont=w}end end)end
+task.spawn(function()task.wait(0.5)o:Destroy()task.wait(0.5)if not u.unloaded then u:Show()end end)return u end return k
+end)()end,[3]=function()local b,c,d=a(3)local e return(function(...)local f={}f.__index=f f.__type='Action'local g=c.
+Parent.Parent.utility local h,i,j=d(g.variables),d(g.log),d(g.HapticEngine)function f.new(k,l)l=if typeof(l)=='table'
+then l else{}local m=setmetatable({window=assert(k,'Missing argument #1 (Window expected)'),name=l.name or l.Name or
+'Action',icon=assert(l.icon or l.Icon,'Missing argument (Icon expected)'),callback=assert(l.callback or l.Callback,
+'Missing argument (Function expected)'),linkedTab=l.linkedTab or l.LinkedTab},f)m.action=m.window:Create('Frame',{Name=m
+.name,BorderSizePixel=0,LayoutOrder=-(l.order or 0),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Parent=m.
+window.actionContainer})m.iconLabel=m.window:Create('ImageLabel',{Image=m.icon,Size=UDim2.fromOffset(20,20),
+BorderSizePixel=0,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),BackgroundTransparency=1,
+ImageTransparency=1,Parent=m.action},{ImageColor3='ActionColor'})m.interact=m.window:Create('TextButton',{
+BackgroundTransparency=1,Size=UDim2.fromScale(1,1),BorderSizePixel=0,Position=UDim2.fromScale(0.5,0.5),AnchorPoint=
+Vector2.new(0.5,0.5),TextTransparency=1,Parent=m.action})local function n()if not m.window:_settled()then return end if
+m.linkedTab and m.window.selectedTab==m.linkedTab then return end if m.isLit and m:isLit()then return end h.tweenService
+:Create(m.iconLabel,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{ImageTransparency=0.6}):Play()
+end m.window:Connect(m.interact.MouseButton1Click,function()j.click()task.spawn(function()local o,p=pcall(m.callback)if
+not o then i.warn(`AFKTY encountered an error, with the callback for a {m.__type} component named '{m.name}':`)i.print(p
+)end n()end)end)m.window:Connect(m.interact.MouseEnter,function()if not m.window:_interactive()then return end h.
+tweenService:Create(m.iconLabel,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{ImageTransparency=
+0.2}):Play()end)m.window:Connect(m.interact.MouseLeave,n)return m end return f end)()end,[4]=function()local b,c,d=a(4)
+local e return(function(...)local f={}f.__index=f f.__type='Button'local g=c.Parent.Parent.utility local h,i,j,k,l=d(g.
+variables),d(g.functions),d(g.moveable),d(g.locale),d(g.HapticEngine)function f.new(m,n)n=if typeof(n)=='table'then n
+else{}local o=setmetatable({tab=assert(m,'Missing argument #1 (Tab expected)'),window=m.window,name=n.name or n.Name or
+'Button',icon=n.icon or n.Icon,description=n.description or n.Description,compact=m.compact or false,callback=n.callback
+or n.Callback or function()end},f)if o.compact then o:_buildCompact()else o:_buildFull()end if o.description and not o.
+compact then o.descriptor=d(c.Parent.descriptor).new(o.tab,{description=o.description})end return o end function f.
+_runCallback(m)m.window:_runGuarded(m,m.callback)end function f._buildFull(m)m.main=m.window:Create('Frame',{Size=UDim2.
+new(1,-20,0,43),BorderSizePixel=0,Name=m.name,BackgroundColor3=Color3.fromRGB(255,255,255),BackgroundTransparency=1,
+Parent=m.tab.tabPage},{BackgroundTransparency='ElementTransparency'})m.stroke=m.window:StyleElementBody(m.main)m.
+hoverOverlay=m.window:CreateHoverOverlay(m.main)m.container=m.window:Create('Frame',{BorderSizePixel=0,Parent=m.main,
+Size=UDim2.new(0,170,0,16),Position=UDim2.new(0,20,0.5,0),AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1})m.
+containerLayout=m.window:Create('UIListLayout',{Padding=UDim.new(0,5),FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Left,Parent=m.container})if
+m.icon then m.iconLabel=m.window:Create('ImageLabel',{Image=m.icon,Size=UDim2.fromOffset(16,16),BorderSizePixel=0,
+BackgroundTransparency=1,ImageTransparency=1,Parent=m.container},{ImageColor3='ContentColor'})end m.title=m.window:
+Create('TextLabel',{Text=k.t(m.name),Size=UDim2.fromOffset(250,16),BorderSizePixel=0,BackgroundTransparency=1,TextSize=
+16,AutomaticSize=Enum.AutomaticSize.X,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,LayoutOrder=1,
+TextTransparency=1,Parent=m.container},{TextColor3='ContentColor',FontFace='Font'})m.interact=m.window:Create(
+'TextButton',{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),BorderSizePixel=0,Position=UDim2.fromScale(0.5,0.5),
+AnchorPoint=Vector2.new(0.5,0.5),TextTransparency=1,Parent=m.main})m.window:_wireElementHover(m)m.window:ConnectFor(m,m.
+interact.MouseButton1Click,function()l.click()h.tweenService:Create(m.stroke,TweenInfo.new(0.25,Enum.EasingStyle.Quint,
+Enum.EasingDirection.Out),{Transparency=1}):Play()h.tweenService:Create(m.main,TweenInfo.new(0.6,Enum.EasingStyle.
+Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(1,-26,0,43)}):Play()m:_runCallback()task.wait(0.11)h.tweenService:
+Create(m.main,TweenInfo.new(0.25,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(1,-20,0,43)}):
+Play()h.tweenService:Create(m.stroke,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=m
+.window.theme.ElementStrokeRestTransparency}):Play()end)end function f._buildCompact(m)local n=m.window m.main,m.stroke,
+m.interact=n:_buildCompactRow(m.tab,m.name)m.hoverOverlay=m.interact n:Create('UIPadding',{PaddingLeft=UDim.new(0,16),
+PaddingRight=UDim.new(0,16),Parent=m.interact})n:Create('UIListLayout',{FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Center,Padding=UDim.new(0,6
+),Parent=m.interact})if m.icon then m.iconLabel=n:Create('ImageLabel',{Image=m.icon,Size=UDim2.fromOffset(16,16),
+BorderSizePixel=0,BackgroundTransparency=1,LayoutOrder=0,ImageTransparency=1,Parent=m.interact},{ImageColor3=
+'ContentColor'})end m.title=n:Create('TextLabel',{Text=k.t(m.name),Size=UDim2.fromOffset(0,16),AutomaticSize=Enum.
+AutomaticSize.X,BorderSizePixel=0,BackgroundTransparency=1,TextSize=16,TextXAlignment=Enum.TextXAlignment.Left,
+TextTruncate=Enum.TextTruncate.AtEnd,LayoutOrder=1,TextTransparency=1,Parent=m.interact},{TextColor3='ContentColor',
+FontFace='Font'})n:Create('UIFlexItem',{FlexMode=Enum.UIFlexMode.Shrink,Parent=m.title})m.window:_wireElementHover(m)m.
+window:ConnectFor(m,m.interact.MouseButton1Click,function()l.click()h.tweenService:Create(m.stroke,TweenInfo.new(0.25,
+Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=1}):Play()m:_runCallback()task.wait(0.11)h.tweenService:
+Create(m.stroke,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Transparency=m.window.theme.
+ElementStrokeRestTransparency}):Play()end)end function f._setShown(m,n,o)if n then m.window:_revealCommon(m,o)else m.
+window:_hideCommon(m,o)end end function f._minWidth(m)local n=32 if m.icon then n+=22 end n+=i.textWidth(m.window.theme.
+Font,16,m.name)return n end j(f)return f end)()end,[5]=function()local b,c,d=a(5)local e return(function(...)local f=c.
+Parent.Parent.utility local g,h,i,j,k,l=d(f.variables),d(f.filesystem),d(f.constants),d(f.locale),d(f.HapticEngine),{}
+function l.buildCollapsedFace(m)m.collapsedIcon=m:Create('ImageLabel',{Name='CollapsedIcon',AnchorPoint=Vector2.new(0,
+0.5),Position=UDim2.new(0,16,0.5,0),Size=UDim2.fromOffset(24,24),BackgroundTransparency=1,Image=m.showIcon,ZIndex=i.
+zIndex.restoreContent,ImageTransparency=1,Parent=m.main},{ImageColor3='TitlingColor'})m:Create('UICorner',{Parent=m.
+collapsedIcon},{CornerRadius='PillCornerRadius'})local n=m:Create('Frame',{Name='CollapsedText',AnchorPoint=Vector2.new(
+0,0.5),Position=UDim2.new(0,50,0.5,0),Size=UDim2.new(1,-60,0,32),BackgroundTransparency=1,ZIndex=i.zIndex.restoreContent
+,Parent=m.main})m:Create('UIListLayout',{Padding=UDim.new(0,1),VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder
+=Enum.SortOrder.LayoutOrder,Parent=n})m.collapsedTitle=m:Create('TextLabel',{Name='Title',Text=m.showName,Size=UDim2.
+new(1,0,0,16),BackgroundTransparency=1,FontFace=g.brandFont(Enum.FontWeight.Medium),RichText=true,TextSize=16,
+TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=1,ZIndex=i.zIndex.restoreContent,TextTransparency=1
+,Parent=n},{TextColor3='TitlingColor'})m.collapsedSubtitle=m:Create('TextLabel',{Name='Subtitle',Text=j.t'Tap to show',
+Size=UDim2.new(1,0,0,14),BackgroundTransparency=1,FontFace=g.brandFont(Enum.FontWeight.Medium),TextSize=14,
+TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=2,ZIndex=i.zIndex.restoreContent,TextTransparency=1,Parent=n},{
 TextColor3='TitlingColor'})m.collapsedInteract=m:Create('TextButton',{Name='CollapsedInteract',BackgroundTransparency=1,
 Size=UDim2.fromScale(1,1),Text='',TextTransparency=1,Visible=false,ZIndex=i.zIndex.restoreInteract,Parent=m.main})m:
 Connect(m.collapsedInteract.MouseButton1Click,function()k.click()m:ToggleHide()end)end function l.isNewUser()local m=g.
@@ -705,7 +710,7 @@ options==0 then W.options={{text='Okay'}}end W:_build()table.insert(S,W)task.spa
 function f._fade(U,V,W,X)table.insert(U._reveal,{instance=V,prop=W,to=X})return V end function f._build(U)local V,W=U.
 window,U.icon~=nil and U.icon~=0 and U.icon~=''U.screenGui=V:Create('ScreenGui',{Name=h.httpService:GenerateGUID(false),
 IgnoreGuiInset=true,ResetOnSpawn=false,Enabled=true,DisplayOrder=j.displayOrder.popup,ZIndexBehavior=Enum.ZIndexBehavior
-.Global,Parent=h.guiContainer})U.backdrop=V:Create('Frame',{Name='Backdrop',BackgroundColor3=Color3.fromRGB(0,0,0),
+.Global})h.parentGui(U.screenGui)U.backdrop=V:Create('Frame',{Name='Backdrop',BackgroundColor3=Color3.fromRGB(0,0,0),
 BorderSizePixel=0,Size=UDim2.fromScale(1,1),Active=true,BackgroundTransparency=1,Parent=U.screenGui})U:_fade(U.backdrop,
 'BackgroundTransparency',R)U.card=V:Create('Frame',{Name='Card',BackgroundColor3=Color3.fromRGB(255,255,255),AnchorPoint
 =Vector2.new(0.5,0.5),Position=UDim2.new(0.5,0,0.5,14),Size=UDim2.fromOffset(r,0),AutomaticSize=Enum.AutomaticSize.Y,
@@ -1464,169 +1469,170 @@ F.value end,__newindex=function(D,E,F)local G=C.controls[E]if not G then ak.warn
 "' to set")return end G:Set(F)end,__iter=function()local D return function()local E D,E=next(C.controls,D)if D then
 return D,E.value end return nil end end})C.screenGui=C:Create('ScreenGui',{Name=e.httpService:GenerateGUID(false),
 IgnoreGuiInset=true,ResetOnSpawn=false,Enabled=true,DisplayOrder=ai.displayOrder.window,ZIndexBehavior=Enum.
-ZIndexBehavior.Global,Parent=e.guiContainer})C.main=C:Create('Frame',{BackgroundColor3=Color3.fromRGB(255,255,255),Name=
-C.name,ZIndex=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.new(0.5,0,0.5,0),Size=UDim2.fromOffset((C.size.X.Offset-
-50),0),BackgroundTransparency=1,Visible=false,Parent=C.screenGui})C.windowCorner=C:Create('UICorner',{Parent=C.main},{
-CornerRadius='CornerRoundness'})C.windowStroke=C:Create('UIStroke',{Transparency=1,Parent=C.main},{Color='SurfaceStroke'
-})C.windowGradient=C:Create('UIGradient',{Rotation=270,Offset=Vector2.new(0,-0.1),Parent=C.main},{Color={'WindowColor',
-ag.toColorSequence}})C.bottomFade=C:Create('Frame',{BackgroundColor3=Color3.fromRGB(255,255,255),BorderSizePixel=0,
-AnchorPoint=Vector2.new(0,1),Position=UDim2.fromScale(0,1),Size=UDim2.new(1,0,-9.3E-2,100),ZIndex=ai.zIndex.bottomFade,
-BackgroundTransparency=1,Parent=C.main})C:Create('UICorner',{Parent=C.bottomFade},{CornerRadius='CornerRoundness'})C.
-bottomFadeGradient=C:Create('UIGradient',{Rotation=270,Offset=Vector2.new(0,0.2),Transparency=NumberSequence.new{
-NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.4414,0),NumberSequenceKeypoint.new(0.7007,0.631),
-NumberSequenceKeypoint.new(1,1)},Parent=C.bottomFade},{Color={'WindowColor',function(D)return ColorSequence.new(ag.
-toColorSequence(D).Keypoints[1].Value)end}})C.topbar=C:Create('Frame',{BackgroundTransparency=1,Size=UDim2.new(1,0,0,66)
-,Active=true,Parent=C.main})C.topContainer=C:Create('Frame',{Size=UDim2.new(0,300,0,24),Position=UDim2.new(0,25,0.5,0),
-AutomaticSize=Enum.AutomaticSize.Y,AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Parent=C.topbar})C.
-topContainerLayout=C:Create('UIListLayout',{Padding=UDim.new(0,8),FillDirection=Enum.FillDirection.Horizontal,
+ZIndexBehavior.Global})e.parentGui(C.screenGui)C.main=C:Create('Frame',{BackgroundColor3=Color3.fromRGB(255,255,255),
+Name=C.name,ZIndex=1,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.new(0.5,0,0.5,0),Size=UDim2.fromOffset((C.size.X.
+Offset-50),0),BackgroundTransparency=1,Visible=false,Parent=C.screenGui})C.windowCorner=C:Create('UICorner',{Parent=C.
+main},{CornerRadius='CornerRoundness'})C.windowStroke=C:Create('UIStroke',{Transparency=1,Parent=C.main},{Color=
+'SurfaceStroke'})C.windowGradient=C:Create('UIGradient',{Rotation=270,Offset=Vector2.new(0,-0.1),Parent=C.main},{Color={
+'WindowColor',ag.toColorSequence}})C.bottomFade=C:Create('Frame',{BackgroundColor3=Color3.fromRGB(255,255,255),
+BorderSizePixel=0,AnchorPoint=Vector2.new(0,1),Position=UDim2.fromScale(0,1),Size=UDim2.new(1,0,-9.3E-2,100),ZIndex=ai.
+zIndex.bottomFade,BackgroundTransparency=1,Parent=C.main})C:Create('UICorner',{Parent=C.bottomFade},{CornerRadius=
+'CornerRoundness'})C.bottomFadeGradient=C:Create('UIGradient',{Rotation=270,Offset=Vector2.new(0,0.2),Transparency=
+NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(0.4414,0),NumberSequenceKeypoint.new(
+0.7007,0.631),NumberSequenceKeypoint.new(1,1)},Parent=C.bottomFade},{Color={'WindowColor',function(D)return
+ColorSequence.new(ag.toColorSequence(D).Keypoints[1].Value)end}})C.topbar=C:Create('Frame',{BackgroundTransparency=1,
+Size=UDim2.new(1,0,0,66),Active=true,Parent=C.main})C.topContainer=C:Create('Frame',{Size=UDim2.new(0,300,0,24),Position
+=UDim2.new(0,25,0.5,0),AutomaticSize=Enum.AutomaticSize.Y,AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,Parent
+=C.topbar})C.topContainerLayout=C:Create('UIListLayout',{Padding=UDim.new(0,8),FillDirection=Enum.FillDirection.
+Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Left,SortOrder=
+Enum.SortOrder.LayoutOrder,Parent=C.topContainer})C.titleContainer=C:Create('Frame',{Size=UDim2.fromOffset(50,24),
+Position=UDim2.new(0,25,0.5,0),AutomaticSize=Enum.AutomaticSize.XY,AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency
+=1,LayoutOrder=1,Parent=C.topContainer})C.titleContainerLayout=C:Create('UIListLayout',{Padding=UDim.new(0,3),
+FillDirection=Enum.FillDirection.Vertical,VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.
+LayoutOrder,Parent=C.titleContainer})if C.name then C.title=C:Create('TextLabel',{Text=aj.t(C.name),FontFace=e.
+brandFont(Enum.FontWeight.Medium),Size=UDim2.fromOffset(50,20),AutomaticSize=Enum.AutomaticSize.X,BackgroundTransparency
+=1,TextSize=20,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,TextTransparency=1,Parent=C.titleContainer},{
+FontFace='Font',TextColor3='TitlingColor'})end if C.icon then C.topbarIcon=C:Create('ImageLabel',{Image=C.icon,
+BackgroundTransparency=1,Size=UDim2.fromOffset(32,32),ImageTransparency=1,Parent=C.topContainer},{ImageColor3=
+'TitlingColor'})end if C.subheading then C.subtitle=C:Create('TextLabel',{Text=aj.t(C.subheading),Size=UDim2.fromOffset(
+50,12),AutomaticSize=Enum.AutomaticSize.X,BackgroundTransparency=1,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,
+TextWrapped=true,TextTransparency=1,Parent=C.titleContainer},{TextColor3='TitlingColor',FontFace='Font'})end C.
+tagContainer=C:Create('Frame',{AnchorPoint=Vector2.new(0,0.5),Position=UDim2.new(0,25,0.5,0),Size=UDim2.fromOffset(50,24
+),AutomaticSize=Enum.AutomaticSize.XY,BackgroundTransparency=1,LayoutOrder=2,Visible=false,Parent=C.topContainer})C.
+tagContainerLayout=C:Create('UIListLayout',{Padding=UDim.new(0,5),FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Parent=C.tagContainer})C.
+windowShadow=C:CreateGlow(C.main,'ShadowColor',20,1)C.windowGlow=C:CreateGlow(C.main,'AccentStroke',48,1)C.elements=C:
+Create('Frame',{Size=UDim2.new(1,0,1,-106),Position=UDim2.fromScale(0.5,1),AnchorPoint=Vector2.new(0.5,1),
+BackgroundTransparency=1,ClipsDescendants=true,Parent=C.main})C.elementsLayout=C:Create('UIPageLayout',{Padding=UDim.
+new(0,0),FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment
+=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,ScrollWheelInputEnabled=false,GamepadInputEnabled=
+false,TouchInputEnabled=false,EasingStyle=Enum.EasingStyle.Exponential,TweenTime=0.4,Parent=C.elements})C.tabList=C:
+Create('ScrollingFrame',{Name='Tabs',Active=true,Size=UDim2.new(1,0,0,38),Position=UDim2.new(0.5,0,0,65),AnchorPoint=
+Vector2.new(0.5,0),BackgroundTransparency=1,AutomaticCanvasSize=Enum.AutomaticSize.X,CanvasSize=UDim2.new(0,0,0,0),
+ScrollBarThickness=0,ScrollBarImageTransparency=1,ScrollingDirection=Enum.ScrollingDirection.X,Parent=C.main})C.
+tabListLayout=C:Create('UIListLayout',{Padding=UDim.new(0,7),FillDirection=Enum.FillDirection.Horizontal,
 VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Left,SortOrder=Enum.
-SortOrder.LayoutOrder,Parent=C.topContainer})C.titleContainer=C:Create('Frame',{Size=UDim2.fromOffset(50,24),Position=
-UDim2.new(0,25,0.5,0),AutomaticSize=Enum.AutomaticSize.XY,AnchorPoint=Vector2.new(0,0.5),BackgroundTransparency=1,
-LayoutOrder=1,Parent=C.topContainer})C.titleContainerLayout=C:Create('UIListLayout',{Padding=UDim.new(0,3),FillDirection
-=Enum.FillDirection.Vertical,VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Parent
-=C.titleContainer})if C.name then C.title=C:Create('TextLabel',{Text=aj.t(C.name),FontFace=e.brandFont(Enum.FontWeight.
-Medium),Size=UDim2.fromOffset(50,20),AutomaticSize=Enum.AutomaticSize.X,BackgroundTransparency=1,TextSize=20,
-TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,TextTransparency=1,Parent=C.titleContainer},{FontFace='Font',
-TextColor3='TitlingColor'})end if C.icon then C.topbarIcon=C:Create('ImageLabel',{Image=C.icon,BackgroundTransparency=1,
-Size=UDim2.fromOffset(32,32),ImageTransparency=1,Parent=C.topContainer},{ImageColor3='TitlingColor'})end if C.subheading
-then C.subtitle=C:Create('TextLabel',{Text=aj.t(C.subheading),Size=UDim2.fromOffset(50,12),AutomaticSize=Enum.
-AutomaticSize.X,BackgroundTransparency=1,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,
-TextTransparency=1,Parent=C.titleContainer},{TextColor3='TitlingColor',FontFace='Font'})end C.tagContainer=C:Create(
-'Frame',{AnchorPoint=Vector2.new(0,0.5),Position=UDim2.new(0,25,0.5,0),Size=UDim2.fromOffset(50,24),AutomaticSize=Enum.
-AutomaticSize.XY,BackgroundTransparency=1,LayoutOrder=2,Visible=false,Parent=C.topContainer})C.tagContainerLayout=C:
-Create('UIListLayout',{Padding=UDim.new(0,5),FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.
-VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Parent=C.tagContainer})C.windowShadow=C:CreateGlow(C.main,
-'ShadowColor',20,1)C.windowGlow=C:CreateGlow(C.main,'AccentStroke',48,1)C.elements=C:Create('Frame',{Size=UDim2.new(1,0,
-1,-106),Position=UDim2.fromScale(0.5,1),AnchorPoint=Vector2.new(0.5,1),BackgroundTransparency=1,ClipsDescendants=true,
-Parent=C.main})C.elementsLayout=C:Create('UIPageLayout',{Padding=UDim.new(0,0),FillDirection=Enum.FillDirection.
-Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder
-=Enum.SortOrder.LayoutOrder,ScrollWheelInputEnabled=false,GamepadInputEnabled=false,TouchInputEnabled=false,EasingStyle=
-Enum.EasingStyle.Exponential,TweenTime=0.4,Parent=C.elements})C.tabList=C:Create('ScrollingFrame',{Name='Tabs',Active=
-true,Size=UDim2.new(1,0,0,38),Position=UDim2.new(0.5,0,0,65),AnchorPoint=Vector2.new(0.5,0),BackgroundTransparency=1,
-AutomaticCanvasSize=Enum.AutomaticSize.X,CanvasSize=UDim2.new(0,0,0,0),ScrollBarThickness=0,ScrollBarImageTransparency=1
-,ScrollingDirection=Enum.ScrollingDirection.X,Parent=C.main})C.tabListLayout=C:Create('UIListLayout',{Padding=UDim.new(0
-,7),FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum
-.HorizontalAlignment.Left,SortOrder=Enum.SortOrder.LayoutOrder,Parent=C.tabList})C:Create('UIPadding',{PaddingLeft=UDim.
-new(0,22),PaddingRight=UDim.new(0,10),Parent=C.tabList})C.actionContainer=C:Create('Frame',{AnchorPoint=Vector2.new(1,
-0.5),AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.fromOffset(0,24),Position=UDim2.new(1,-20,0.5,0),
-BackgroundTransparency=1,Parent=C.topbar})C.actionsListLayout=C:Create('UIListLayout',{Padding=UDim.new(0,5),
-FillDirection=Enum.FillDirection.Horizontal,VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.
-HorizontalAlignment.Right,SortOrder=Enum.SortOrder.LayoutOrder,Parent=C.actionContainer})C.rfSettings=C:CreateTab{name=
-'AFKTY Settings',customOrder=1000,neglectSelector=true,forgetState=true}ac(ab.Parent.action).new(C,{name='Close',icon=ai
-.icons.close,order=1,callback=function()C:ToggleHide()end})C.minimiseAction=ac(ab.Parent.action).new(C,{name='Minimise',
-icon=ai.icons.minimise,order=2,callback=function()C:ToggleMinimise()end})C.settingsAction=ac(ab.Parent.action).new(C,{
-name='Settings',icon=ai.icons.settings,order=3,linkedTab=C.rfSettings,callback=function()C.rfSettings:Select()end})d.
-build(C)C.unloaded=false C.minimised=false C.hidden=true C.animating=false C._revealing=false C.hasShownOnce=false C.
-_resizing=false C.settings={toggleKeybind=Enum.KeyCode.K,mouseOverride=true,keepOnScreen=true,welcomeToast=true,haptics=
-false}C:LoadSettings()local D=C.settings.windowWidth~=nil and C.settings.windowHeight~=nil if D then C:_applySize(C.
-settings.windowWidth,C.settings.windowHeight)end local E=A.resize~=false and A.Resize~=false if E then C.resize=ac(ab.
-Parent.resize).new(C)end b.setContainer(C.screenGui)b.setEnabled(C.settings.haptics)c.buildCollapsedFace(C)C:
-_bindKeybind()C:_bindMouseOverride()C:_bindTopbarDrag()C:_buildSettingsUI()C:_syncLiveAnimation()return C end function g
-._syncLiveAnimation(A)if not A.theme.LiveAnimation then A._liveAnimating=false return end if A._liveAnimating then
-return end A._liveAnimating=true A._liveGeneration=(A._liveGeneration or 0)+1 local B=A._liveGeneration task.spawn(
-function()local C,D=true,TweenInfo.new(10,Enum.EasingStyle.Quint,Enum.EasingDirection.Out)while A._liveGeneration==B and
-A._liveAnimating and not A.unloaded do local E=e.tweenService:Create(A.windowGradient,D,{Offset=Vector2.new(if C then
-0.4 else-0.2,0),Rotation=(if C then 220 else 280)})A._liveTween=E E:Play()E.Completed:Wait()C=not C end if A.
-_liveGeneration==B then A._liveAnimating=false A._liveTween=nil end end)end function g.ChangeTheme(A,B)local C=if
-typeof(B)=='table'then B else z(B)for D,E in C do A.theme[D]=u(D,E)end if typeof(B)=='table'then x(A.theme,C)end for D,E
-in A.themeProperties do for F,G in E do local H=if typeof(G)=='table'then G[2](A.theme[G[1] ])else A.theme[G]if typeof(H
-)=='Color3'or typeof(H)=='number'then e.tweenService:Create(D,TweenInfo.new(0.5,Enum.EasingStyle.Quint,Enum.
-EasingDirection.Out),{[F]=H}):Play()else D[F]=H end end end if A.hidden then A._themeRefreshPending=true else A:
-_refreshElementThemes()end A:_syncLiveAnimation()end function g._refreshElementThemes(A)for B,C in A.tabs do for D,E in
-C.elements do if E._refreshTheme then E:_refreshTheme()end end end end function g.CreateTab(A,B)local C=ac(ab.Parent.tab
-).new(A,B)table.insert(A.tabs,C)if C.railCategory and C.topbarItem and not C.railCategory.active then C.topbarItem.
-Visible=false end if not C.neglectSelector then local D=true for E,F in A.tabs do if F~=C and not F.neglectSelector then
-D=false break end end if D then C:Select(true)end if not A.hidden and not A.minimised then C.topbarItem.Visible=true C:
-_applyVisual(if A.selectedTab==C then'selected'else'unselected',TweenInfo.new(0.4,Enum.EasingStyle.Quint,Enum.
-EasingDirection.Out))end end return C end function g.CreateTag(A,B)local C=ac(ab.Parent.tag).new(A,B)table.insert(A.tags
-,C)return C end function g.CreateRailItem(A,B)local C=ac(ab.Parent.rail).new(A,B)table.insert(A.railItems,C)return C end
-function g.CreateRailProfile(A,B)local C=ac(ab.Parent.rail).profile(A,B)A.railProfile=C table.insert(A.railItems,C)
-return C end function g._registerControl(A,B)if not B.flag or B.flag==''or B.forgetState then return end local C=B.flag
-if A.controls[C]then local D=2 while A.controls[C..D]do D+=1 end C=C..D ak.warn("AFKTY: duplicate config flag '"..B.flag
-.."', saving this one as '"..C.."'. Set a unique flag to keep it stable across sessions.")end B.flag=C A.controls[C]=B
-return C end function g._restoreLate(A,B)if not A._loadedConfig or not B.flag or B.forgetState then return end local C=A
-._loading A._loading=true ah.applyTo(B,A._loadedConfig[B.flag])A._loading=C end function g._persist(A,B)if B.flag and
-not B.forgetState and A.configuration.autoSave and not A._loading then task.spawn(A.Save,A)end end function g.
-_unregisterControl(A,B)if B.flag and A.controls[B.flag]==B then A.controls[B.flag]=nil end end function g._keybindUsing(
-A,B,C)if typeof(B)~='EnumItem'or B==Enum.KeyCode.Unknown then return nil end for D,E in A.tabs do for F,G in E.elements
-do if G~=C and G.__type=='Keybind'and G.value==B then return G end end end return nil end function g.Notify(A,B)if A.
-unloaded then return end if not A.notifications then A.notifications=A:Create('Frame',{Name='Notifications',Size=UDim2.
-new(0,300,0,800),Position=UDim2.new(1,-20,1,-20),AnchorPoint=Vector2.new(1,1),BackgroundTransparency=1,Parent=A.
-screenGui})A:Create('UIListLayout',{FillDirection=Enum.FillDirection.Vertical,VerticalAlignment=Enum.VerticalAlignment.
-Bottom,HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,0),
-Parent=A.notifications})end return ac(ab.Parent.notification).new(A,B)end function g.Toast(A,B)if A.unloaded then return
-end local C=(B or{}).position or'Top'local D=C=='Top'local E=if D then'_toastsTop'else'_toastsBottom'local F=A[E]if not
-F then F=A:Create('Frame',{Name='Toasts',Size=UDim2.new(0,n,1,-24),Position=if D then UDim2.new(0.5,0,0,12)else UDim2.
-new(0.5,0,1,-12),AnchorPoint=if D then Vector2.new(0.5,0)else Vector2.new(0.5,1),BackgroundTransparency=1,ZIndex=ai.
-zIndex.toast,Parent=A.screenGui})A:Create('UIListLayout',{FillDirection=Enum.FillDirection.Vertical,VerticalAlignment=if
-D then Enum.VerticalAlignment.Top else Enum.VerticalAlignment.Bottom,HorizontalAlignment=Enum.HorizontalAlignment.Center
-,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,0),Parent=F})A[E]=F end return ac(ab.Parent.toast).new(A,B,F)
-end function g.Popup(A,B)if A.unloaded then return end return ac(ab.Parent.popup).new(A,B)end function g.Hide(A)if A.
-animating or A.hidden then return end if A._searching then d.close(A,{showTabs=false,jumpTo=A.selectedTab and A.
-selectedTab.tabPage})end A.animating=true A._revealing=true A.hidden=true A.collapsedInteract.Visible=false if A.
-minimised then A.minimised=false af.assign(A.minimiseAction.iconLabel,'Image',ai.icons.minimise)end A._restorePosition=A
-.main.Position local B,C=A:_collapsedRect()local D,E,F,G=TweenInfo.new(0.18,Enum.EasingStyle.Quint,Enum.EasingDirection.
-Out),TweenInfo.new(0.35,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),TweenInfo.new(0.35,Enum.EasingStyle.
-Exponential,Enum.EasingDirection.InOut),TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out)e.tweenService
-:Create(A.windowShadow,D,{Transparency=1}):Play()e.tweenService:Create(A.windowGlow,D,{Transparency=1}):Play()e.
-tweenService:Create(A.windowStroke,D,{Transparency=1}):Play()e.tweenService:Create(A.bottomFade,D,{
-BackgroundTransparency=1}):Play()if A.title then e.tweenService:Create(A.title,D,{TextTransparency=1}):Play()end if A.
-subtitle then e.tweenService:Create(A.subtitle,D,{TextTransparency=1}):Play()end if A.topbarIcon then e.tweenService:
-Create(A.topbarIcon,D,{ImageTransparency=1}):Play()end if A.rail then ac(ab.Parent.rail).setShown(A,false,D)end if A.
-resize then A.resize:SetShown(false)end for H,I in ipairs(A.actionContainer:GetChildren())do if I:IsA'Frame'then e.
-tweenService:Create(I.ImageLabel,D,{ImageTransparency=1}):Play()end end for H,I in A.tags do I:_setShown(false,D)end for
-H,I in pairs(A.tabs)do if not I.neglectSelector and I.topbarItem then I:_applyVisual('hidden',D)end end A:
-_fadeSelectedElementsOut()e.tweenService:Create(A.main,E,{Size=C,Position=B}):Play()e.tweenService:Create(A.windowCorner
-,F,{CornerRadius=UDim.new(1,0)}):Play()task.delay(0.18,function()if not A.hidden then return end A.topbar.Visible=false
-A.elements.Visible=false A.tabList.Visible=false c.setCollapsedShown(A,true,G)end)task.delay(0.35,function()if not A.
-hidden then return end A.collapsedInteract.Visible=true A.animating=false A._revealing=false end)end function g.
-ToggleHide(A)if A.animating then return end if A.hidden then A:Show()else A:Hide()end end function g.ToggleMinimise(A)if
-A.animating or A.hidden then return end if A._searching then d.close(A,{showTabs=true})end A.animating=true local B,C=
-TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),TweenInfo.new(0.4,Enum.EasingStyle.Exponential,
-Enum.EasingDirection.Out)if A.minimised then A.minimised=false af.assign(A.minimiseAction.iconLabel,'Image',ai.icons.
-minimise)e.tweenService:Create(A.main,B,{Size=A.size}):Play()e.tweenService:Create(A.windowShadow,C,{Transparency=0.6}):
-Play()e.tweenService:Create(A.windowGlow,C,{Transparency=i}):Play()if A.rail then ac(ab.Parent.rail).setShown(A,true,C)
-end if A.resize then A.resize:SetShown(true)end e.tweenService:Create(A.windowStroke,C,{Transparency=j}):Play()e.
-tweenService:Create(A.bottomFade,C,{BackgroundTransparency=0}):Play()task.delay(0.2,function()if A.minimised or A.hidden
-then return end A.elements.Visible=true A.tabList.Visible=true for D,E in pairs(A.tabs)do if not E.neglectSelector and E
-.topbarItem then E.topbarItem.Visible=true E:_applyVisual(if A.selectedTab==E then'selected'else'unselected',C)end end A
-:_revealElements(0.035,0.4)end)task.delay(0.5,function()A.animating=false end)else A.minimised=true af.assign(A.
-minimiseAction.iconLabel,'Image',ai.icons.maximise)A:_fadeSelectedElementsOut()for D,E in pairs(A.tabs)do if not E.
-neglectSelector and E.topbarItem then E:_applyVisual('hidden',C)end end task.delay(0.3,function()if not A.minimised then
-return end A.elements.Visible=false A.tabList.Visible=false for D,E in pairs(A.tabs)do if not E.neglectSelector and E.
-topbarItem then E.topbarItem.Visible=false end end end)e.tweenService:Create(A.windowShadow,C,{Transparency=1}):Play()e.
-tweenService:Create(A.windowGlow,C,{Transparency=1}):Play()e.tweenService:Create(A.windowStroke,C,{Transparency=1}):
-Play()if A.rail then ac(ab.Parent.rail).setShown(A,false,C,true)end if A.resize then A.resize:SetShown(false)end e.
-tweenService:Create(A.bottomFade,C,{BackgroundTransparency=1}):Play()e.tweenService:Create(A.main,B,{Size=m}):Play()task
-.delay(0.5,function()A.animating=false end)end end function g._applySize(A,B,C)local D=e.workspace.CurrentCamera local E
-=D and D.ViewportSize local F,G=g.clampSize(B,C,E)local H=A.size A.size=UDim2.fromOffset(F,G)local I=A.hidden or A.
-minimised if I then if not A.hasShownOnce then A.main.Size=UDim2.fromOffset(math.max(0,F-50),0)end return end local J,K=
-(F-H.X.Offset)/2,(G-H.Y.Offset)/2 A.main.Size=A.size local L,M=A.screenGui.AbsoluteSize,A.main.Position local N,O=M.X.
-Scale*L.X+M.X.Offset+J,M.Y.Scale*L.Y+M.Y.Offset+K if A.settings and A.settings.keepOnScreen then N,O=g.
-clampCentreOnScreen(N,O,A.main.AbsoluteSize,L)end A.main.Position=UDim2.fromOffset(N,O)end function g._bindKeybind(A)A:
-Connect(e.userInputService.InputBegan,function(B,C)if C or A._recordingKeybind then return end if B.KeyCode==A.settings.
-toggleKeybind or B.UserInputType==A.settings.toggleKeybind then A:ToggleHide()end end)end function g._bindMouseOverride(
-A)local B=e.userInputService local function C()return A.settings.mouseOverride and not A.hidden and not A.minimised end
-local function D()if not C()then return end if B:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then return end if
-B.MouseBehavior~=Enum.MouseBehavior.Default then B.MouseBehavior=Enum.MouseBehavior.Default end if not B.
-MouseIconEnabled then B.MouseIconEnabled=true end end A:Connect(B:GetPropertyChangedSignal'MouseBehavior',D)A:Connect(B:
-GetPropertyChangedSignal'MouseIconEnabled',D)A:Connect(B.InputEnded,function(E)if E.UserInputType==Enum.UserInputType.
-MouseButton2 then D()end end)A._freeMouse=D end function g._bindTopbarDrag(A)local B,C,D,E=e.userInputService,false,
-Vector2.zero,Vector2.zero if A.screenGui and A.screenGui.IgnoreGuiInset then E=e.guiService:GetGuiInset()end
-local function F()local G=B:GetMouseLocation()+D+E local H,I=G.X,G.Y if A.settings and A.settings.keepOnScreen then
-local J,K,L=A.main.AbsoluteSize,A.screenGui.AbsoluteSize,8 local M,N=J.X/2,J.Y/2 H=math.clamp(H,M+L,math.max(M+L,K.X-M-L
-))I=math.clamp(I,N+L,math.max(N+L,K.Y-N-L))end return UDim2.fromOffset(H,I)end local function G(H,I)for J,K in{A.tabList
-,A.actionContainer}do local L,M=K.AbsolutePosition,K.AbsoluteSize if H>=L.X and H<=L.X+M.X and I>=L.Y and I<=L.Y+M.Y
-then return true end end return false end A:Connect(A.topbar.InputBegan,function(H,I)if I then return end local J=H.
-UserInputType.Name if J~='MouseButton1'and J~='Touch'then return end if G(H.Position.X,H.Position.Y)then return end if
-not A:_interactive()then return end C=true if A.screenGui and A.screenGui.IgnoreGuiInset then E=e.guiService:
-GetGuiInset()end D=A.main.AbsolutePosition+A.main.AbsoluteSize*A.main.AnchorPoint-B:GetMouseLocation()end)A:Connect(B.
-InputEnded,function(H)local I=H.UserInputType.Name if I=='MouseButton1'or I=='Touch'then C=false end end)A:Connect(B.
-WindowFocusReleased,function()C=false end)A:Connect(e.runService.RenderStepped,function()if not C then return end if not
-A:_interactive()then C=false return end A.main.Position=F()end)end function g._buildSettingsUI(A)A.rfSettings:
-CreateSection{name='General'}A.rfSettings:CreateKeybind{name='Toggle Keybind',icon=ai.icons.search,value=A.settings.
-toggleKeybind,isMenuToggle=true,onChanged=function(B)A.settings.toggleKeybind=B A:SaveSettings()end}A.rfSettings:
-CreateToggle{name='Unlock cursor while open',description=
+SortOrder.LayoutOrder,Parent=C.tabList})C:Create('UIPadding',{PaddingLeft=UDim.new(0,22),PaddingRight=UDim.new(0,10),
+Parent=C.tabList})C.actionContainer=C:Create('Frame',{AnchorPoint=Vector2.new(1,0.5),AutomaticSize=Enum.AutomaticSize.X,
+Size=UDim2.fromOffset(0,24),Position=UDim2.new(1,-20,0.5,0),BackgroundTransparency=1,Parent=C.topbar})C.
+actionsListLayout=C:Create('UIListLayout',{Padding=UDim.new(0,5),FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,HorizontalAlignment=Enum.HorizontalAlignment.Right,SortOrder=Enum.
+SortOrder.LayoutOrder,Parent=C.actionContainer})C.rfSettings=C:CreateTab{name='AFKTY Settings',customOrder=1000,
+neglectSelector=true,forgetState=true}ac(ab.Parent.action).new(C,{name='Close',icon=ai.icons.close,order=1,callback=
+function()C:ToggleHide()end})C.minimiseAction=ac(ab.Parent.action).new(C,{name='Minimise',icon=ai.icons.minimise,order=2
+,callback=function()C:ToggleMinimise()end})C.settingsAction=ac(ab.Parent.action).new(C,{name='Settings',icon=ai.icons.
+settings,order=3,linkedTab=C.rfSettings,callback=function()C.rfSettings:Select()end})d.build(C)C.unloaded=false C.
+minimised=false C.hidden=true C.animating=false C._revealing=false C.hasShownOnce=false C._resizing=false C.settings={
+toggleKeybind=Enum.KeyCode.K,mouseOverride=true,keepOnScreen=true,welcomeToast=true,haptics=false}C:LoadSettings()local
+D=C.settings.windowWidth~=nil and C.settings.windowHeight~=nil if D then C:_applySize(C.settings.windowWidth,C.settings.
+windowHeight)end local E=A.resize~=false and A.Resize~=false if E then C.resize=ac(ab.Parent.resize).new(C)end b.
+setContainer(C.screenGui)b.setEnabled(C.settings.haptics)c.buildCollapsedFace(C)C:_bindKeybind()C:_bindMouseOverride()C:
+_bindTopbarDrag()C:_buildSettingsUI()C:_syncLiveAnimation()return C end function g._syncLiveAnimation(A)if not A.theme.
+LiveAnimation then A._liveAnimating=false return end if A._liveAnimating then return end A._liveAnimating=true A.
+_liveGeneration=(A._liveGeneration or 0)+1 local B=A._liveGeneration task.spawn(function()local C,D=true,TweenInfo.new(
+10,Enum.EasingStyle.Quint,Enum.EasingDirection.Out)while A._liveGeneration==B and A._liveAnimating and not A.unloaded do
+local E=e.tweenService:Create(A.windowGradient,D,{Offset=Vector2.new(if C then 0.4 else-0.2,0),Rotation=(if C then 220
+else 280)})A._liveTween=E E:Play()E.Completed:Wait()C=not C end if A._liveGeneration==B then A._liveAnimating=false A.
+_liveTween=nil end end)end function g.ChangeTheme(A,B)local C=if typeof(B)=='table'then B else z(B)for D,E in C do A.
+theme[D]=u(D,E)end if typeof(B)=='table'then x(A.theme,C)end for D,E in A.themeProperties do for F,G in E do local H=if
+typeof(G)=='table'then G[2](A.theme[G[1] ])else A.theme[G]if typeof(H)=='Color3'or typeof(H)=='number'then e.
+tweenService:Create(D,TweenInfo.new(0.5,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{[F]=H}):Play()else D[F]=H end
+end end if A.hidden then A._themeRefreshPending=true else A:_refreshElementThemes()end A:_syncLiveAnimation()end
+function g._refreshElementThemes(A)for B,C in A.tabs do for D,E in C.elements do if E._refreshTheme then E:
+_refreshTheme()end end end end function g.CreateTab(A,B)local C=ac(ab.Parent.tab).new(A,B)table.insert(A.tabs,C)if C.
+railCategory and C.topbarItem and not C.railCategory.active then C.topbarItem.Visible=false end if not C.neglectSelector
+then local D=true for E,F in A.tabs do if F~=C and not F.neglectSelector then D=false break end end if D then C:Select(
+true)end if not A.hidden and not A.minimised then C.topbarItem.Visible=true C:_applyVisual(if A.selectedTab==C then
+'selected'else'unselected',TweenInfo.new(0.4,Enum.EasingStyle.Quint,Enum.EasingDirection.Out))end end return C end
+function g.CreateTag(A,B)local C=ac(ab.Parent.tag).new(A,B)table.insert(A.tags,C)return C end function g.CreateRailItem(
+A,B)local C=ac(ab.Parent.rail).new(A,B)table.insert(A.railItems,C)return C end function g.CreateRailProfile(A,B)local C=
+ac(ab.Parent.rail).profile(A,B)A.railProfile=C table.insert(A.railItems,C)return C end function g._registerControl(A,B)
+if not B.flag or B.flag==''or B.forgetState then return end local C=B.flag if A.controls[C]then local D=2 while A.
+controls[C..D]do D+=1 end C=C..D ak.warn("AFKTY: duplicate config flag '"..B.flag.."', saving this one as '"..C..
+"'. Set a unique flag to keep it stable across sessions.")end B.flag=C A.controls[C]=B return C end function g.
+_restoreLate(A,B)if not A._loadedConfig or not B.flag or B.forgetState then return end local C=A._loading A._loading=
+true ah.applyTo(B,A._loadedConfig[B.flag])A._loading=C end function g._persist(A,B)if B.flag and not B.forgetState and A
+.configuration.autoSave and not A._loading then task.spawn(A.Save,A)end end function g._unregisterControl(A,B)if B.flag
+and A.controls[B.flag]==B then A.controls[B.flag]=nil end end function g._keybindUsing(A,B,C)if typeof(B)~='EnumItem'or
+B==Enum.KeyCode.Unknown then return nil end for D,E in A.tabs do for F,G in E.elements do if G~=C and G.__type==
+'Keybind'and G.value==B then return G end end end return nil end function g.Notify(A,B)if A.unloaded then return end if
+not A.notifications then A.notifications=A:Create('Frame',{Name='Notifications',Size=UDim2.new(0,300,0,800),Position=
+UDim2.new(1,-20,1,-20),AnchorPoint=Vector2.new(1,1),BackgroundTransparency=1,Parent=A.screenGui})A:Create('UIListLayout'
+,{FillDirection=Enum.FillDirection.Vertical,VerticalAlignment=Enum.VerticalAlignment.Bottom,HorizontalAlignment=Enum.
+HorizontalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,0),Parent=A.notifications})end return
+ac(ab.Parent.notification).new(A,B)end function g.Toast(A,B)if A.unloaded then return end local C=(B or{}).position or
+'Top'local D=C=='Top'local E=if D then'_toastsTop'else'_toastsBottom'local F=A[E]if not F then F=A:Create('Frame',{Name=
+'Toasts',Size=UDim2.new(0,n,1,-24),Position=if D then UDim2.new(0.5,0,0,12)else UDim2.new(0.5,0,1,-12),AnchorPoint=if D
+then Vector2.new(0.5,0)else Vector2.new(0.5,1),BackgroundTransparency=1,ZIndex=ai.zIndex.toast,Parent=A.screenGui})A:
+Create('UIListLayout',{FillDirection=Enum.FillDirection.Vertical,VerticalAlignment=if D then Enum.VerticalAlignment.Top
+else Enum.VerticalAlignment.Bottom,HorizontalAlignment=Enum.HorizontalAlignment.Center,SortOrder=Enum.SortOrder.
+LayoutOrder,Padding=UDim.new(0,0),Parent=F})A[E]=F end return ac(ab.Parent.toast).new(A,B,F)end function g.Popup(A,B)if
+A.unloaded then return end return ac(ab.Parent.popup).new(A,B)end function g.Hide(A)if A.animating or A.hidden then
+return end if A._searching then d.close(A,{showTabs=false,jumpTo=A.selectedTab and A.selectedTab.tabPage})end A.
+animating=true A._revealing=true A.hidden=true A.collapsedInteract.Visible=false if A.minimised then A.minimised=false
+af.assign(A.minimiseAction.iconLabel,'Image',ai.icons.minimise)end A._restorePosition=A.main.Position local B,C=A:
+_collapsedRect()local D,E,F,G=TweenInfo.new(0.18,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),TweenInfo.new(0.35,
+Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),TweenInfo.new(0.35,Enum.EasingStyle.Exponential,Enum.
+EasingDirection.InOut),TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out)e.tweenService:Create(A.
+windowShadow,D,{Transparency=1}):Play()e.tweenService:Create(A.windowGlow,D,{Transparency=1}):Play()e.tweenService:
+Create(A.windowStroke,D,{Transparency=1}):Play()e.tweenService:Create(A.bottomFade,D,{BackgroundTransparency=1}):Play()
+if A.title then e.tweenService:Create(A.title,D,{TextTransparency=1}):Play()end if A.subtitle then e.tweenService:
+Create(A.subtitle,D,{TextTransparency=1}):Play()end if A.topbarIcon then e.tweenService:Create(A.topbarIcon,D,{
+ImageTransparency=1}):Play()end if A.rail then ac(ab.Parent.rail).setShown(A,false,D)end if A.resize then A.resize:
+SetShown(false)end for H,I in ipairs(A.actionContainer:GetChildren())do if I:IsA'Frame'then e.tweenService:Create(I.
+ImageLabel,D,{ImageTransparency=1}):Play()end end for H,I in A.tags do I:_setShown(false,D)end for H,I in pairs(A.tabs)
+do if not I.neglectSelector and I.topbarItem then I:_applyVisual('hidden',D)end end A:_fadeSelectedElementsOut()e.
+tweenService:Create(A.main,E,{Size=C,Position=B}):Play()e.tweenService:Create(A.windowCorner,F,{CornerRadius=UDim.new(1,
+0)}):Play()task.delay(0.18,function()if not A.hidden then return end A.topbar.Visible=false A.elements.Visible=false A.
+tabList.Visible=false c.setCollapsedShown(A,true,G)end)task.delay(0.35,function()if not A.hidden then return end A.
+collapsedInteract.Visible=true A.animating=false A._revealing=false end)end function g.ToggleHide(A)if A.animating then
+return end if A.hidden then A:Show()else A:Hide()end end function g.ToggleMinimise(A)if A.animating or A.hidden then
+return end if A._searching then d.close(A,{showTabs=true})end A.animating=true local B,C=TweenInfo.new(0.5,Enum.
+EasingStyle.Exponential,Enum.EasingDirection.Out),TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.
+Out)if A.minimised then A.minimised=false af.assign(A.minimiseAction.iconLabel,'Image',ai.icons.minimise)e.tweenService:
+Create(A.main,B,{Size=A.size}):Play()e.tweenService:Create(A.windowShadow,C,{Transparency=0.6}):Play()e.tweenService:
+Create(A.windowGlow,C,{Transparency=i}):Play()if A.rail then ac(ab.Parent.rail).setShown(A,true,C)end if A.resize then A
+.resize:SetShown(true)end e.tweenService:Create(A.windowStroke,C,{Transparency=j}):Play()e.tweenService:Create(A.
+bottomFade,C,{BackgroundTransparency=0}):Play()task.delay(0.2,function()if A.minimised or A.hidden then return end A.
+elements.Visible=true A.tabList.Visible=true for D,E in pairs(A.tabs)do if not E.neglectSelector and E.topbarItem then E
+.topbarItem.Visible=true E:_applyVisual(if A.selectedTab==E then'selected'else'unselected',C)end end A:_revealElements(
+0.035,0.4)end)task.delay(0.5,function()A.animating=false end)else A.minimised=true af.assign(A.minimiseAction.iconLabel,
+'Image',ai.icons.maximise)A:_fadeSelectedElementsOut()for D,E in pairs(A.tabs)do if not E.neglectSelector and E.
+topbarItem then E:_applyVisual('hidden',C)end end task.delay(0.3,function()if not A.minimised then return end A.elements
+.Visible=false A.tabList.Visible=false for D,E in pairs(A.tabs)do if not E.neglectSelector and E.topbarItem then E.
+topbarItem.Visible=false end end end)e.tweenService:Create(A.windowShadow,C,{Transparency=1}):Play()e.tweenService:
+Create(A.windowGlow,C,{Transparency=1}):Play()e.tweenService:Create(A.windowStroke,C,{Transparency=1}):Play()if A.rail
+then ac(ab.Parent.rail).setShown(A,false,C,true)end if A.resize then A.resize:SetShown(false)end e.tweenService:Create(A
+.bottomFade,C,{BackgroundTransparency=1}):Play()e.tweenService:Create(A.main,B,{Size=m}):Play()task.delay(0.5,function()
+A.animating=false end)end end function g._applySize(A,B,C)local D=e.workspace.CurrentCamera local E=D and D.ViewportSize
+local F,G=g.clampSize(B,C,E)local H=A.size A.size=UDim2.fromOffset(F,G)local I=A.hidden or A.minimised if I then if not
+A.hasShownOnce then A.main.Size=UDim2.fromOffset(math.max(0,F-50),0)end return end local J,K=(F-H.X.Offset)/2,(G-H.Y.
+Offset)/2 A.main.Size=A.size local L,M=A.screenGui.AbsoluteSize,A.main.Position local N,O=M.X.Scale*L.X+M.X.Offset+J,M.Y
+.Scale*L.Y+M.Y.Offset+K if A.settings and A.settings.keepOnScreen then N,O=g.clampCentreOnScreen(N,O,A.main.AbsoluteSize
+,L)end A.main.Position=UDim2.fromOffset(N,O)end function g._bindKeybind(A)A:Connect(e.userInputService.InputBegan,
+function(B,C)if C or A._recordingKeybind then return end if B.KeyCode==A.settings.toggleKeybind or B.UserInputType==A.
+settings.toggleKeybind then A:ToggleHide()end end)end function g._bindMouseOverride(A)local B=e.userInputService
+local function C()return A.settings.mouseOverride and not A.hidden and not A.minimised end local function D()if not C()
+then return end if B:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then return end if B.MouseBehavior~=Enum.
+MouseBehavior.Default then B.MouseBehavior=Enum.MouseBehavior.Default end if not B.MouseIconEnabled then B.
+MouseIconEnabled=true end end A:Connect(B:GetPropertyChangedSignal'MouseBehavior',D)A:Connect(B:GetPropertyChangedSignal
+'MouseIconEnabled',D)A:Connect(B.InputEnded,function(E)if E.UserInputType==Enum.UserInputType.MouseButton2 then D()end
+end)A._freeMouse=D end function g._bindTopbarDrag(A)local B,C,D,E=e.userInputService,false,Vector2.zero,Vector2.zero if
+A.screenGui and A.screenGui.IgnoreGuiInset then E=e.guiService:GetGuiInset()end local function F()local G=B:
+GetMouseLocation()+D+E local H,I=G.X,G.Y if A.settings and A.settings.keepOnScreen then local J,K,L=A.main.AbsoluteSize,
+A.screenGui.AbsoluteSize,8 local M,N=J.X/2,J.Y/2 H=math.clamp(H,M+L,math.max(M+L,K.X-M-L))I=math.clamp(I,N+L,math.max(N+
+L,K.Y-N-L))end return UDim2.fromOffset(H,I)end local function G(H,I)for J,K in{A.tabList,A.actionContainer}do local L,M=
+K.AbsolutePosition,K.AbsoluteSize if H>=L.X and H<=L.X+M.X and I>=L.Y and I<=L.Y+M.Y then return true end end return
+false end A:Connect(A.topbar.InputBegan,function(H,I)if I then return end local J=H.UserInputType.Name if J~=
+'MouseButton1'and J~='Touch'then return end if G(H.Position.X,H.Position.Y)then return end if not A:_interactive()then
+return end C=true if A.screenGui and A.screenGui.IgnoreGuiInset then E=e.guiService:GetGuiInset()end D=A.main.
+AbsolutePosition+A.main.AbsoluteSize*A.main.AnchorPoint-B:GetMouseLocation()end)A:Connect(B.InputEnded,function(H)local
+I=H.UserInputType.Name if I=='MouseButton1'or I=='Touch'then C=false end end)A:Connect(B.WindowFocusReleased,function()C
+=false end)A:Connect(e.runService.RenderStepped,function()if not C then return end if not A:_interactive()then C=false
+return end A.main.Position=F()end)end function g._buildSettingsUI(A)A.rfSettings:CreateSection{name='General'}A.
+rfSettings:CreateKeybind{name='Toggle Keybind',icon=ai.icons.search,value=A.settings.toggleKeybind,isMenuToggle=true,
+onChanged=function(B)A.settings.toggleKeybind=B A:SaveSettings()end}A.rfSettings:CreateToggle{name=
+'Unlock cursor while open',description=
 [[Unlocks the cursor while the menu is open so you can configure in FPS games that lock it.]],value=A.settings.
 mouseOverride,callback=function(B)A.settings.mouseOverride=B A:SaveSettings()end}A.rfSettings:CreateToggle{name=
 'Welcome toast',description=[[Shows a 'Signed in as' toast the first time you open the menu on a new account.]],value=A.
@@ -2221,77 +2227,82 @@ writefile(ai,aj)pcall(ae.delfile,ak)end return af end)()end,[53]=function()local
 ...)local ae=ac(ab.Parent.services)export type RuntimeState={secureMode:boolean,coreGui:CoreGui,workspace:Workspace,
 runService:RunService,userInputService:UserInputService,guiService:GuiService,localPlayer:Player?,tweenService:
 TweenService,httpService:HttpService,textService:TextService,replicatedStorage:ReplicatedStorage,localizationService:
-LocalizationService,guiContainer:Instance}local af={}::RuntimeState af.secureMode=(function()if typeof(getgenv)~=
-'function'then return false end local ag,ah=pcall(function()return getgenv().AFKTY_SECURE end)return ag and ah==true end
-)()af.coreGui=ae.getService'CoreGui'::CoreGui af.workspace=ae.getService'Workspace'::Workspace af.runService=ae.
-getService'RunService'::RunService af.userInputService=ae.getService'UserInputService'::UserInputService af.guiService=
-ae.getService'GuiService'::GuiService af.localPlayer=(ae.getService'Players'::Players).LocalPlayer af.tweenService=ae.
-getService'TweenService'::TweenService af.httpService=ae.getService'HttpService'::HttpService af.textService=ae.
-getService'TextService'::TextService af.replicatedStorage=ae.getService'ReplicatedStorage'::ReplicatedStorage af.
-localizationService=ae.getService'LocalizationService'::LocalizationService af.guiContainer=(function():Instance if af.
-runService:IsStudio()then return(af.localPlayer::Player).PlayerGui end if typeof(gethui)=='function'then local ag,ah=
-pcall(gethui)if ag and ah then return ah end end return af.coreGui end)()return af end)()end,[54]=function()local aa,ab,
-ac=a(54)local ad return(function(...)local ae={}function ae.getService(af)local ag=game:GetService(af)return if cloneref
-then cloneref(ag)else ag end return ae end)()end,[55]=function()local aa,ab,ac=a(55)local ad return(function(...)local
-ae=ac(ab.Parent.variables)local af,ag,ah:{[string]:number},ai,aj=ae.textService,{},{},0,1024 local function ak(b:
-GetTextBoundsParams):unknown local c,d=pcall(function()return af:GetTextBoundsAsync(b)end)return if c then d else nil
-end local function b(c:unknown,d:'X'|'Y'):number?if typeof(c)=='Vector2'then return if d=='X'then c.X else c.Y end if
-type(c)=='table'and type((c::any)[d])=='number'then return(c::any)[d]end return nil end function ag.textWidth(c:Font,d:
-number,e:any):number e=tostring(e)local f=tostring(c.Family)..'|'..tostring(c.Weight)..'|'..tostring(c.Style)..'|'..
-tostring(d)..'|'..e local g=ah[f]if g then return g end local h=Instance.new'GetTextBoundsParams'h.Text=e h.Font=c h.
-Size=d h.Width=math.huge local i=b(ak(h),'X')if not i then local j=utf8.len(e)or#e return math.ceil(d*0.55*j)end local j
-=math.ceil(i)if ai>=aj then ah={}ai=0 end ah[f]=j ai+=1 return j end function ag.textHeight(c:Font,d:number,e:any,f:
-number):number local g=Instance.new'GetTextBoundsParams'g.Text=tostring(e)g.Font=c g.Size=d g.Width=f local h=b(ak(g),
-'Y')return if h then math.ceil(h)else d end return ag end)()end,[56]=function()local aa,ab,ac=a(56)local ad return(
-function(...)local ae,af,ag,ah,ai,aj=ac(ab.Parent.runtime),ac(ab.Parent.constants),ac(ab.Parent.log),ac(ab.Parent.
-filesystemManager),ac(ab.Parent.assetResolver),ac(ab.Parent.fontManager)type RuntimeState=ae.RuntimeState type
-FileSystemManager=ah.FileSystemManager type AssetResolver=ai.AssetResolver type FontManager=aj.FontManager export type
-VariablesState=RuntimeState&{fallbackFont:Font,fileSystemManager:FileSystemManager,assetResolver:AssetResolver,
-fontManager:FontManager,setFallbackFont:(font:Enum.Font|Font)->(),brandFont:(weight:Enum.FontWeight?)->Font}local ak=
-table.clone(ae)::VariablesState ag.setSecureModeSource(function()return ak.secureMode end)ak.fallbackFont=Font.fromEnum(
-Enum.Font.BuilderSans)ak.fileSystemManager=ah.new()ak.assetResolver=ai.new(true,ai.Enum.AssetDownloadUrl.
-RoProxyDownloadUrl)::AssetResolver ak.fontManager=aj.new(ak.fileSystemManager:getAssetsFolder'fonts',false,true,ai.Enum.
-AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFont=ak.fallbackFont})::FontManager
-function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
-ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
-ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{28,1,{'utility'},{{36,2,{'flagNames'}},{47,2,{'path'}},{34,2,{'filesystem'}},{50,2,{'persistencePaths'
-}},{56,2,{'variables'}},{31,2,{'colors'}},{39,2,{'image'}},{38,2,{'functions'}},{49,2,{'persistenceConfig'}},{42,2,{
-'log'}},{54,2,{'services'}},{53,2,{'runtime'}},{37,2,{'fontManager'}},{52,2,{'persistenceWrite'}},{46,2,{'ordering'}},{
-44,2,{'network'}},{29,2,{'HapticEngine'}},{30,2,{'assetResolver'}},{32,2,{'constants'}},{45,2,{'odometer'}},{41,2,{
-'locale'}},{55,2,{'textMetrics'}},{51,2,{'persistenceSettings'}},{35,2,{'filesystemManager'}},{33,2,{'enums'}},{43,2,{
-'moveable'}},{40,2,{'imageCache'}},{48,2,{'persistence'}}}},{27,2,{'types'}},{25,1,{'themes'},{{26,2,{'default'}}}},{2,1
-,{'components'},{{15,2,{'resize'}},{4,2,{'button'}},{23,2,{'toggle'}},{19,2,{'stat'}},{7,2,{'descriptor'}},{18,2,{
-'slider'}},{6,2,{'colorpicker'}},{8,2,{'dropdown'}},{9,2,{'group'}},{10,2,{'input'}},{22,2,{'toast'}},{14,2,{'rail'}},{
-12,2,{'notification'}},{20,2,{'tab'}},{21,2,{'tag'}},{17,2,{'section'}},{5,2,{'chrome'}},{3,2,{'action'}},{13,2,{'popup'
-}},{11,2,{'keybind'}},{24,2,{'window'}},{16,2,{'search'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,
-table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.
-freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,
-'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
-end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={
-GetFullName={{},function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},
-GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}
-for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string',
-'boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do
-return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.
-Name==C then return D end D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)
-end}},{}for D,E in ai,B do local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=
-function(I,...)if not A[I]then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H
-do local M=J[K]local N,O,P=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'
-and N~=O and not(N=='nil'and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...
-)end end local function D(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..
-' is not a valid (virtual) member of '..E..' "'..F..'"',3)end local function K(L)ah(
-'Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.__metatable=false M.__index=
-function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'then return G elseif E==
-'StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai,H do if P.Name==O then
-return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'then F=P elseif O==
-'Parent'then if P==L then return end if G~=nil then A[G][L]=nil end G=P if P~=nil then A[P][L]=true end elseif E==
-'StringValue'and O=='Value'then I=P else J(O)end end M.__tostring=function()return F end ag(L,M)A[L]=H if G~=nil then A[
-G][L]=true end return L end local function E(F,G)local H,I,J,K=F[1],F[2],F[3],F[4]local L=t[I]local M=J and l(J,1)or L
-local N=D(L,M,G)u[H]=N if J then for O,P in ai,J do N[O]=P end end if K then for O,P in ai,K do E(P,N)end end return N
-end local F=D('Folder','['..ad..']')for G,H in ai,ab do E(H,F)end for G,H in ai,aa do local I=u[G]v[I]=H w[I]=G local J=
-I.ClassName if J=='LocalScript'or J=='Script'then k(y,I)end end local function G(H)local I,J=H.ClassName,x[H]if J and I
-=='ModuleScript'then return ak(J)end local K=v[H]local function L(M)M=g(M)local N,O,P=H:GetFullName(),p(M,
+LocalizationService,guiContainer:Instance,guiContainerHidden:boolean,resolveProtect:()->((Instance)->())?,parentGui:(gui
+:Instance)->()}local af={}::RuntimeState af.secureMode=(function()if typeof(getgenv)~='function'then return false end
+local ag,ah=pcall(function()return getgenv().AFKTY_SECURE end)return ag and ah==true end)()af.coreGui=ae.getService
+'CoreGui'::CoreGui af.workspace=ae.getService'Workspace'::Workspace af.runService=ae.getService'RunService'::RunService
+af.userInputService=ae.getService'UserInputService'::UserInputService af.guiService=ae.getService'GuiService'::
+GuiService af.localPlayer=(ae.getService'Players'::Players).LocalPlayer af.tweenService=ae.getService'TweenService'::
+TweenService af.httpService=ae.getService'HttpService'::HttpService af.textService=ae.getService'TextService'::
+TextService af.replicatedStorage=ae.getService'ReplicatedStorage'::ReplicatedStorage af.localizationService=ae.
+getService'LocalizationService'::LocalizationService local ag=false af.guiContainer=(function():Instance if af.
+runService:IsStudio()then return(af.localPlayer::Player).PlayerGui end if typeof(gethui)=='function'then local ah,ai=
+pcall(gethui)if ah and ai then ag=true return ai end end local ah=af.coreGui:FindFirstChild'RobloxGui'if ah then return
+ah end return af.coreGui end)()af.guiContainerHidden=ag function af.resolveProtect():((Instance)->())?local ah,ai=pcall(
+getfenv)if not ah or type(ai)~='table'then return nil end local aj=ai.syn if type(aj)=='table'and type(aj.protect_gui)==
+'function'then return aj.protect_gui end if type(ai.protectgui)=='function'then return ai.protectgui end return nil end
+function af.parentGui(ah:Instance)if not af.guiContainerHidden then local ai=af.resolveProtect()if ai then pcall(ai,ah)
+end end ah.Parent=af.guiContainer end return af end)()end,[54]=function()local aa,ab,ac=a(54)local ad return(function(
+...)local ae={}function ae.getService(af)local ag=game:GetService(af)return if cloneref then cloneref(ag)else ag end
+return ae end)()end,[55]=function()local aa,ab,ac=a(55)local ad return(function(...)local ae=ac(ab.Parent.variables)
+local af,ag,ah:{[string]:number},ai,aj=ae.textService,{},{},0,1024 local function ak(b:GetTextBoundsParams):unknown
+local c,d=pcall(function()return af:GetTextBoundsAsync(b)end)return if c then d else nil end local function b(c:unknown,
+d:'X'|'Y'):number?if typeof(c)=='Vector2'then return if d=='X'then c.X else c.Y end if type(c)=='table'and type((c::any)
+[d])=='number'then return(c::any)[d]end return nil end function ag.textWidth(c:Font,d:number,e:any):number e=tostring(e)
+local f=tostring(c.Family)..'|'..tostring(c.Weight)..'|'..tostring(c.Style)..'|'..tostring(d)..'|'..e local g=ah[f]if g
+then return g end local h=Instance.new'GetTextBoundsParams'h.Text=e h.Font=c h.Size=d h.Width=math.huge local i=b(ak(h),
+'X')if not i then local j=utf8.len(e)or#e return math.ceil(d*0.55*j)end local j=math.ceil(i)if ai>=aj then ah={}ai=0 end
+ah[f]=j ai+=1 return j end function ag.textHeight(c:Font,d:number,e:any,f:number):number local g=Instance.new
+'GetTextBoundsParams'g.Text=tostring(e)g.Font=c g.Size=d g.Width=f local h=b(ak(g),'Y')return if h then math.ceil(h)else
+d end return ag end)()end,[56]=function()local aa,ab,ac=a(56)local ad return(function(...)local ae,af,ag,ah,ai,aj=ac(ab.
+Parent.runtime),ac(ab.Parent.constants),ac(ab.Parent.log),ac(ab.Parent.filesystemManager),ac(ab.Parent.assetResolver),
+ac(ab.Parent.fontManager)type RuntimeState=ae.RuntimeState type FileSystemManager=ah.FileSystemManager type
+AssetResolver=ai.AssetResolver type FontManager=aj.FontManager export type VariablesState=RuntimeState&{fallbackFont:
+Font,fileSystemManager:FileSystemManager,assetResolver:AssetResolver,fontManager:FontManager,setFallbackFont:(font:Enum.
+Font|Font)->(),brandFont:(weight:Enum.FontWeight?)->Font}local ak=table.clone(ae)::VariablesState ag.
+setSecureModeSource(function()return ak.secureMode end)ak.fallbackFont=Font.fromEnum(Enum.Font.BuilderSans)ak.
+fileSystemManager=ah.new()ak.assetResolver=ai.new(true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl)::AssetResolver ak.
+fontManager=aj.new(ak.fileSystemManager:getAssetsFolder'fonts',false,true,ai.Enum.AssetDownloadUrl.RoProxyDownloadUrl,{
+saveToDisk=true,skipCache=false,fallbackFont=ak.fallbackFont})::FontManager function ak.setFallbackFont(b:Enum.Font|Font
+)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then ak.fallbackFont=b ak.fontManager.
+defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if ak.secureMode then return Font.
+new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},{{1,2,{'AFKTY'},{{28,1,{
+'utility'},{{42,2,{'log'}},{49,2,{'persistenceConfig'}},{38,2,{'functions'}},{52,2,{'persistenceWrite'}},{44,2,{
+'network'}},{51,2,{'persistenceSettings'}},{29,2,{'HapticEngine'}},{41,2,{'locale'}},{55,2,{'textMetrics'}},{39,2,{
+'image'}},{37,2,{'fontManager'}},{35,2,{'filesystemManager'}},{54,2,{'services'}},{53,2,{'runtime'}},{31,2,{'colors'}},{
+45,2,{'odometer'}},{40,2,{'imageCache'}},{56,2,{'variables'}},{34,2,{'filesystem'}},{36,2,{'flagNames'}},{50,2,{
+'persistencePaths'}},{32,2,{'constants'}},{48,2,{'persistence'}},{33,2,{'enums'}},{47,2,{'path'}},{46,2,{'ordering'}},{
+30,2,{'assetResolver'}},{43,2,{'moveable'}}}},{27,2,{'types'}},{2,1,{'components'},{{4,2,{'button'}},{15,2,{'resize'}},{
+9,2,{'group'}},{8,2,{'dropdown'}},{18,2,{'slider'}},{24,2,{'window'}},{5,2,{'chrome'}},{22,2,{'toast'}},{16,2,{'search'}
+},{14,2,{'rail'}},{23,2,{'toggle'}},{12,2,{'notification'}},{11,2,{'keybind'}},{20,2,{'tab'}},{10,2,{'input'}},{6,2,{
+'colorpicker'}},{19,2,{'stat'}},{13,2,{'popup'}},{21,2,{'tag'}},{7,2,{'descriptor'}},{3,2,{'action'}},{17,2,{'section'}}
+}},{25,1,{'themes'},{{26,2,{'default'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,
+coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or
+function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r
+and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[
+2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},
+function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B
+)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)
+for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)
+local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,
+true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end
+D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do
+local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]
+then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P
+=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'
+and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D
+(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3
+)end local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
+__metatable=false M.__index=function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'
+then return G elseif E=='StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai
+,H do if P.Name==O then return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'
+then F=P elseif O=='Parent'then if P==L then return end if G~=nil then A[G][L]=nil end G=P if P~=nil then A[P][L]=true
+end elseif E=='StringValue'and O=='Value'then I=P else J(O)end end M.__tostring=function()return F end ag(L,M)A[L]=H if
+G~=nil then A[G][L]=true end return L end local function E(F,G)local H,I,J,K=F[1],F[2],F[3],F[4]local L=t[I]local M=J
+and l(J,1)or L local N=D(L,M,G)u[H]=N if J then for O,P in ai,J do N[O]=P end end if K then for O,P in ai,K do E(P,N)end
+end return N end local F=D('Folder','['..ad..']')for G,H in ai,ab do E(H,F)end for G,H in ai,aa do local I=u[G]v[I]=H w[
+I]=G local J=I.ClassName if J=='LocalScript'or J=='Script'then k(y,I)end end local function G(H)local I,J=H.ClassName,x[
+H]if J and I=='ModuleScript'then return ak(J)end local K=v[H]local function L(M)M=g(M)local N,O,P=H:GetFullName(),p(M,
 '[^:]+:(%d+): (.+)')if not O or not j then return N..':*: '..(P or M)end O=h(O)local Q=w[H]local R=j[Q]local S=O-R+1 if
 S<0 then S='?'end return N..':'..S..': '..P end if I=='LocalScript'or I=='Script'then local M,N=f(K)if not M then ah(L(N
 ),0)end else local M={f(K)}local N=l(M,1)if not N then local O=l(M,1)ah(L(O),0)end x[H]=M return ak(M)end end function a

@@ -285,9 +285,10 @@ function Window.new(properties)
         Enabled = true,
         DisplayOrder = constants.displayOrder.window,
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
-
-        Parent = variables.guiContainer,
+        -- parented below, via parentGui: on an executor with no gethui the ScreenGui itself
+        -- has to be handed to the protect call before it lands anywhere the game can see
     })
+    variables.parentGui(self.screenGui)
 
     -- Window
     self.main = self:Create("Frame", {
