@@ -39,8 +39,9 @@ about it. That is the actual exposure.
 
 It changes nothing about detectability in secure mode: there the ids are never requested at all,
 because the PNGs in this folder are cached to disk and served from there. Normal mode does render
-`rbxassetid://<id>`, but the ScreenGui lives behind `gethui()` (always on, not gated on secure
-mode), so a game script cannot walk the tree to read those properties back.
+`rbxassetid://<id>`, but reading those properties back means reaching the ScreenGui first, and it
+is kept out of reach whether or not secure mode is on — `gethui()` where the executor has it,
+otherwise the protect call and then `RobloxGui` (`src/utility/runtime.luau:58`).
 
 ### Steps
 
