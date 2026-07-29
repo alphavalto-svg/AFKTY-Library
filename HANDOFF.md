@@ -3,16 +3,58 @@
 State as of **2026-07-29** — 228/228 specs, coverage 87.41% (ratchet 86.36%). The whole gate
 was run and is green: `format-check`, `lint`, `typecheck`, specs.
 
-**`main` is at `e73a202`. The branch `secure-mode-gaps` (`f6cc8dd`) sits one commit ahead and
-is not merged.** That commit carries the secure-mode fixes *and* the matching
-`dist/Library.lua`, so until it lands on `main` the shipped bundle does not have them —
-`HttpGet` fetches `main/dist/Library.lua`.
+`secure-mode-gaps` has been **merged to `main` and pushed** (fast-forward, so history stays
+linear), and the icon swap landed on top of it. `dist/Library.lua` on `main` was fetched back
+from the raw URL and confirmed byte-identical to the local build, carrying the new asset ids and
+none of the old ones — so what `HttpGet` serves is current.
+
+Nothing is unpushed. `main` is the only live branch; `secure-mode-gaps` can be deleted.
 
 Open this file and say *"pick up where we left off"*.
 
 ---
 
-## Session of 2026-07-29 (latest) — secure-mode gaps, executor test, row lighting
+## Session of 2026-07-29 (latest) — the icon set moved onto owned uploads
+
+**Every asset the library ships is now an AlphaValto upload.** Nine of the ten glyphs were still
+upstream uploads inherited in `d5737be`, on an account this project cannot control — deleting or
+moderating any one would have blanked that icon in every hub with no recourse. They were
+reuploaded and swapped; the emblem was already ours.
+
+The swap is `constants.icons` **plus** a rename of `assets/`, and both halves are load bearing:
+`imageCache` builds its secure-mode download manifest by iterating the table, and the filename in
+`assets/` is the cache key it writes to disk. A rename that drifted from the table would cache
+under a name nothing ever looks up. The PNGs themselves are untouched — git recorded all nine as
+pure renames.
+
+Full detail, and the procedure for swapping an icon again, is in **`assets/README.md`**.
+
+### Verify a new asset id before wiring it in
+
+Learned here, worth repeating: a **pending or moderated** upload renders *blank rather than
+erroring*, so it looks exactly like a code bug. Check three things —
+
+- it resolves at all (`economy.roblox.com/v2/assets/<id>/details`)
+- `AssetTypeId` is **1** (Image). A Decal id does not render in `ImageLabel.Image`
+- thumbnail `state` is `Completed` (`thumbnails.roblox.com/v1/assets?assetIds=<id>`)
+
+Do **not** try to judge an icon by its rendered thumbnail. The set is white-on-transparent and
+composites to blank white on the thumbnail background — a known-good icon looks identical to a
+broken one. A transient placeholder at one size also cleared at another, so a single lookup is not
+evidence either way.
+
+### Demo icons are consumer-side, and three stay upstream
+
+The demos, `docs/TUTORIAL.md` and `rail.spec.luau` passed four ids that had just been replaced;
+those 22 occurrences were repointed. Nothing in `dist/` changes — they are not the shipped set.
+
+Three remain (`93364949241311` leaf, `84750991656135` sword, `85925158736685` chart, all uploaded
+by `shlexr`). **Left deliberately** — see `assets/README.md`. They resolve and render; if they
+ever vanish, three demo tabs lose an icon and the library is unaffected.
+
+---
+
+## Session of 2026-07-29 (earlier) — secure-mode gaps, executor test, row lighting
 
 ### `secure-mode-gaps` branch — two gaps against upstream Rayfield
 

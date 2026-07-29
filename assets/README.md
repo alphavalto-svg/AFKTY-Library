@@ -99,7 +99,11 @@ upstream author):
 | 84750991656135 | `sword` | Combat / Layout tabs |
 | 85925158736685 | `chart` | Stats tab |
 
-All three resolve and render — they are a live dependency, not a broken one. Replacing them needs
-new uploads; there is no owned glyph that stands in sensibly (a Combat tab with a chevron on it is
-worse than one with someone else's sword). Until then they are the last thing here that could
-disappear without warning, and only the demos would break, never the library.
+All three resolve and render — they are a live dependency, not a broken one.
+
+**Keeping them is a decision, not an oversight.** It was weighed against uploading replacements
+and against dropping the icons entirely, and left deliberately: replacing them needs new art (no
+owned glyph substitutes sensibly — a Combat tab with a chevron on it is worse than one with
+someone else's sword), and the exposure does not justify it. If those uploads ever vanish, three
+demo tabs lose an icon. The library is untouched either way, because nothing in `constants.icons`
+depends on them any more. Don't re-litigate this without a reason that has changed.
