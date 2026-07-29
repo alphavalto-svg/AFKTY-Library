@@ -5,9 +5,13 @@
 	ReplicatedStorage instead of loadstring+HttpGet, since Studio has no executor.
 
 	Expected to NOT work in Studio (needs executor globals):
-	  - secure mode      (no getgenv)
-	  - config save/load (no writefile/readfile) -- Save() returns false
+	  - secure mode (no getgenv)
 	Everything else -- window, tabs, every element, themes, notifications -- is live.
+
+	Config save/load DOES work here. Studio has no writefile, so utility/filesystem.luau
+	simulates the disk with instances: Save() returns true and writes a StringValue under
+	ReplicatedStorage.Filesystem, which you can open to read the JSON. The simulation dies
+	with the session, so only a real executor persists across joins.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -194,7 +198,8 @@ Tab:CreateButton({
 })
 
 Tab:CreateButton({
-    name = "Save Config (expect false in Studio)",
+    name = "Save Config",
+    description = "Writes to the simulated disk under ReplicatedStorage.Filesystem.",
     callback = function()
         print("Save ->", Window:Save())
     end,

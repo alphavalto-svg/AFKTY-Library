@@ -1,13 +1,52 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-29**, commit `5fd6023` on branch **`window-resizing`** — 214/214 specs,
-coverage 87.26%. **Four commits, not merged to `main`, not pushed.**
+State as of **2026-07-29** — 214/214 specs, coverage 87.26%. The `window-resizing` work is
+**merged to `main` and pushed**, so `dist/Library.lua` on the CDN is current.
 
 Open this file and say *"pick up where we left off"*.
 
 ---
 
-## Session of 2026-07-29 — what landed
+## Session of 2026-07-29 (later) — API tour, types, CI gate
+
+### The full CI gate passes for the first time
+
+`format-check`, `lint`, `typecheck` and the specs are all green together. `typecheck` used to
+fail on one pre-existing error and nobody had noticed, because the gate is never run whole.
+**Run `luau-lsp analyze` before claiming a change is clean** — the specs passing is not the
+same as the gate passing.
+
+### `studio.tour.client.luau` — exhaustive API demo
+
+A second Studio demo that touches every public function once, each control labelled with the
+call it makes and printing a `[TOUR]` line naming the method that ran. Three rail categories
+(Elements / Layout / Window), twelve tabs. Destructive calls are quarantined on a Teardown
+tab, `Unload` behind a confirm popup.
+
+Wired into the place as `StarterPlayerScripts.Tour` with **`Disabled = true`**, so it does not
+fight `Client`. To run it: tick `Disabled` on `Client`, untick it on `Tour`. Rojo accepts
+`$path` and `$properties` on the same node — verified, no `.meta.json` needed.
+
+### `types.luau` had drifted behind the source
+
+It was missing the entire rail API — the exact API `docs/TUTORIAL.md` teaches — so a typed
+consumer got analysis errors on the documented path. Added `RailItemProps`,
+`RailProfileProps`, `RailItem` (`Select` / `SetActive` / `SetUserId` / `Destroy`),
+`TabProps.category`, `Tab:Select/Deselect/Remove`, `Dropdown:Refresh/Add/Remove`, and
+`Window:CreateRailItem/CreateRailProfile/GetPath/SaveSettings/LoadSettings/Get/Set`.
+Re-exported the new types from `init.luau`.
+
+`RailItemProps.icon` is typed **required**, not optional, because `rail.new` asserts on it.
+
+### `rail.luau` typecheck fix
+
+`local rail = {}` was left to inference. `_lastCategory` is only ever assigned inside the
+search and settings callbacks, and Luau seals the literal before it sees them, so reading it
+back reported the key as missing. Annotated `{ [string]: any }`.
+
+---
+
+## Session of 2026-07-29 (earlier) — what landed
 
 All four changes below were checked by hand in Studio and signed off ("yes now its good").
 Design doc for the resizing work: `docs/superpowers/specs/2026-07-29-window-resizing-design.md`.
@@ -81,6 +120,19 @@ again each time and compound.
 The traps table below used to say it doesn't. `persistenceSettings.spec.luau` has been using
 `.never.to.be.ok()` since before this session. (`.throw()` is still absent — use `pcall`.)
 
+### Config saving DOES work in Studio
+
+`studio.client.luau` used to claim `Save()` returns false in Studio, and had a button labelled
+"expect false in Studio". Both were wrong. `utility/filesystem.luau:57` simulates the disk
+with instances under `ReplicatedStorage.Filesystem` whenever `RunService:IsStudio()` — files
+are `StringValue`s, folders are `Folder`s. `Save()` returns **true** and you can open that
+folder to read the JSON. The simulation dies with the session, so only a real executor
+persists across joins.
+
+Verified by running `Save` / `Save(named)` / `Load` / `SaveSettings` / `ListConfigs` /
+`DeleteConfig` under the harness with only `JSONEncode` stubbed (see the trap below) — the
+filesystem path itself is genuine there, because the harness reports `IsStudio() == true`.
+
 ---
 
 ## Build
@@ -140,6 +192,9 @@ Window:CreateTab({ name = "Aimbot", category = combat })
 | Hardcoding the Studio exe path | `Versions\version-*` changes on every Roblox update and the old folder is deleted. Glob for the folder that actually contains `RobloxStudioBeta.exe`. |
 | Studio holding a stale place | Rojo rebuilding `AFKTY Library.rbxlx` does not reload an open Studio. Studio ignores a programmatic close, so restarting means `Stop-Process -Force`, deleting `AFKTY Library.rbxlx.lock`, then relaunching. |
 | PowerShell here-strings in the Bash tool | `@'...'@` is not bash. A commit message containing `0.72 -> 0.88` was read as a redirect and created empty files named `0.88,`. Use a `<<'MSG'` heredoc. |
+| **The harness has no `JSONEncode`** | `scripts/run-tests.luau:1015` errors on `HttpService:JSONEncode`/`JSONDecode` by design. So `Window:Save()` returns **false under lune** for a reason that has nothing to do with the code under test. Specs that need it stub it themselves. A spec written to prove saving works will fail and look like a real bug. |
+| `luau-lsp` cannot see the library from a consumer script | `require(ReplicatedStorage.AFKTY)` resolves as `any` in the root `.client.luau` demos, so `analyze` happily accepts `Window:MethodThatDoesNotExist()`. A clean analyze on those files proves basic Luau validity and nothing about API correctness. Exercise the API under the lune harness instead. |
+| Editing `src/` without rebuilding `dist/` | `dist/Library.lua` is committed and is what `HttpGet` fetches. Any `src/` change — including type-only ones — leaves it stale until `lune run build`. |
 
 ---
 
@@ -156,9 +211,9 @@ They never say "Rayfield", and minification strips comments, so the shipped
 
 ## Known open items
 
-- **`window-resizing` is unmerged and unpushed.** Four commits. Until it reaches `main` and is
-  pushed, `dist/Library.lua` on the CDN is still the pre-resize build, and `docs/TUTORIAL.md`
-  describes behaviour no consumer has yet.
+- **`studio.tour.client.luau` has never been run.** Every call it makes was executed under the
+  lune harness with assertions, so the API usage is sound, but nobody has clicked through it in
+  Studio. Layout and interaction are unverified.
 - The emblem on the minimise bar sits at y 12–40 in a 66px bar, ~7px above true centre. Never
   eyeballed closely. `EDGE_PADDING` in `rail.luau` is the knob; the title gap is
   `COLLAPSED_TITLE_X`.
@@ -168,5 +223,9 @@ They never say "Rayfield", and minification strips comments, so the shipped
 - Rail is ~12% of a 465px window vs ~6% in the reference design; narrowing to 44px would
   match
 - `GUIGAG2.lua` in `HUB/` still loads Rayfield — one line to switch it to the AFKTY URL
-- A GitHub Action to rebuild `dist/` on push, so it can't drift from `src/`
-- Secure mode and config saving have never run in a real executor — only unit-tested
+- A GitHub Action to rebuild `dist/` on push, so it can't drift from `src/`. Now that the whole
+  gate is green it can enforce `format-check` + `lint` + `typecheck` + specs too.
+- **Secure mode has never run in a real executor** — only unit-tested. It needs
+  `getgenv().AFKTY_SECURE = true` before load, so Studio can never exercise it. Config saving
+  is no longer on this list: it is confirmed working on the Studio simulation (see above),
+  though real on-disk persistence is still executor-only.
