@@ -1,25 +1,64 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-29**, commit `4d9c477` on branch **`window-resizing`** (not merged to
-`main`, not pushed) — 212/212 specs, coverage 87.20%.
+State as of **2026-07-29**, commit `5fd6023` on branch **`window-resizing`** — 214/214 specs,
+coverage 87.26%. **Four commits, not merged to `main`, not pushed.**
 
 Open this file and say *"pick up where we left off"*.
 
 ---
 
-## Just landed: window resizing
+## Session of 2026-07-29 — what landed
 
-Done. Design doc: `docs/superpowers/specs/2026-07-29-window-resizing-design.md`.
+All four changes below were checked by hand in Studio and signed off ("yes now its good").
+Design doc for the resizing work: `docs/superpowers/specs/2026-07-29-window-resizing-design.md`.
 
-- `src/components/resize.luau` — a 16×16 grip in main's bottom-right, built alongside `Drag`.
-  On by default; `CreateWindow({ resize = false })` opts out.
-- `Window:_applySize(width, height)` in `window.luau` — the one funnel every size change goes
-  through. Writes `self.size`, so all four show/hide paths inherit the new size for free.
-- `Window.clampSize` / `Window.clampCentreOnScreen` — pure, take the viewport and screen as
-  arguments so the bounds are testable without a camera.
+### 1. Window resizing
+
+- `src/components/resize.luau` — a 16×16 grip in main's bottom-right corner. On by default;
+  `CreateWindow({ resize = false })` opts out. Sizes by cursor *delta*, not absolute position,
+  so grabbing it never snaps the corner to the pointer.
+- `Window:_applySize(width, height)` — the one funnel every size change goes through. Writes
+  `self.size`, so `Hide`, `Show`, `_quickRestore` and `ToggleMinimise` all inherit the new size
+  without knowing resizing exists. Pins the top-left by shifting the centre half the delta.
+- `Window.clampSize` / `Window.clampCentreOnScreen` — **pure**, take the viewport and screen as
+  arguments rather than reading them, so the bounds are testable without a camera. Min 300×320,
+  max viewport − 60.
 - Size persists via `windowWidth` / `windowHeight` in `persistenceSettings`, saved on release
   (never per frame) and re-clamped on load.
 - `tests/components/resize.spec.luau`, plus three cases in `persistenceSettings.spec.luau`.
+
+### 2. Drag bar removed
+
+`src/components/drag.luau` is **deleted**, along with all 10 call sites. The window moves by the
+topbar (`_bindTopbarDrag`), which rejects presses over the tabs and action icons. `zIndex.drag`
+is gone from `constants`; the grip uses the new `zIndex.resizeGrip = 200`.
+
+### 3. Glow softened
+
+It was tiring to look at. Three knobs, all easy to nudge further:
+
+| Knob | Was | Now | Drives |
+|---|---|---|---|
+| `GLOW_IDLE` (`window.luau`) | 0.72 | **0.88** | the 48px halo around the window |
+| `EDGE_IDLE` (`window.luau`) | 0.5 | **0.68** | the window's lit outer stroke |
+| `AccentGlow` (`themes/default`) | 0.15 | **0.45** | toggle indicators, rail selection, slider fills |
+
+### 4. Minimise is fixed, and keeps the emblem
+
+- `minimisedSize = UDim2.fromOffset(300, 66)` — the collapsed bar no longer tracks the resized
+  width. `_applySize` leaves the bar alone while minimised; only what it *restores to* changes.
+- Making the bar narrow exposed a latent bug: `insetForRail` shifts the title right by the full
+  `RAIL_WIDTH` permanently, so at 300px the title landed under the action icons.
+  `Rail.setShown` now slides `topContainer` between two homes — `_titleBaseX + RAIL_WIDTH`
+  expanded, `COLLAPSED_TITLE_X` (52) collapsed. Idempotent, so repeated show/hide can't walk it.
+- `Rail.setShown(window, shown, info, keepBrand)` — minimise passes `keepBrand = true` so the
+  emblem stays and the bar still reads as the product. `Hide` does not, because the collapsed
+  pill draws its own face.
+
+### 5. Docs
+
+`docs/TUTORIAL.md` — a full walkthrough for writing a hub against the library. Every signature
+verified against the demos or the source.
 
 **Two claims in the old version of this file were wrong — corrected below.**
 
@@ -87,7 +126,7 @@ Window:CreateTab({ name = "Aimbot", category = combat })
 
 ---
 
-## Traps that cost time today
+## Traps — each of these cost real time; read before touching anything
 
 | Trap | Detail |
 |---|---|
@@ -98,6 +137,9 @@ Window:CreateTab({ name = "Aimbot", category = combat })
 | `expect(...).throw()` | Not implemented in this harness. Use `pcall` + `equal`. `.never` **is** implemented. |
 | Four separate show/hide paths | `Hide`, `Show` (first-run reveal), `_quickRestore`, `ToggleMinimise`. Wiring only some caused two distinct bugs. Touch all four. |
 | Coverage ratchet | `coverage-baseline.json` enforces no regression. Refresh it only when the line total legitimately shrank; if a new line is genuinely uncovered, write a test. |
+| Hardcoding the Studio exe path | `Versions\version-*` changes on every Roblox update and the old folder is deleted. Glob for the folder that actually contains `RobloxStudioBeta.exe`. |
+| Studio holding a stale place | Rojo rebuilding `AFKTY Library.rbxlx` does not reload an open Studio. Studio ignores a programmatic close, so restarting means `Stop-Process -Force`, deleting `AFKTY Library.rbxlx.lock`, then relaunching. |
+| PowerShell here-strings in the Bash tool | `@'...'@` is not bash. A commit message containing `0.72 -> 0.88` was read as a redirect and created empty files named `0.88,`. Use a `<<'MSG'` heredoc. |
 
 ---
 
@@ -114,7 +156,15 @@ They never say "Rayfield", and minification strips comments, so the shipped
 
 ## Known open items
 
-- Resizing has passed its specs but has **not been driven by hand in Studio yet**
+- **`window-resizing` is unmerged and unpushed.** Four commits. Until it reaches `main` and is
+  pushed, `dist/Library.lua` on the CDN is still the pre-resize build, and `docs/TUTORIAL.md`
+  describes behaviour no consumer has yet.
+- The emblem on the minimise bar sits at y 12–40 in a 66px bar, ~7px above true centre. Never
+  eyeballed closely. `EDGE_PADDING` in `rail.luau` is the knob; the title gap is
+  `COLLAPSED_TITLE_X`.
+- Only `default` exists in `src/themes/`. The README used to advertise five more
+  (`amethyst`, `cobalt`, `ember`, `frost`, `rose`) — corrected 2026-07-29. Note
+  `example.client.luau` still passes `theme = "cobalt"`, which warns and falls back.
 - Rail is ~12% of a 465px window vs ~6% in the reference design; narrowing to 44px would
   match
 - `GUIGAG2.lua` in `HUB/` still loads Rayfield — one line to switch it to the AFKTY URL
