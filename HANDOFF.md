@@ -322,7 +322,10 @@ They never say "Rayfield", and minification strips comments, so the shipped
   `example.client.luau` still passes `theme = "cobalt"`, which warns and falls back.
 - Rail is ~12% of a 465px window vs ~6% in the reference design; narrowing to 44px would
   match
-- `GUIGAG2.lua` in `HUB/` still loads Rayfield — one line to switch it to the AFKTY URL
+- ~~`GUIGAG2.lua` in `HUB/` still loads Rayfield~~ — **wrong, checked 2026-07-29.** It loads no
+  library at all: it is the hand-built v1 hub that draws its own UI from scratch (the one the
+  theme comments credit for the tighter corner radii). Nothing to switch. `AFKTY-Quick.lua` is
+  the script that consumes this library, and it already points at the AFKTY URL.
 - A GitHub Action to rebuild `dist/` on push, so it can't drift from `src/`. Now that the whole
   gate is green it can enforce `format-check` + `lint` + `typecheck` + specs too. **Note the
   reproducibility trap above** — an action that rebuilds and commits will churn the manifest on
