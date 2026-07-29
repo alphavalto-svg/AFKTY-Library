@@ -195,6 +195,7 @@ Window:CreateTab({ name = "Aimbot", category = combat })
 | **The harness has no `JSONEncode`** | `scripts/run-tests.luau:1015` errors on `HttpService:JSONEncode`/`JSONDecode` by design. So `Window:Save()` returns **false under lune** for a reason that has nothing to do with the code under test. Specs that need it stub it themselves. A spec written to prove saving works will fail and look like a real bug. |
 | `luau-lsp` cannot see the library from a consumer script | `require(ReplicatedStorage.AFKTY)` resolves as `any` in the root `.client.luau` demos, so `analyze` happily accepts `Window:MethodThatDoesNotExist()`. A clean analyze on those files proves basic Luau validity and nothing about API correctness. Exercise the API under the lune harness instead. |
 | Editing `src/` without rebuilding `dist/` | `dist/Library.lua` is committed and is what `HttpGet` fetches. Any `src/` change — including type-only ones — leaves it stale until `lune run build`. |
+| **The bundle is not reproducible** | Rebuilding from unchanged `src/` still produces a diff: the wax module manifest near the end of `dist/Library.lua` assigns numeric ids in a non-stable order, so ~13 lines churn every build. A `git diff` on `dist/` is therefore **not** evidence that `src/` changed. Check the hunk — if it is the one manifest hunk and the line count matches, nothing real moved. |
 
 ---
 
@@ -224,7 +225,10 @@ They never say "Rayfield", and minification strips comments, so the shipped
   match
 - `GUIGAG2.lua` in `HUB/` still loads Rayfield — one line to switch it to the AFKTY URL
 - A GitHub Action to rebuild `dist/` on push, so it can't drift from `src/`. Now that the whole
-  gate is green it can enforce `format-check` + `lint` + `typecheck` + specs too.
+  gate is green it can enforce `format-check` + `lint` + `typecheck` + specs too. **Note the
+  reproducibility trap above** — an action that rebuilds and commits will churn the manifest on
+  every run. Either make the bundler's module order stable first, or have the action rebuild and
+  compare *everything but* that hunk rather than blindly committing.
 - **Secure mode has never run in a real executor** — only unit-tested. It needs
   `getgenv().AFKTY_SECURE = true` before load, so Studio can never exercise it. Config saving
   is no longer on this list: it is confirmed working on the Studio simulation (see above),
