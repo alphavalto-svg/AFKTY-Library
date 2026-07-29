@@ -381,7 +381,7 @@ local revenue = statTab:CreateStat({
     prefix = "$",
     value = 12400,
     display = "value",
-    compact = true, -- 12.4k rather than 12400
+    compact = true, -- the 41px single-readout card instead of the 90px one
     numberEasing = true, -- animate between values instead of snapping
 })
 
