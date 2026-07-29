@@ -60,6 +60,15 @@ local Window = Library:CreateWindow({
 
 Window:CreateTag({ text = if SECURE then "secure" else "normal" })
 
+-- The avatar chip takes a different secure-mode path from the icons: image.avatar caches to
+-- avatar_<userId>.png rather than <id>.png. Without one on screen that branch never runs, so
+-- the disk check below would only ever prove half of it.
+Window:CreateRailProfile({
+    callback = function(profile)
+        log("rail profile clicked, userId =", profile.userId)
+    end,
+})
+
 local tab = Window:CreateTab({ name = "Persistence", icon = 93364949241311 })
 
 -- Flagged controls. These are what get written to disk, so change them before saving.
@@ -130,15 +139,70 @@ tab:CreateButton({
 })
 
 -- Secure mode ---------------------------------------------------------------
+-- What secure mode actually changes, and how you can see each one:
+--   1. Icons are downloaded, written to AFKTY/Assets/<id>.png and loaded back through
+--      getcustomasset, so no asset id ever goes out over the wire. Visible as files.
+--   2. Avatars the same way, as avatar_<userId>.png.
+--   3. The brand font is fetched off the main thread; until it lands you get the fallback
+--      family, so the first moment after open looks plainer.
+--   4. The library stops logging entirely -- log.warn/log.print are gagged, so any AFKTY
+--      warning you would normally see in the console is silent.
 tab:CreateSection({ name = "Secure mode" })
 
 tab:CreateButton({
-    name = "Report secure mode state",
-    description = "Icons should render either way; in secure mode they come from disk.",
+    name = "Can this executor do secure mode?",
+    description = "Caching needs all three. Missing any one and preload bails and icons stay as plain asset ids.",
     callback = function()
-        log("AFKTY_SECURE =", getgenv and getgenv().AFKTY_SECURE)
-        log("gethui available =", typeof(gethui) == "function")
-        log("getcustomasset available =", typeof(getcustomasset) == "function")
+        log("AFKTY_SECURE set by this script =", typeof(getgenv) == "function" and getgenv().AFKTY_SECURE)
+        log("getcustomasset =", typeof(getcustomasset) == "function")
+        log("isfile =", typeof(isfile) == "function")
+        log("listfiles =", typeof(listfiles) == "function")
+    end,
+})
+
+tab:CreateButton({
+    name = "Did icons actually cache to disk?",
+    description = "The real proof. In secure mode this folder fills with .png files; with it off it stays empty.",
+    callback = function()
+        if typeof(listfiles) ~= "function" then
+            log("no listfiles() in this executor - can't check")
+            return
+        end
+        local folder = "AFKTY/Assets"
+        local listed, files = pcall(listfiles, folder)
+        if not listed then
+            log("no", folder, "folder yet - nothing has cached")
+            return
+        end
+        local icons, avatars = 0, 0
+        for _, file in files do
+            if string.find(file, "avatar_", 1, true) then
+                avatars += 1
+            elseif string.sub(file, -4) == ".png" then
+                icons += 1
+            end
+        end
+        log(("%s: %d icon(s), %d avatar(s)"):format(folder, icons, avatars))
+        for i = 1, math.min(#files, 5) do
+            log("  ", files[i])
+        end
+        Window:Notify({
+            title = if icons + avatars > 0 then "Icons are cached" else "Nothing cached",
+            content = ("%d icon(s), %d avatar(s) in %s"):format(icons, avatars, folder),
+        })
+    end,
+})
+
+tab:CreateButton({
+    name = "Is the library silent?",
+    description = "Forces a library-side warning. Secure mode gags it, so seeing nothing in the console is the pass.",
+    callback = function()
+        -- an unknown theme name makes the library log.warn and fall back. With secure mode on
+        -- that warning is suppressed; with it off you get "AFKTY: unknown theme ..."
+        Window:ChangeTheme("definitely-not-a-real-theme")
+        log("asked for a bogus theme. secure mode ON = no AFKTY warning above this line;")
+        log("secure mode OFF = you should see 'AFKTY: unknown theme'")
+        Window:ChangeTheme("default")
     end,
 })
 
