@@ -108,6 +108,9 @@ function Slider.new(tab, properties)
     }, { BackgroundTransparency = "ElementTransparency" })
 
     self.stroke = self.window:StyleElementBody(self.main)
+    -- the row rests unlit like every other element, so it needs the shared hover to light it.
+    -- the track's own hover below is a separate, subtler thing and stays.
+    self.window:_wireElementHover(self)
     self._lastValue = self.value
 
     -- minimal is just the track (built below); skip the whole title/value block

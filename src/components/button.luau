@@ -166,7 +166,7 @@ function Button:_buildFull()
             :Create(
                 self.stroke,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-                { Transparency = self.window.theme.ElementStrokeTransparency }
+                { Transparency = self.window.theme.ElementStrokeRestTransparency }
             )
             :Play()
     end)
@@ -252,7 +252,7 @@ function Button:_buildCompact()
             :Create(
                 self.stroke,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-                { Transparency = self.window.theme.ElementStrokeTransparency }
+                { Transparency = self.window.theme.ElementStrokeRestTransparency }
             )
             :Play()
     end)

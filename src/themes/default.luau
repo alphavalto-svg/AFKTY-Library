@@ -51,7 +51,13 @@ return {
     }),
     ElementStrokeHover = Color3.fromRGB(144, 231, 68),
     ElementTransparency = 0,
+    -- Resting edge for panels and other surfaces that never light up: dropdown cards, popup
+    -- boxes, stat tiles. Constant, because nothing else tells you where they end.
     ElementStrokeTransparency = 0,
+    -- Resting edge for the hoverable rows (button, toggle, slider, input, keybind, colour
+    -- picker). Hidden, so a page of elements reads as a quiet list and only the row under the
+    -- cursor is outlined. Set this to 0 to get the old always-on edges back.
+    ElementStrokeRestTransparency = 1,
     ElementStrokeHoverTransparency = 0,
     ElementTextHoverColor = Color3.fromRGB(255, 255, 255),
 

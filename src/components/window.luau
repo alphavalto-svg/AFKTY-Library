@@ -2151,6 +2151,10 @@ function Window:_wireElementHover(element)
     local info = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local theme = self.theme
 
+    -- marks the row as one that lights under the cursor, so reveal knows to rest it hidden
+    -- rather than at the constant panel edge
+    element.hoverLit = true
+
     self:Connect(element.main.MouseEnter, function()
         if not self:_interactive() then
             return -- window still revealing/hiding: dont light up mid-animation
@@ -2162,7 +2166,10 @@ function Window:_wireElementHover(element)
                 { Transparency = theme.ElementStrokeHoverTransparency, Color = theme.ElementStrokeHover }
             )
             :Play()
-        variables.tweenService:Create(element.title, info, { TextColor3 = theme.ElementTextHoverColor }):Play()
+        -- a minimal slider is track-only and has no title
+        if element.title then
+            variables.tweenService:Create(element.title, info, { TextColor3 = theme.ElementTextHoverColor }):Play()
+        end
         if element.hoverOverlay then
             variables.tweenService:Create(element.hoverOverlay, info, { BackgroundTransparency = 0.97 }):Play()
         end
@@ -2173,10 +2180,12 @@ function Window:_wireElementHover(element)
             :Create(
                 element.stroke,
                 info,
-                { Transparency = theme.ElementStrokeTransparency, Color = theme.ElementStroke }
+                { Transparency = theme.ElementStrokeRestTransparency, Color = theme.ElementStroke }
             )
             :Play()
-        variables.tweenService:Create(element.title, info, { TextColor3 = theme.ContentColor }):Play()
+        if element.title then
+            variables.tweenService:Create(element.title, info, { TextColor3 = theme.ContentColor }):Play()
+        end
         if element.hoverOverlay then
             variables.tweenService:Create(element.hoverOverlay, info, { BackgroundTransparency = 1 }):Play()
         end
@@ -2247,11 +2256,13 @@ function Window:StyleElementBody(main)
         Parent = main,
     }, { CornerRadius = "ElementCornerRadius" })
 
+    -- rests hidden and lights on hover; every element built through here wires that up, so
+    -- the resting key is the row one rather than the panel one
     return self:Create("UIStroke", {
         Transparency = 1,
 
         Parent = main,
-    }, { Color = "ElementStroke", Transparency = "ElementStrokeTransparency" })
+    }, { Color = "ElementStroke", Transparency = "ElementStrokeRestTransparency" })
 end
 
 -- Shared scaffold for the compact button/toggle row: the white body + stroke, the fill flex
@@ -2355,7 +2366,12 @@ end
 
 -- Reveal the parts every non-Section element shares (fill/stroke/title/icon/descriptor).
 function Window:_revealCommon(element, animate)
-    self:_reveal(element.stroke, { Transparency = self.theme.ElementStrokeTransparency }, animate)
+    -- a row that lights on hover rests hidden; a stat tile has no hover state, so it keeps the
+    -- constant edge or it would have no outline at all
+    local restStroke = if element.hoverLit
+        then self.theme.ElementStrokeRestTransparency
+        else self.theme.ElementStrokeTransparency
+    self:_reveal(element.stroke, { Transparency = restStroke }, animate)
     self:_reveal(element.title, { TextTransparency = 0 }, animate)
     self:_reveal(element.main, { BackgroundTransparency = self.theme.ElementTransparency or 0 }, animate)
     if element.iconLabel then

@@ -257,6 +257,7 @@ function ColorPicker.new(tab, properties)
 
     self.stroke = self.window:StyleElementBody(self.main)
     self.hoverOverlay = self.window:CreateHoverOverlay(self.main)
+    self.hoverLit = true -- wires its own hover below rather than going through _wireElementHover
 
     self:_buildHeader()
     self:_buildPicker()
@@ -292,7 +293,7 @@ function ColorPicker.new(tab, properties)
             :Create(
                 self.stroke,
                 fadeInfo,
-                { Transparency = theme.ElementStrokeTransparency, Color = theme.ElementStroke }
+                { Transparency = theme.ElementStrokeRestTransparency, Color = theme.ElementStroke }
             )
             :Play()
         variables.tweenService:Create(self.title, fadeInfo, { TextColor3 = theme.ContentColor }):Play()

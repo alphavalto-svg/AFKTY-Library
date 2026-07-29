@@ -270,7 +270,7 @@ function Toggle:_buildFull()
             :Create(
                 self.stroke,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-                { Transparency = self.window.theme.ElementStrokeTransparency }
+                { Transparency = self.window.theme.ElementStrokeRestTransparency }
             )
             :Play()
     end)
@@ -385,7 +385,7 @@ function Toggle:_buildCompact()
             :Create(
                 self.stroke,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-                { Transparency = self.window.theme.ElementStrokeTransparency }
+                { Transparency = self.window.theme.ElementStrokeRestTransparency }
             )
             :Play()
     end)
