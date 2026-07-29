@@ -7,6 +7,8 @@ every consuming script.
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main/dist/Library.lua"))()
 ```
 
+Writing a hub against it? Start with [docs/TUTORIAL.md](docs/TUTORIAL.md).
+
 ## API
 
 | Area | Methods |
@@ -19,7 +21,8 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alpha
 
 ## Themes
 
-Built-ins: `default`, `amethyst`, `cobalt`, `ember`, `frost`, `rose`.
+Built-in: `default`. It is currently the only theme in `src/themes/` — passing any other name
+logs a warning and falls back to it.
 
 Themes are **partial override tables** — a theme only specifies what differs and inherits
 corners, fonts, and toggle/field behaviour from `default`. Adding one means dropping a
