@@ -1897,8 +1897,13 @@ function Window:_firstShow()
     end
 end
 
+-- The config file's full path. persistence.getPath hands back (dir, fullPath), and returning
+-- both meant `local path = Window:GetPath()` bound the *directory* - so every caller doing
+-- isfile(path) got false against a folder that plainly existed. The type has always said one
+-- string, and a method called GetPath singular means the file.
 function Window:GetPath()
-    return persistence.getPath(self)
+    local _, fullPath = persistence.getPath(self)
+    return fullPath
 end
 
 -- name saves to a specific config; omit it to save the default file.

@@ -369,7 +369,13 @@ return function()
             expect(w:Set("missing", true)).to.equal(false)
             expect(w:Save("")).to.equal(false)
             expect(w:Load("")).to.equal(false)
-            expect(type(w:GetPath())).to.equal("string")
+            -- GetPath means the file, not the folder holding it. It used to hand back
+            -- (dir, fullPath), so a caller binding one value got the directory and every
+            -- isfile() check against it failed against a folder that plainly existed.
+            expect(select("#", w:GetPath())).to.equal(1)
+            local configPath = w:GetPath()
+            expect(type(configPath)).to.equal("string")
+            expect(configPath:sub(-5)).to.equal(".rfld")
 
             tag:Remove()
             expect(#w.tags).to.equal(0)
