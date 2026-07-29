@@ -101,6 +101,41 @@ return function()
             expect(encodedData.haptics).to.equal(true)
         end)
 
+        it("saves the window size, so a resize survives a rejoin", function()
+            local window = makeWindow()
+            window.settings.windowWidth = 720
+            window.settings.windowHeight = 640
+
+            expect(persistenceSettings.saveSettings(window)).to.equal(true)
+
+            expect(encodedData.windowWidth).to.equal(720)
+            expect(encodedData.windowHeight).to.equal(640)
+        end)
+
+        it("restores a saved window size", function()
+            local window = makeWindow()
+            files["Root/Settings/afkty.rfld"] = "settings-json"
+            decodedData = { windowWidth = 720, windowHeight = 640 }
+
+            expect(persistenceSettings.loadSettings(window)).to.equal(true)
+
+            expect(window.settings.windowWidth).to.equal(720)
+            expect(window.settings.windowHeight).to.equal(640)
+        end)
+
+        it("ignores a window size that is not a number", function()
+            local window = makeWindow()
+            window.settings.windowWidth = 720
+            files["Root/Settings/afkty.rfld"] = "settings-json"
+            decodedData = { windowWidth = "wide", windowHeight = {} }
+
+            expect(persistenceSettings.loadSettings(window)).to.equal(true)
+
+            -- a corrupt file must not be able to feed a bogus size into the window
+            expect(window.settings.windowWidth).to.equal(720)
+            expect(window.settings.windowHeight).never.to.be.ok()
+        end)
+
         it("parks a whole copy before it overwrites the real file", function()
             local written = {}
             filesystem.writefile = function(path, content)

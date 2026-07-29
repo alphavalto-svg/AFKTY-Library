@@ -1,22 +1,45 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-28, commit `344bc17`** — 182/182 specs, coverage 86.62%, published.
+State as of **2026-07-29** — 211/211 specs, coverage 86.89%, built but **not yet committed**.
 
 Open this file and say *"pick up where we left off"*.
 
 ---
 
-## Next task: window resizing
+## Just landed: window resizing
 
-Not started. The pieces it needs:
+Done. Design doc: `docs/superpowers/specs/2026-07-29-window-resizing-design.md`.
 
-- Drag handles on the window edges and bottom-right corner that don't fight the existing
-  `src/components/drag.luau` (which owns moving the window)
-- Min/max size clamps, and keeping the window on screen
-- **`insetForRail` must re-run on every resize.** It currently applies once when the rail is
-  created; a resize would leave the rail inset stale and the content misaligned
-- Persist the size through `SaveSettings` / `LoadSettings` so it survives a rejoin
-- Specs, following `tests/components/rail.spec.luau`
+- `src/components/resize.luau` — a 16×16 grip in main's bottom-right, built alongside `Drag`.
+  On by default; `CreateWindow({ resize = false })` opts out.
+- `Window:_applySize(width, height)` in `window.luau` — the one funnel every size change goes
+  through. Writes `self.size`, so all four show/hide paths inherit the new size for free.
+- `Window.clampSize` / `Window.clampCentreOnScreen` — pure, take the viewport and screen as
+  arguments so the bounds are testable without a camera.
+- Size persists via `windowWidth` / `windowHeight` in `persistenceSettings`, saved on release
+  (never per frame) and re-clamped on load.
+- `tests/components/resize.spec.luau`, plus three cases in `persistenceSettings.spec.luau`.
+
+**Two claims in the old version of this file were wrong — corrected below.**
+
+### `insetForRail` does NOT need to re-run on resize
+
+The previous handoff listed this as required work. It isn't, and doing it would *introduce* a
+bug: everything `insetForRail` touches is scale-sized or left-anchored with a pure pixel
+offset, so the inset stays correct at any width. Re-running it would subtract `RAIL_WIDTH`
+again each time and compound.
+
+| Element | Original | After inset |
+|---|---|---|
+| `tabList` | `UDim2.new(1, 0, 0, 38)` | `(1, -RAIL_WIDTH, 0, 38)` |
+| `elements` | `UDim2.new(1, 0, 1, -106)` | `(1, -RAIL_WIDTH, 1, -106)` |
+| `searchPill` | `UDim2.new(1, -35, 0, 35)` | `(1, -35-RAIL_WIDTH, 0, 35)` |
+| `topContainer` | `Position (0, 25, 0.5, 0)` | `(0, 25+RAIL_WIDTH, 0.5, 0)` |
+
+### `expect(...).never` DOES exist
+
+The traps table below used to say it doesn't. `persistenceSettings.spec.luau` has been using
+`.never.to.be.ok()` since before this session. (`.throw()` is still absent — use `pcall`.)
 
 ---
 
@@ -71,7 +94,7 @@ Window:CreateTab({ name = "Aimbot", category = combat })
 | Piping a build through `head` | SIGPIPE kills it mid-run and it looks like it passed. Verify artifact **contents**, not timestamps. |
 | Long boolean wrapped by stylua | A multi-line `if` whose condition starts on the next line breaks the coverage instrumenter (`Expected 'then'`). Put the condition in a local. |
 | `Font.fromEnum` in a theme | The lune harness shims `Font`. Use `variables.brandFont(weight)`; the family comes from `constants.fontAsset`. |
-| `expect(...).never` / `.throw()` | Not implemented in this harness. Use `pcall` + `equal`. |
+| `expect(...).throw()` | Not implemented in this harness. Use `pcall` + `equal`. `.never` **is** implemented. |
 | Four separate show/hide paths | `Hide`, `Show` (first-run reveal), `_quickRestore`, `ToggleMinimise`. Wiring only some caused two distinct bugs. Touch all four. |
 | Coverage ratchet | `coverage-baseline.json` enforces no regression. Refresh it only when the line total legitimately shrank; if a new line is genuinely uncovered, write a test. |
 
@@ -90,7 +113,7 @@ They never say "Rayfield", and minification strips comments, so the shipped
 
 ## Known open items
 
-- **Window resizing** (above)
+- Resizing has passed its specs but has **not been driven by hand in Studio yet**
 - Rail is ~12% of a 465px window vs ~6% in the reference design; narrowing to 44px would
   match
 - `GUIGAG2.lua` in `HUB/` still loads Rayfield — one line to switch it to the AFKTY URL

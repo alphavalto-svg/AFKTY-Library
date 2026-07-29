@@ -20,6 +20,8 @@ type SettingsWindow = {
         keepOnScreen: boolean,
         welcomeToast: boolean,
         haptics: boolean,
+        windowWidth: number?,
+        windowHeight: number?,
     },
 }
 
@@ -29,6 +31,8 @@ type DecodedSettings = {
     keepOnScreen: unknown?,
     welcomeToast: unknown?,
     haptics: unknown?,
+    windowWidth: unknown?,
+    windowHeight: unknown?,
 }
 
 function persistenceSettings.getSettingsPath(): (string, string)
@@ -47,6 +51,8 @@ function persistenceSettings.saveSettings(window: SettingsWindow): boolean
         keepOnScreen = window.settings.keepOnScreen,
         welcomeToast = window.settings.welcomeToast,
         haptics = window.settings.haptics,
+        windowWidth = window.settings.windowWidth,
+        windowHeight = window.settings.windowHeight,
     }
 
     local ok, encoded = pcall(variables.httpService.JSONEncode, variables.httpService, data)
@@ -133,6 +139,16 @@ function persistenceSettings.loadSettings(window: SettingsWindow): boolean
 
     if type(settings.haptics) == "boolean" then
         window.settings.haptics = settings.haptics
+    end
+
+    -- the window re-clamps these against the current viewport before applying them, so a
+    -- rejoin on a smaller screen cant restore a window bigger than the display
+    if type(settings.windowWidth) == "number" then
+        window.settings.windowWidth = settings.windowWidth
+    end
+
+    if type(settings.windowHeight) == "number" then
+        window.settings.windowHeight = settings.windowHeight
     end
 
     return true

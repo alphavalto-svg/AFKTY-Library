@@ -60,10 +60,12 @@ constants.statAccents = {
 -- Named stacking layers for window furniture (assumes Global ZIndexBehavior)
 constants.zIndex = {
     bottomFade = 100,
-    -- bottom-right notification cards, above the bottom fade + drag so they aren't dimmed or
-    -- pierced by them (they land over the window's lower-right corner)
+    -- the resize grip sits over the bottom fade it shares a corner with, but under the
+    -- notification cards that land on top of that same corner
+    resizeGrip = 200,
+    -- bottom-right notification cards, above the bottom fade and the resize grip so they aren't
+    -- dimmed or pierced by them (they land over the window's lower-right corner)
     notification = 1500,
-    drag = 1000,
     -- top-centre and bottom-centre toasts float over the whole window
     toast = 2000,
     toastContent = 2001,

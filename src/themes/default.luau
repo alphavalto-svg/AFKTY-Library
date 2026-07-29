@@ -18,9 +18,9 @@
 --   mid     rgb( 57,  87,  43)   emblem median
 --   deep    rgb( 27,  42,  12)   emblem shadow
 --
--- The glow reads through three things working together: accent fills sitting a step darker
--- than their strokes so every edge looks lit rather than flat, stroke gradients running
--- bright through their midpoint, and a low AccentGlow transparency so the halo carries.
+-- The lit look comes from accent fills sitting a step darker than their strokes, so every edge
+-- reads lit rather than flat, plus stroke gradients running bright through their midpoint. The
+-- halo itself (AccentGlow) is deliberately restrained - it is trim, not a light source.
 local variables = require(script.Parent.Parent.utility.variables)
 
 return {
@@ -68,7 +68,7 @@ return {
     -- Fill sits a step under the stroke so the rim reads lit instead of a flat block.
     AccentColor = Color3.fromRGB(112, 190, 48),
     AccentStroke = Color3.fromRGB(166, 250, 92),
-    AccentGlow = 0.15, -- well under the 0.4 stock value, so the halo carries
+    AccentGlow = 0.45, -- a hint of halo, not a bloom; 0.15 was bright enough to tire the eye
 
     ActionColor = Color3.fromRGB(255, 255, 255),
     ContentColor = Color3.fromRGB(255, 255, 255),

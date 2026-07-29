@@ -34,11 +34,15 @@ local revealInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingD
 -- restore button used to sit.
 -- Resting transparencies for the window's lit outer edge. Every reveal path uses these so
 -- the glow can't differ between first load and a reopen.
-local GLOW_IDLE = 0.72
-local EDGE_IDLE = 0.5
+local GLOW_IDLE = 0.88
+local EDGE_IDLE = 0.68
 
 local collapsedSize = UDim2.fromOffset(185, 50)
 local collapsedTop = UDim2.new(0.5, 0, 0, 20)
+
+-- Minimise collapses to this exact bar, whatever the window has been resized to. Fixed on
+-- purpose: the collapsed state should be one shape you learn, not a different width every time.
+local minimisedSize = UDim2.fromOffset(300, 66)
 
 -- Width of the top-centre toast stack container. Toasts hug their own content and centre
 -- within it, so this just needs to be at least the toast's own max width.
@@ -65,6 +69,33 @@ local function fitWindowSize()
     local width = math.max(minWindowSize.X, math.min(defaultWindowSize.X, viewport.X - viewportMargin))
     local height = math.max(minWindowSize.Y, math.min(defaultWindowSize.Y, viewport.Y - viewportMargin))
     return UDim2.fromOffset(width, height)
+end
+
+-- Clamp a requested size to what the screen can actually show. Pure, and takes the viewport
+-- rather than reading it, so the bounds are testable without a camera. A nil viewport (none
+-- yet) applies the floor only - the same fallback fitWindowSize takes.
+function Window.clampSize(width, height, viewport)
+    local clampedWidth = math.max(minWindowSize.X, width)
+    local clampedHeight = math.max(minWindowSize.Y, height)
+
+    if viewport and viewport.X > 0 and viewport.Y > 0 then
+        -- math.max so the floor still wins on a screen smaller than the minimum window
+        clampedWidth = math.min(clampedWidth, math.max(minWindowSize.X, viewport.X - viewportMargin))
+        clampedHeight = math.min(clampedHeight, math.max(minWindowSize.Y, viewport.Y - viewportMargin))
+    end
+
+    return clampedWidth, clampedHeight
+end
+
+-- Pull a window centre back until the whole window sits on screen. Same clamp the drag paths
+-- use, pulled out here so growing near an edge cant push the window off.
+function Window.clampCentreOnScreen(x, y, size, screen)
+    local margin = 8
+    local halfX, halfY = size.X / 2, size.Y / 2
+    -- math.max in case the window is bigger than the screen, which would invert the clamp
+    local clampedX = math.clamp(x, halfX + margin, math.max(halfX + margin, screen.X - halfX - margin))
+    local clampedY = math.clamp(y, halfY + margin, math.max(halfY + margin, screen.Y - halfY - margin))
+    return clampedX, clampedY
 end
 
 -- Keys that drive a UIGradient and so want a ColorSequence. A dev may pass a plain Color3 for
@@ -272,8 +303,6 @@ function Window.new(properties)
 
         Parent = self.screenGui,
     })
-
-    self.drag = require(script.Parent.drag).new(self)
 
     self.windowCorner = self:Create("UICorner", {
 
@@ -608,6 +637,7 @@ function Window.new(properties)
     self.animating = false
     self._revealing = false
     self.hasShownOnce = false
+    self._resizing = false
 
     self.settings = {
         toggleKeybind = Enum.KeyCode.K,
@@ -615,9 +645,25 @@ function Window.new(properties)
         keepOnScreen = true, -- clamp the drag so the window cant be pulled off screen
         welcomeToast = true, -- the "signed in as" toast on first open for a new/changed account
         haptics = false, -- off by default; opt in from settings (buzzes on presses/notifications)
+        -- windowWidth/windowHeight stay unset until the window is actually resized, so a fresh
+        -- install still opens at whatever fitWindowSize picks for the screen it lands on
     }
 
     self:LoadSettings()
+
+    -- a size carried over from a previous session, re-clamped in case this screen is smaller
+    local hasSavedSize = self.settings.windowWidth ~= nil and self.settings.windowHeight ~= nil
+    if hasSavedSize then
+        self:_applySize(self.settings.windowWidth, self.settings.windowHeight)
+    end
+
+    -- On unless a hub turns it off. Behaviour belongs in the library rather than being re-typed
+    -- by every consuming script, so the default is the useful one.
+    local wantsResize = properties.resize ~= false and properties.Resize ~= false
+    if wantsResize then
+        self.resize = require(script.Parent.resize).new(self)
+    end
+
     hapticEngine.setContainer(self.screenGui) -- effects live with the interface, not the workspace
     hapticEngine.setEnabled(self.settings.haptics) -- honour a saved off before any interaction
     chrome.buildCollapsedFace(self)
@@ -987,18 +1033,6 @@ function Window:Hide()
     local cornerInfo = TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut)
     local faceInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-    -- shrink the drag bar back down the same way it grows in on first reveal, instead of
-    -- just cutting it
-    variables.tweenService
-        :Create(self.drag.dragCosmetic, fadeInfo, { Size = UDim2.fromOffset(0, 4), BackgroundTransparency = 1 })
-        :Play()
-    task.delay(0.18, function()
-        if not self.hidden then
-            return
-        end
-        self.drag.drag.Visible = false
-    end)
-
     -- fade the window's own chrome out; main keeps its own background/gradient/corner the
     -- whole time, it just reshapes underneath - there's nothing to hand off to
     variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
@@ -1020,6 +1054,11 @@ function Window:Hide()
     -- down explicitly or it keeps drawing over the collapsed face
     if self.rail then
         require(script.Parent.rail).setShown(self, false, fadeInfo)
+    end
+
+    -- the grip lives inside main too, and there is nothing to size while collapsed
+    if self.resize then
+        self.resize:SetShown(false)
     end
 
     for _, action in ipairs(self.actionContainer:GetChildren()) do
@@ -1105,19 +1144,11 @@ function Window:ToggleMinimise()
         if self.rail then
             require(script.Parent.rail).setShown(self, true, fadeInfo)
         end
+        if self.resize then
+            self.resize:SetShown(true)
+        end
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
-
-        variables.tweenService
-            :Create(self.drag.drag, sizeInfo, {
-                Position = UDim2.new(
-                    self.main.Position.X.Scale,
-                    self.main.Position.X.Offset,
-                    self.main.Position.Y.Scale,
-                    self.main.Position.Y.Offset + self.size.Y.Offset / 2 + 15
-                ),
-            })
-            :Play()
 
         -- once the window's grown back, fade the content and tab pills in rather than
         -- snapping them visible
@@ -1174,24 +1205,64 @@ function Window:ToggleMinimise()
         if self.rail then
             require(script.Parent.rail).setShown(self, false, fadeInfo)
         end
+        if self.resize then
+            self.resize:SetShown(false)
+        end
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 1 }):Play()
-        variables.tweenService:Create(self.main, sizeInfo, { Size = UDim2.fromOffset(self.size.X.Offset, 66) }):Play()
-
-        variables.tweenService
-            :Create(self.drag.drag, sizeInfo, {
-                Position = UDim2.new(
-                    self.main.Position.X.Scale,
-                    self.main.Position.X.Offset,
-                    self.main.Position.Y.Scale,
-                    self.main.Position.Y.Offset + 66 / 2 + 15
-                ),
-            })
-            :Play()
+        -- a fixed bar, deliberately not the resized width: collapsed is a consistent shape you
+        -- learn the position of, not a reminder of how wide you left the window
+        variables.tweenService:Create(self.main, sizeInfo, { Size = minimisedSize }):Play()
 
         task.delay(0.5, function()
             self.animating = false
         end)
     end
+end
+
+-- The one funnel every size change goes through: the grip drag, and a size restored from disk.
+-- It writes self.size, which every reveal target reads - so Hide, Show, _quickRestore and
+-- ToggleMinimise inherit the new size without any of them knowing that resizing exists.
+function Window:_applySize(width, height)
+    local camera = variables.workspace.CurrentCamera
+    local viewport = camera and camera.ViewportSize
+    local newWidth, newHeight = Window.clampSize(width, height, viewport)
+
+    local previous = self.size
+    self.size = UDim2.fromOffset(newWidth, newHeight)
+
+    -- Nothing on screen to resize. Hidden: main is still parked at its pre-reveal start state,
+    -- and snapping it to full size would leave the intro animation with nothing to sweep out, so
+    -- keep that start state in step instead. Minimised: the collapsed bar is a fixed size, and
+    -- only what it restores to changes.
+    local offScreen = self.hidden or self.minimised
+    if offScreen then
+        if not self.hasShownOnce then
+            self.main.Size = UDim2.fromOffset(math.max(0, newWidth - 50), 0)
+        end
+        return
+    end
+
+    -- main is centre-anchored, so growing by d moves both edges out by d/2. Shifting the centre
+    -- by that same half-delta pins the top-left corner, which is what makes the grip feel like
+    -- it is dragging the corner rather than stretching the window from the middle.
+    local halfDeltaX = (newWidth - previous.X.Offset) / 2
+    local halfDeltaY = (newHeight - previous.Y.Offset) / 2
+
+    self.main.Size = self.size
+
+    -- resolve to absolute pixels, the same space the topbar drag already leaves Position in, so
+    -- a resized window and a dragged one are positioned the same way
+    local screen = self.screenGui.AbsoluteSize
+    local position = self.main.Position
+    local centreX = position.X.Scale * screen.X + position.X.Offset + halfDeltaX
+    local centreY = position.Y.Scale * screen.Y + position.Y.Offset + halfDeltaY
+
+    -- growing next to an edge would otherwise push part of the window off screen
+    if self.settings and self.settings.keepOnScreen then
+        centreX, centreY = Window.clampCentreOnScreen(centreX, centreY, self.main.AbsoluteSize, screen)
+    end
+
+    self.main.Position = UDim2.fromOffset(centreX, centreY)
 end
 
 function Window:_bindKeybind()
@@ -1344,16 +1415,6 @@ function Window:_bindTopbarDrag()
         end
 
         self.main.Position = getTarget()
-
-        if self.drag and self.drag.drag then
-            local mainPosition = self.main.Position
-            self.drag.drag.Position = UDim2.new(
-                mainPosition.X.Scale,
-                mainPosition.X.Offset,
-                mainPosition.Y.Scale,
-                mainPosition.Y.Offset + (self.main.Size.Y.Offset / 2 + 15)
-            )
-        end
     end)
 end
 
@@ -1420,11 +1481,6 @@ function Window:_buildSettingsUI()
             variables.tweenService
                 :Create(self.main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0.5, 0, 0.5, 0),
-                })
-                :Play()
-            variables.tweenService
-                :Create(self.drag.drag, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(0.5, 0, 0.5, self.size.Y.Offset / 2 + 15),
                 })
                 :Play()
         end,
@@ -1672,6 +1728,10 @@ function Window:_quickRestore()
             require(script.Parent.rail).setShown(self, true, fadeInfo)
         end
 
+        if self.resize then
+            self.resize:SetShown(true)
+        end
+
         for _, action in ipairs(self.actionContainer:GetChildren()) do
             if action:IsA("Frame") then
                 variables.tweenService:Create(action.ImageLabel, fadeInfo, { ImageTransparency = 0.6 }):Play()
@@ -1698,20 +1758,6 @@ function Window:_quickRestore()
         self:_revealElements(0.035, 0.4)
     end)
 
-    -- Drag handle grows in with the chrome, same width sweep it uses on first reveal. Position
-    -- is recalculated against the full restored size - if the window was minimised (a shorter
-    -- bar-hang offset) before hiding, it would otherwise reappear at the old, wrong height.
-    task.delay(0.22, function()
-        self.drag.drag.Position =
-            UDim2.new(target.X.Scale, target.X.Offset, target.Y.Scale, target.Y.Offset + self.size.Y.Offset / 2 + 15)
-        self.drag.dragCosmetic.Size = UDim2.fromOffset(0, 4)
-        self.drag.dragCosmetic.BackgroundTransparency = 1
-        self.drag.drag.Visible = true
-        variables.tweenService
-            :Create(self.drag.dragCosmetic, growInfo, { Size = UDim2.fromOffset(100, 4), BackgroundTransparency = 0.7 })
-            :Play()
-    end)
-
     task.delay(0.6, function()
         self.animating = false
         self._revealing = false
@@ -1723,7 +1769,6 @@ function Window:_firstShow()
     self.elements.Visible = true
     self.tabList.Visible = true
 
-    self.drag.drag.Visible = false
     self.main.Visible = true
     variables.tweenService
         :Create(
@@ -1832,22 +1877,6 @@ function Window:_firstShow()
     self:_revealElements(0.03, 2)
 
     task.wait(1)
-
-    self.drag.drag.Visible = true
-    variables.tweenService
-        :Create(
-            self.drag.dragCosmetic,
-            TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-            { BackgroundTransparency = 0.7 }
-        )
-        :Play()
-    variables.tweenService
-        :Create(
-            self.drag.dragCosmetic,
-            TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-            { Size = UDim2.fromOffset(100, 4) }
-        )
-        :Play()
 
     self.animating = false
     self._revealing = false

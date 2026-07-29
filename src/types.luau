@@ -32,6 +32,7 @@ export type WindowProps = {
     showName: string?,
     showIcon: (string | number)?,
     configuration: WindowConfiguration?,
+    resize: boolean?, -- drag the bottom-right grip to resize; on unless set false
     fallbackFont: (Font | Enum.Font)?, -- built-in stand-in shown in secure mode while the brand font downloads
     locale: string?, -- pin the UI language; defaults to the player's Roblox locale
     translations: Translations?, -- language tables keyed by locale id; the easy, table-first path
