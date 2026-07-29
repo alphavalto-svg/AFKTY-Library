@@ -1,6 +1,7 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-29** — 211/211 specs, coverage 86.89%, built but **not yet committed**.
+State as of **2026-07-29**, commit `4d9c477` on branch **`window-resizing`** (not merged to
+`main`, not pushed) — 212/212 specs, coverage 87.20%.
 
 Open this file and say *"pick up where we left off"*.
 
