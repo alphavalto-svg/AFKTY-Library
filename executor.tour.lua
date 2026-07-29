@@ -5,12 +5,25 @@
 
 	It does two jobs at once:
 
-	  1. AUTOMATED CHECKS. Everything that can be asserted without a human is asserted on load,
-	     printed to the console as [PASS]/[FAIL], and collected onto the Checks tab. Read that
-	     tab first -- if something is broken it will say so there rather than making you hunt.
+	  1. AUTOMATED CHECKS. Everything that can be asserted without a human is asserted on load
+	     and collected onto the Checks tab. Read that tab first -- if something is broken it
+	     will say so there rather than making you hunt.
 
 	  2. FULL API COVERAGE. Every public call the library exposes, each behind a labelled
-	     control that prints a [TOUR] line naming the method that ran.
+	     control that records a [TOUR] line naming the method that ran.
+
+	NOTHING IS PRINTED TO THE CONSOLE
+	  Output goes to an in-memory buffer, readable from Session -> Show log. This is not
+	  fussiness: a game LocalScript can hook LogService.MessageOut and read every print any
+	  script makes, executor scripts included, and LogService:GetLogHistory() hands it the
+	  backlog as well -- so a line stays readable long after it scrolled past.
+
+	  Tested against this library on a live client with a simulated game-side detector. The
+	  library itself emitted nothing at all in secure mode, through a bogus theme name, a
+	  duplicate flag, an uncached icon and a hub callback that threw. The only thing the
+	  detector could see was this script's own chatter. Hence the buffer.
+
+	  Set LOG_TO_CONSOLE = true below when you are debugging and want it in the console.
 
 	HOW TO USE
 	  Run it. SECURE is true by default, matching what a shipped hub now gets. Set it false and
@@ -53,13 +66,41 @@ local URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main
 
 -- ===========================================================================
 -- Results plumbing
+--
+-- Nothing here reaches the console by default, and that is deliberate. A game LocalScript can
+-- hook LogService.MessageOut and read every print any script makes, executor scripts included,
+-- and LogService:GetLogHistory() hands it the backlog too -- so output survives long after the
+-- line scrolled away. Verified against this library on a live client: the library itself stays
+-- completely silent in secure mode, and the only thing a detector could see was this script's
+-- own [TOUR] chatter sitting in the log.
+--
+-- So output goes to a buffer and is read back through the UI (Session -> Show log). Flip
+-- LOG_TO_CONSOLE when you are debugging and would rather have it in the console.
 -- ===========================================================================
+
+local LOG_TO_CONSOLE = false
 
 local results = {}
 local passed, failed = 0, 0
+local lines = {}
+local LINE_CAP = 250
+
+local function emit(text)
+    table.insert(lines, text)
+    if #lines > LINE_CAP then
+        table.remove(lines, 1)
+    end
+    if LOG_TO_CONSOLE then
+        print(text)
+    end
+end
 
 local function log(...)
-    print("[TOUR]", ...)
+    local parts = {}
+    for i = 1, select("#", ...) do
+        table.insert(parts, tostring((select(i, ...))))
+    end
+    emit("[TOUR] " .. table.concat(parts, " "))
 end
 
 local function check(name, ok, detail)
@@ -69,14 +110,14 @@ local function check(name, ok, detail)
         failed += 1
     end
     table.insert(results, { name = name, ok = ok, detail = detail })
-    print(string.format("[AFKTY %s] %s%s", ok and "PASS" or "FAIL", name, detail and (" - " .. detail) or ""))
+    emit(string.format("[%s] %s%s", ok and "PASS" or "FAIL", name, detail and (" - " .. detail) or ""))
 end
 
 -- Some checks are only meaningful in one mode. Recording them as skipped keeps the summary
 -- honest instead of inflating the pass count with things that never ran.
 local function skip(name, why)
     table.insert(results, { name = name, ok = nil, detail = why })
-    print(string.format("[AFKTY SKIP] %s - %s", name, why))
+    emit(string.format("[SKIP] %s - %s", name, why))
 end
 
 -- A note attached only when the check failed. `cond and nil or text` looks like it does this
@@ -139,7 +180,12 @@ end)
 
 check("library loads from the CDN", ok, note(ok, tostring(Library)))
 if not ok then
-    warn("[AFKTY TOUR] cannot continue")
+    -- There is no UI to report into when the library is what failed, so this is the one place
+    -- the console is the only channel. It stays gated: silence is the safe default, and a load
+    -- failure is visible anyway (no window appears). Flip LOG_TO_CONSOLE to see why.
+    if LOG_TO_CONSOLE then
+        warn("[AFKTY TOUR] cannot continue: " .. tostring(Library))
+    end
     return
 end
 
@@ -1171,6 +1217,67 @@ localeTab:CreateButton({
 -- ===========================================================================
 
 local sessionTab = Window:CreateTab({ name = "Session", icon = ICON.check, category = catWindow })
+
+-- Log viewer ----------------------------------------------------------------
+-- Everything this script would have printed is here instead. Popup's box layout is a
+-- scrolling list of cards, which is exactly the shape a log wants, and it is public API -
+-- no reaching into element internals to rewrite labels.
+sessionTab:CreateSection({ name = "Log - nothing goes to the console" })
+
+local LOG_PAGE = 12
+
+local function showLog(fromEnd)
+    local total = #lines
+    if total == 0 then
+        Window:Toast({ title = "Log is empty" })
+        return
+    end
+
+    local last = math.max(1, total - fromEnd + 1)
+    local first = math.max(1, last - LOG_PAGE + 1)
+
+    local boxes = {}
+    for i = first, last do
+        table.insert(boxes, { title = "#" .. i, description = lines[i] })
+    end
+
+    Window:Popup({
+        title = "Script log",
+        subtitle = string.format("lines %d-%d of %d, newest last", first, last, total),
+        icon = ICON.config,
+        options = {
+            { text = "Close" },
+            {
+                text = "Older",
+                callback = function()
+                    if first > 1 then
+                        showLog(fromEnd + LOG_PAGE)
+                    end
+                end,
+            },
+        },
+        boxes = boxes,
+    })
+end
+
+sessionTab:CreateButton({
+    name = "Show log",
+    description = "The newest lines. 'Older' pages back through the buffer.",
+    icon = ICON.config,
+    callback = function()
+        showLog(0)
+    end,
+})
+
+sessionTab:CreateButton({
+    name = "Why not the console?",
+    description = "A game LocalScript can hook LogService.MessageOut and read every print any script makes, and GetLogHistory hands it the backlog too. Tested on a live client: the library stays silent, but this script's own output was fully readable.",
+    callback = function()
+        log("console output is readable by any game script, live and retroactively")
+        log("the library emits nothing in secure mode; this script is the only thing that would")
+        Window:Toast({ title = "Logged", subtitle = "see Show log", icon = ICON.check })
+    end,
+})
 
 sessionTab:CreateSection({ name = "Secure mode" })
 

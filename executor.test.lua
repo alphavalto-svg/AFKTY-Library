@@ -12,15 +12,28 @@
 	  run it again. If autoLoad worked, your values come back. That round trip is the
 	  thing that has never actually been verified.
 
+	NOTHING IS PRINTED TO THE CONSOLE
+	  This script's output goes to a buffer, read back from the "Show log" button. A game
+	  LocalScript can hook LogService.MessageOut and read every print any script makes,
+	  executor scripts included, and LogService:GetLogHistory() hands it the backlog too.
+
+	  Verified on a live client against a simulated game-side detector: the library itself
+	  emitted nothing in secure mode, even through a callback that threw. The only readable
+	  trace was this script's own prints. Set LOG_TO_CONSOLE = true while debugging.
+
+	  The one console check that remains deliberate is "Is the library silent?" -- that one is
+	  testing the LIBRARY's output, so you do want to watch the real console for it.
+
 	SECURE MODE
 	  The library defaults it ON in any executor that can serve the icon cache (getcustomasset
 	  plus isfile), so SECURE is true here to match. Set it false to opt out and compare.
 
 	  It must be set BEFORE the library loads either way - runtime.luau reads
 	  getgenv().AFKTY_SECURE once at module load, so setting it afterwards does nothing. In
-	  secure mode the library caches icons to disk instead of using asset ids, and downloads
-	  the brand font in the background. Expect a brief plain-font moment, and a quiet console:
-	  secure mode gags the library's own warn/print.
+	  secure mode the library caches icons to disk instead of using asset ids. Note the brand
+	  font does NOT swap in secure mode -- you get the BuilderSans fallback, because
+	  constants.fontAsset is a built-in rbxasset:// path rather than a numeric id that
+	  fontManager can resolve. Both are built-in faces, so nothing leaks either way.
 ]]
 
 local SECURE = true -- <-- set false to compare against normal mode
@@ -37,20 +50,46 @@ getgenv().AFKTY_SECURE = SECURE
 
 local URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY-Library/main/dist/Library.lua"
 
+-- Output goes to a buffer, not the console. A game LocalScript can hook LogService.MessageOut
+-- and read every print any script makes, executor scripts included, and GetLogHistory() hands it
+-- the backlog too. Verified on a live client: the library is silent in secure mode, and this
+-- script's own prints were the only thing a detector could see. Read them from the Log section
+-- in the UI, or flip this while debugging.
+local LOG_TO_CONSOLE = false
+
+local lines = {}
+
+local function log(...)
+    local parts = {}
+    for i = 1, select("#", ...) do
+        table.insert(parts, tostring((select(i, ...))))
+    end
+    local line = table.concat(parts, " ")
+    table.insert(lines, line)
+    if #lines > 250 then
+        table.remove(lines, 1)
+    end
+    if LOG_TO_CONSOLE then
+        print("[AFKTY TEST]", line)
+    end
+end
+
 local ok, Library = pcall(function()
-    return loadstring(game:HttpGet(URL))()
+    local chunk, parseError = loadstring(game:HttpGet(URL))
+    assert(chunk, "the bundle did not parse: " .. tostring(parseError))
+    return chunk()
 end)
 
 if not ok then
-    warn("[AFKTY TEST] failed to load the library:", Library)
+    -- the library is what failed, so there is no UI to report into. Still gated: a failed load
+    -- is obvious anyway (no window appears), and silence is the safe default.
+    if LOG_TO_CONSOLE then
+        warn("[AFKTY TEST] failed to load the library:", Library)
+    end
     return
 end
 
-print("[AFKTY TEST] library loaded. secure mode =", SECURE)
-
-local function log(...)
-    print("[AFKTY TEST]", ...)
-end
+log("library loaded. secure mode =", SECURE)
 
 local Window = Library:CreateWindow({
     name = "AFKTY Executor Test",
@@ -199,14 +238,40 @@ tab:CreateButton({
 
 tab:CreateButton({
     name = "Is the library silent?",
-    description = "Forces a library-side warning. Secure mode gags it, so seeing nothing in the console is the pass.",
+    description = "Forces a library-side warning. Secure mode gags it, so an empty console is the pass. Check the real console for this one - it is the library being tested, not this script.",
     callback = function()
         -- an unknown theme name makes the library log.warn and fall back. With secure mode on
         -- that warning is suppressed; with it off you get "AFKTY: unknown theme ..."
         Window:ChangeTheme("definitely-not-a-real-theme")
-        log("asked for a bogus theme. secure mode ON = no AFKTY warning above this line;")
-        log("secure mode OFF = you should see 'AFKTY: unknown theme'")
+        log("asked for a bogus theme. secure ON = no AFKTY warning in the console")
+        log("secure OFF = you should see 'AFKTY: unknown theme' there")
         Window:ChangeTheme("default")
+    end,
+})
+
+-- Log ------------------------------------------------------------------------
+-- Everything this script would have printed. Popup's box layout is a scrolling list of cards,
+-- which is the shape a log wants, and it is public API rather than rewriting element internals.
+tab:CreateSection({ name = "Log - nothing goes to the console" })
+
+tab:CreateButton({
+    name = "Show log",
+    description = "The last 12 lines this script recorded.",
+    icon = 139478662436110,
+    callback = function()
+        if #lines == 0 then
+            Window:Toast({ title = "Log is empty" })
+            return
+        end
+        local boxes = {}
+        for i = math.max(1, #lines - 11), #lines do
+            table.insert(boxes, { title = "#" .. i, description = lines[i] })
+        end
+        Window:Popup({
+            title = "Script log",
+            subtitle = string.format("%d line(s) recorded, newest last", #lines),
+            boxes = boxes,
+        })
     end,
 })
 
