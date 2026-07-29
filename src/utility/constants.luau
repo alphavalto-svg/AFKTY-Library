@@ -20,17 +20,17 @@ constants.pillResizeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum
 -- exactly these (see utility/image) so the UI never has to fall back to a raw asset id at
 -- runtime. Add a new built-in icon here and it's cached automatically.
 constants.icons = {
-    close = 83277910885129,
-    minimise = 108115485663409,
-    maximise = 88738500661569,
-    settings = 129180860773723,
-    search = 100604009889706,
-    chevron = 88479147175134,
-    check = 125626312718314,
-    dot = 91452555903853, -- unselected dropdown option (also the colorpicker "invisible" mark)
-    colorpicker = 91452555903853, -- same hollow-box glyph as dot
+    close = 90172788330629,
+    minimise = 136031305763694,
+    maximise = 134279979385460,
+    settings = 123873302071776,
+    search = 102529133382626,
+    chevron = 104706369326409,
+    check = 95316442098951,
+    dot = 95965547856004, -- unselected dropdown option (also the colorpicker "invisible" mark)
+    colorpicker = 95965547856004, -- same hollow-box glyph as dot
     banner = 85628806611332, -- AFKTY emblem, shown while the window builds
-    config = 125823673784681, -- saved-configurations picker
+    config = 139478662436110, -- saved-configurations picker
     afkty = 85628806611332, -- default show icon on the sign-in toast
 }
 

@@ -1906,9 +1906,9 @@ Color3|ColorSequence):ColorSequence return if typeof(af)=='ColorSequence'then af
 ae.contrastText(af:Color3):Color3 local ag=0.299*af.R+0.587*af.G+0.114*af.B return if ag>0.6 then Color3.fromRGB(20,20,
 20)else Color3.fromRGB(255,255,255)end return ae end)()end,[32]=function()local aa,ab,ac=a(32)local ad return(function(
 ...)local ae={}ae.fontAsset='rbxasset://fonts/families/GothamSSm.json'ae.pillResizeInfo=TweenInfo.new(0.4,Enum.
-EasingStyle.Exponential,Enum.EasingDirection.Out)ae.icons={close=83277910885129,minimise=108115485663409,maximise=
-88738500661569,settings=129180860773723,search=100604009889706,chevron=88479147175134,check=125626312718314,dot=
-91452555903853,colorpicker=91452555903853,banner=85628806611332,config=125823673784681,afkty=85628806611332}ae.accent={
+EasingStyle.Exponential,Enum.EasingDirection.Out)ae.icons={close=90172788330629,minimise=136031305763694,maximise=
+134279979385460,settings=123873302071776,search=102529133382626,chevron=104706369326409,check=95316442098951,dot=
+95965547856004,colorpicker=95965547856004,banner=85628806611332,config=139478662436110,afkty=85628806611332}ae.accent={
 on=Color3.fromRGB(112,190,48),onStroke=Color3.fromRGB(166,250,92)}ae.statAccents={positive={fill=ColorSequence.new(
 Color3.fromRGB(122,205,54),Color3.fromRGB(94,168,36)),stroke=ColorSequence.new(Color3.fromRGB(166,250,92),Color3.
 fromRGB(140,224,74))},negative={fill=ColorSequence.new(Color3.fromRGB(172,47,47),Color3.fromRGB(135,37,37)),stroke=
@@ -2267,32 +2267,32 @@ saveToDisk=true,skipCache=false,fallbackFont=ak.fallbackFont})::FontManager func
 )if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then ak.fallbackFont=b ak.fontManager.
 defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if ak.secureMode then return Font.
 new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},{{1,2,{'AFKTY'},{{28,1,{
-'utility'},{{42,2,{'log'}},{49,2,{'persistenceConfig'}},{38,2,{'functions'}},{52,2,{'persistenceWrite'}},{44,2,{
-'network'}},{51,2,{'persistenceSettings'}},{29,2,{'HapticEngine'}},{41,2,{'locale'}},{55,2,{'textMetrics'}},{39,2,{
-'image'}},{37,2,{'fontManager'}},{35,2,{'filesystemManager'}},{54,2,{'services'}},{53,2,{'runtime'}},{31,2,{'colors'}},{
-45,2,{'odometer'}},{40,2,{'imageCache'}},{56,2,{'variables'}},{34,2,{'filesystem'}},{36,2,{'flagNames'}},{50,2,{
-'persistencePaths'}},{32,2,{'constants'}},{48,2,{'persistence'}},{33,2,{'enums'}},{47,2,{'path'}},{46,2,{'ordering'}},{
-30,2,{'assetResolver'}},{43,2,{'moveable'}}}},{27,2,{'types'}},{2,1,{'components'},{{4,2,{'button'}},{15,2,{'resize'}},{
-9,2,{'group'}},{8,2,{'dropdown'}},{18,2,{'slider'}},{24,2,{'window'}},{5,2,{'chrome'}},{22,2,{'toast'}},{16,2,{'search'}
-},{14,2,{'rail'}},{23,2,{'toggle'}},{12,2,{'notification'}},{11,2,{'keybind'}},{20,2,{'tab'}},{10,2,{'input'}},{6,2,{
-'colorpicker'}},{19,2,{'stat'}},{13,2,{'popup'}},{21,2,{'tag'}},{7,2,{'descriptor'}},{3,2,{'action'}},{17,2,{'section'}}
-}},{25,1,{'themes'},{{26,2,{'default'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,
-coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or
-function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r
-and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[
-2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},
-function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B
-)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)
-for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)
-local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,
-true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end
-D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do
-local F,G,H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]
-then ah("Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P
-=d(M),L[1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'
-and P)then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D
-(E,F,G)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3
-)end local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
+'utility'},{{36,2,{'flagNames'}},{33,2,{'enums'}},{56,2,{'variables'}},{40,2,{'imageCache'}},{35,2,{'filesystemManager'}
+},{44,2,{'network'}},{45,2,{'odometer'}},{32,2,{'constants'}},{55,2,{'textMetrics'}},{37,2,{'fontManager'}},{48,2,{
+'persistence'}},{29,2,{'HapticEngine'}},{53,2,{'runtime'}},{52,2,{'persistenceWrite'}},{50,2,{'persistencePaths'}},{41,2
+,{'locale'}},{34,2,{'filesystem'}},{47,2,{'path'}},{43,2,{'moveable'}},{51,2,{'persistenceSettings'}},{49,2,{
+'persistenceConfig'}},{30,2,{'assetResolver'}},{54,2,{'services'}},{38,2,{'functions'}},{46,2,{'ordering'}},{31,2,{
+'colors'}},{42,2,{'log'}},{39,2,{'image'}}}},{27,2,{'types'}},{25,1,{'themes'},{{26,2,{'default'}}}},{2,1,{'components'}
+,{{18,2,{'slider'}},{14,2,{'rail'}},{13,2,{'popup'}},{12,2,{'notification'}},{7,2,{'descriptor'}},{9,2,{'group'}},{4,2,{
+'button'}},{19,2,{'stat'}},{22,2,{'toast'}},{24,2,{'window'}},{15,2,{'resize'}},{23,2,{'toggle'}},{20,2,{'tab'}},{21,2,{
+'tag'}},{6,2,{'colorpicker'}},{10,2,{'input'}},{17,2,{'section'}},{8,2,{'dropdown'}},{5,2,{'chrome'}},{3,2,{'action'}},{
+16,2,{'search'}},{11,2,{'keybind'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,error,next,table,unpack,coroutine
+,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.remove,aj.freeze or function(k)
+return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e,'@lune/task')if r and s then
+af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)end,{[1]='Folder',[2]=
+'ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={GetFullName={{},function
+(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},GetChildren={{},function(B)local C
+={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}for D in ai,A[B]do k(C,D)for E,F
+in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string','boolean?'},function(B,C,D)local E=A[B]
+for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do return F:FindFirstChild(C,true)end end
+end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.Name==C then return D end D=D.Parent
+end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)end}},{}for D,E in ai,B do local F,G,
+H=E[1],E[2],{}for I,J in ai,F do local K,L=p(J,'^([^%?]+)(%??)')H[I]={K,L}end C[D]=function(I,...)if not A[I]then ah(
+"Expected ':' not '.' calling member function "..D,2)end local J={...}for K,L in ai,H do local M=J[K]local N,O,P=d(M),L[
+1],L[2]if M==nil and not P then ah('Argument '..M..' missing or nil',3)end if O~='any'and N~=O and not(N=='nil'and P)
+then ah('Argument '..K..' expects type "'..O..'", got "'..N..'"',2)end end return G(I,...)end end local function D(E,F,G
+)local H,I=(ag({},{__mode='k'}))local function J(K)ah(K..' is not a valid (virtual) member of '..E..' "'..F..'"',3)end
+local function K(L)ah('Unable to assign (virtual) property '..L..'. Property is read only',3)end local L,M={},{}M.
 __metatable=false M.__index=function(N,O)if O=='ClassName'then return E elseif O=='Name'then return F elseif O=='Parent'
 then return G elseif E=='StringValue'and O=='Value'then return I else local P=C[O]if P then return P end end for P in ai
 ,H do if P.Name==O then return P end end J(O)end M.__newindex=function(N,O,P)if O=='ClassName'then K(O)elseif O=='Name'
