@@ -1,9 +1,66 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-29** — 214/214 specs, coverage 87.26%. The `window-resizing` work is
-**merged to `main` and pushed**, so `dist/Library.lua` on the CDN is current.
+State as of **2026-07-29** — 228/228 specs, coverage 87.41% (ratchet 86.36%). The whole gate
+was run and is green: `format-check`, `lint`, `typecheck`, specs.
+
+**`main` is at `e73a202`. The branch `secure-mode-gaps` (`f6cc8dd`) sits one commit ahead and
+is not merged.** That commit carries the secure-mode fixes *and* the matching
+`dist/Library.lua`, so until it lands on `main` the shipped bundle does not have them —
+`HttpGet` fetches `main/dist/Library.lua`.
 
 Open this file and say *"pick up where we left off"*.
+
+---
+
+## Session of 2026-07-29 (latest) — secure-mode gaps, executor test, row lighting
+
+### `secure-mode-gaps` branch — two gaps against upstream Rayfield
+
+1. **GUI parenting had one fallback where upstream has three.** `runtime.luau` tried `gethui()`
+   and dropped straight to raw `CoreGui`, so on an executor without `gethui` the ScreenGui sat
+   somewhere `CoreGui:GetChildren()` enumerates — the most detectable thing a UI library can do.
+   Added `runtime.resolveProtect` (`syn.protect_gui`, then a bare `protectgui`) and a
+   `RobloxGui` fallback beneath it.
+
+   Protection applies to the **ScreenGui itself**, not a container, so all three ScreenGui sites
+   (window, popup, banner) now go through `runtime.parentGui`, which protects *then* parents.
+   `guiContainerHidden` records whether `gethui` already put us out of reach, because protecting
+   twice is a no-op at best and throws on some executors.
+
+2. **`image.onBlock` was declared and called but never assigned.** An icon secure mode couldn't
+   serve came back as `""` with nothing said about it — the only symptom was missing artwork.
+   It now raises **one** notification however many icons are affected.
+
+   Built-in icons are deliberately exempt: the library's own chrome resolves blank too until its
+   download lands, so reporting those would fire on every cold start and tell the dev to cache
+   icons that were about to appear on their own.
+
+New specs: `tests/utility/guiProtection.spec.luau`, `tests/integration/secureIcons.spec.luau`
+(+14 specs, 214 → 228).
+
+### `executor.test.lua` — the two things Studio structurally cannot reach
+
+Secure mode (needs `getgenv`) and on-disk persistence surviving a rejoin (needs `writefile`).
+Paste into an executor and run; flip `SECURE` at the top of the file **before** load, since
+`runtime.luau` reads `getgenv().AFKTY_SECURE` once at module load.
+
+The checks observe what secure mode actually *does* rather than echoing the flag the script just
+set: whether the executor has the globals caching needs, whether `AFKTY/Assets` filled with
+`.png` files, and whether a deliberately bogus theme name produces the library warning or is
+gagged. It also draws a rail profile, because avatars cache through a different path
+(`avatar_<userId>.png`) that never runs without one on screen.
+
+### Element rows light only under the cursor
+
+Every hoverable row carried a fully opaque stroke at rest, so a page read as a grid of outlined
+boxes with hover barely distinguishable. Added **`ElementStrokeRestTransparency`** rather than
+repurposing `ElementStrokeTransparency` — that key is shared with `StyleElementPanel`, and
+flipping it would also have stripped the edge off dropdown panels, popup cards and stat tiles,
+which have no hover state and need a constant edge to read as surfaces at all.
+
+`_revealCommon` serves both rows and stat tiles, so it resolves per element through a `hoverLit`
+flag that `_wireElementHover` sets. Set `ElementStrokeRestTransparency = 0` in a theme to get the
+old always-on edges back.
 
 ---
 
@@ -233,3 +290,8 @@ They never say "Rayfield", and minification strips comments, so the shipped
   `getgenv().AFKTY_SECURE = true` before load, so Studio can never exercise it. Config saving
   is no longer on this list: it is confirmed working on the Studio simulation (see above),
   though real on-disk persistence is still executor-only.
+  **`executor.test.lua` exists to close this** — it just has to be pasted into an executor and
+  run. Nobody has done that yet, so the harness itself is also unverified.
+- **`secure-mode-gaps` is unmerged.** It is one commit (`f6cc8dd`) ahead of `main` and carries
+  the rebuilt `dist/Library.lua`, so the secure-mode fixes are not in the bundle consumers fetch
+  until it lands on `main`. The full gate passes on the branch.
