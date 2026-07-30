@@ -5,6 +5,10 @@ return function()
 
     describe("component rail", function()
         local window
+        local image
+        local imageCache
+        local variables
+        local originalSecureMode
 
         local function makeWindow()
             window = Window.new({
@@ -16,11 +20,21 @@ return function()
             return window
         end
 
+        beforeEach(function()
+            image = helpers.requireUtility("image")
+            imageCache = helpers.requireUtility("imageCache")
+            variables = helpers.requireUtility("variables")
+            originalSecureMode = variables.secureMode
+        end)
+
         afterEach(function()
             if window and not window.unloaded then
                 window:Unload()
             end
             window = nil
+            variables.secureMode = originalSecureMode
+            table.clear(image.rewrites)
+            table.clear(image.pending)
         end)
 
         it("does not build a rail, or move anything, until one is asked for", function()
@@ -257,15 +271,7 @@ return function()
         end)
 
         it("registers rail icons as pending so they rebind once cached", function()
-            local image = helpers.requireUtility("image")
-            local imageCache = helpers.requireUtility("imageCache")
-            local variables = helpers.requireUtility("variables")
-
-            local originalSecure = variables.secureMode
             variables.secureMode = true
-            table.clear(image.rewrites)
-            table.clear(image.pending)
-
             local w = makeWindow()
             local item = w:CreateRailItem({ icon = 9876543210, name = "Custom" })
 
@@ -276,10 +282,6 @@ return function()
             image.rewrites[9876543210] = "rbxasset://cached/custom.png"
             imageCache.onCached(9876543210)
             expect(item.iconImage.Image).to.equal("rbxasset://cached/custom.png")
-
-            variables.secureMode = originalSecure
-            table.clear(image.rewrites)
-            table.clear(image.pending)
         end)
     end)
 end
