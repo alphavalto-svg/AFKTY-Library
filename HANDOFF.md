@@ -3,24 +3,29 @@
 State as of **2026-07-30** — 265/265 specs, coverage 87.62% (ratchet 86.36%). The whole gate
 was run and is green: `format-check`, `lint`, `typecheck`, specs.
 
-**`hub-icon-caching` is pushed but NOT merged.** It is 10 commits ahead of `main` and carries the
-rebuilt `dist/Library.lua`, so hub icons do not cache on `main` yet. It was verified live against
-its own branch raw URL rather than `main`'s, deliberately, so nothing reached `main` unproven.
+**`hub-icon-caching` is MERGED to `main` and pushed** (fast-forward, so history stays linear).
+`main` and the branch are identical; the branch can be deleted. `dist/Library.lua` was rebuilt at
+`899870c` so the artifact matches `src/`, and the copy `raw.githubusercontent` serves from `main`
+was fetched back and confirmed **byte-identical** (sha256 `ee551a92…`, 275,954 bytes).
 
-⚠️ **`dist/Library.lua` is one commit stale.** It was last built at `a2fe67d`; the theme commit
-`4ec0c4a` touched `example.client.luau`, specs and docs only, so the bundle's behaviour is
-unchanged — but rebuild before merging so the artifact matches `src/`.
+Re-verified running from `main` on a live client, cold cache, `AFKTY_SECURE` unset so the
+capability gate had to enable itself: 0 remote asset ids, 9 local `rbxasset://` refs, 0 blanks,
+12 icons cached, stat coercion holding (`"7"` → 7, junk ignored), element `Destroy()` returning
+true, main Frame a GUID, unknown theme falling back to a complete default, unload clean.
 
-Nothing else is unpushed.
+Nothing is unpushed.
 
 Open this file and say *"pick up where we left off"*.
 
 ### What is NOT done
 
-- **Not merged to `main`.** Nothing above reaches consumers until it lands.
 - **Tasks 2–4 of the icon-caching plan were never independently reviewed** — the reviewer
-  dispatches were interrupted. The ledger at `.superpowers/sdd/2026-07-30-hub-icon-caching/`
-  records exactly what needs scrutiny. A whole-branch review is the only gate they have had.
+  dispatches were interrupted, and the whole-branch review was skipped at merge time. This code
+  is on `main` having had no review gate but its own tests. The ledger at
+  `.superpowers/sdd/2026-07-30-hub-icon-caching/` records exactly what needs scrutiny:
+  `writeCached` split out of `cacheFile` (a disk hit must not download), `inFlight` cleared on
+  every exit path including a throwing fetch, `preload` sharing `inFlight` without breaking the
+  settle counter, and the two-endpoint `fetchIcon` ordering.
 - **No real rejoin test.** Warm disk was tested in-session with a fresh library instance over a
   populated cache; that proves reuse and no re-download, not that the files survive a restart.
 - **Nobody has visually clicked through the UI.** Every check has been a probe reading properties
