@@ -114,61 +114,32 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
 
     if variables.secureMode then
         -- cache icons locally so secureMode doesnt leak asset ids. non-blocking: whats already on
-        -- disk applies now, the rest download in the background and rebind once ready. if any never
-        -- cache, tell the dev once - on screen only, secure mode stays off the console
-        image.preload(function(failed)
-            if failed <= 0 then
+        -- disk applies now, the rest download in the background and rebind once ready. an icon a
+        -- hub passes in takes the same path on demand, so both failure sources report here.
+        local warnedFailed = false
+        local function reportFailure()
+            if warnedFailed then
                 return
             end
-            local function notify()
-                if not window or window.unloaded then
-                    return
-                end
-                window:Notify({
-                    title = locale.resolve("Secure mode"),
-                    content = if failed == 1
-                        then locale.resolve("An asset couldn't be cached and won't appear.")
-                        else locale.resolve("Some assets couldn't be cached and won't appear."),
-                })
-            end
-            notifyWhenReady(notify)
-        end)
-
-        -- Secure mode blanks any icon it cannot serve from disk, which is every asset id a hub
-        -- passes in beyond the library's own built-ins. That used to happen silently, so the
-        -- only symptom was missing artwork with nothing saying why.
-        --
-        -- Only a non-built-in id is worth reporting. The library's own chrome resolves blank too
-        -- until its download lands, so reporting those would fire on every cold start and tell
-        -- the dev to cache icons that are about to appear on their own.
-        local builtInIcon = {}
-        for _, id in constants.icons do
-            builtInIcon[id] = true
-        end
-
-        local warnedBlocked = false
-        image.onBlock = function(value)
-            if warnedBlocked then
-                return
-            end
-            local id = if type(value) == "number" then value else tonumber(string.match(tostring(value), "%d+"))
-            if id and builtInIcon[id] then
-                return -- ours, and it appears as soon as the cache warms
-            end
-            warnedBlocked = true
+            warnedFailed = true
             notifyWhenReady(function()
                 if not window or window.unloaded then
                     return
                 end
                 window:Notify({
                     title = locale.resolve("Secure mode"),
-                    content = locale.resolve(
-                        "Custom icons are hidden in secure mode. Cache them yourself and pass the result."
-                    ),
+                    content = locale.resolve("Some icons couldn't be downloaded and won't appear."),
                     duration = 8,
                 })
             end)
         end
+
+        image.preload(function(failed)
+            if failed > 0 then
+                reportFailure()
+            end
+        end)
+        image.onFailed = reportFailure
     end
 
     -- the banner is only torn down once the window is up, so a throw in here (bad props) would

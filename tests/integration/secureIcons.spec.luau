@@ -12,17 +12,17 @@ return function()
         local window
         local originalSecureMode
         local originalPreload
-        local originalOnBlock
+        local originalOnFailed
         local originalLoadFont
 
         beforeEach(function()
             originalSecureMode = variables.secureMode
             originalPreload = image.preload
-            originalOnBlock = image.onBlock
+            originalOnFailed = image.onFailed
             originalLoadFont = variables.fontManager.loadFont
 
             -- settle immediately with nothing failed, so the only notification that can appear
-            -- is the blocked-icon one this spec is about
+            -- is the download-failure one this spec is about
             image.preload = function(onSettled)
                 if onSettled then
                     onSettled(0)
@@ -40,39 +40,36 @@ return function()
             window = nil
             variables.secureMode = originalSecureMode
             image.preload = originalPreload
-            image.onBlock = originalOnBlock
+            image.onFailed = originalOnFailed
             variables.fontManager.loadFont = originalLoadFont
         end)
 
-        it("wires a block handler while secure mode is on", function()
+        it("wires a failure handler while secure mode is on", function()
             variables.secureMode = true
-            image.onBlock = nil
+            image.onFailed = nil
 
             window = AFKTY:CreateWindow({
                 name = "Secure Icons",
                 configuration = { autoSave = false, autoLoad = false },
             })
 
-            expect(image.onBlock).to.be.ok()
+            expect(image.onFailed).to.be.ok()
         end)
 
         it("leaves the handler alone outside secure mode", function()
             variables.secureMode = false
-            image.onBlock = nil
+            image.onFailed = nil
 
             window = AFKTY:CreateWindow({
                 name = "Normal Icons",
                 configuration = { autoSave = false, autoLoad = false },
             })
 
-            -- nothing is blocked outside secure mode, so there is nothing to report
-            expect(image.onBlock).never.to.be.ok()
+            -- nothing is cached outside secure mode, so nothing can fail to cache
+            expect(image.onFailed).never.to.be.ok()
         end)
 
-        it("stays quiet about the library's own icons, which appear once cached", function()
-            -- construction resolves the chrome icons before anything has cached, so these run
-            -- through onBlock on every cold start. Reporting them would tell the dev to cache
-            -- icons that are about to appear on their own.
+        it("notifies once however many icons fail to cache", function()
             local WindowClass = helpers.requireComponent("window")
             local originalNotify = WindowClass.Notify
             local notified = 0
@@ -81,23 +78,23 @@ return function()
             end
 
             variables.secureMode = true
-            image.onBlock = nil
+            image.onFailed = nil
 
             window = AFKTY:CreateWindow({
                 name = "Secure Icons",
                 configuration = { autoSave = false, autoLoad = false },
             })
 
-            local constants = helpers.requireUtility("constants")
-            image.onBlock(constants.icons.close)
-            image.onBlock(constants.icons.settings)
-            image.onBlock("rbxassetid://" .. tostring(constants.icons.search))
+            -- a page full of icons behind a dead proxy must not become a stack of toasts
+            image.onFailed(9876543210)
+            image.onFailed(1234509876)
+            image.onFailed(5555555555)
 
             WindowClass.Notify = originalNotify
-            expect(notified).to.equal(0)
+            expect(notified).to.equal(1)
         end)
 
-        it("notifies once however many custom icons are blocked", function()
+        it("does not notify twice when preload and a late icon both fail", function()
             local WindowClass = helpers.requireComponent("window")
             local originalNotify = WindowClass.Notify
             local notified = 0
@@ -106,17 +103,19 @@ return function()
             end
 
             variables.secureMode = true
-            image.onBlock = nil
+            image.onFailed = nil
+            -- a cold start that could not reach github, then a hub icon that fails later
+            image.preload = function(onSettled)
+                if onSettled then
+                    onSettled(3)
+                end
+            end
 
             window = AFKTY:CreateWindow({
                 name = "Secure Icons",
                 configuration = { autoSave = false, autoLoad = false },
             })
-
-            -- a page full of custom icons must not become a stack of identical toasts
-            image.onBlock(9876543210)
-            image.onBlock(1234509876)
-            image.onBlock("rbxassetid://5555555555")
+            image.onFailed(9876543210)
 
             WindowClass.Notify = originalNotify
             expect(notified).to.equal(1)
