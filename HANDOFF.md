@@ -1,18 +1,65 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-29** — 228/228 specs, coverage 87.41% (ratchet 86.36%). The whole gate
+State as of **2026-07-30** — 242/242 specs, coverage 87.47% (ratchet 86.36%). The whole gate
 was run and is green: `format-check`, `lint`, `typecheck`, specs.
 
-`secure-mode-gaps` has been **merged to `main` and pushed** (fast-forward, so history stays
-linear), and the icon swap landed on top of it. `dist/Library.lua` on `main` was fetched back
-from the raw URL and confirmed byte-identical to the local build, carrying the new asset ids and
-none of the old ones — so what `HttpGet` serves is current.
+**`hub-icon-caching` is pushed but NOT merged.** It is 6 commits ahead of `main` and carries the
+rebuilt `dist/Library.lua`, so hub icons do not cache on `main` yet. It was verified live against
+its own branch raw URL rather than `main`'s, deliberately, so nothing reached `main` unproven.
 
-Nothing is unpushed. `main` is the only live branch; `secure-mode-gaps` can be deleted.
+Nothing else is unpushed.
 
 Open this file and say *"pick up where we left off"*.
 
 ---
+
+## Session of 2026-07-30 (latest) — hub icons cache themselves
+
+Secure mode used to serve exactly ten icons: the built-ins, from a manifest fixed at module load
+by iterating `constants.icons`. Anything a hub passed in had no entry in `imageCache.rewrites`, so
+`image.resolve` returned `""` and that icon was blank for the session, permanently. The library's
+own advice was *"cache them yourself and pass the result."* It now does it for you.
+
+**`imageCache.request(id) -> (string?, boolean)`** is the new entry point. A disk hit on
+`AFKTY/Assets/<id>.png` returns synchronously with no network; anything else spawns one background
+download and returns `(nil, true)`, meaning *register for the rebind*. The second return value is
+load bearing — without it `image.assign` cannot tell "a download is coming" from "this will never
+arrive," and registering in the latter case leaks a pending entry nothing ever clears.
+
+Two endpoints, in order: `assetResolver:getAssetContentFromId` (which is
+`assetdelivery.roproxy.com`, the same call `fontManager` already uses for font faces), then
+`thumbnails.roblox.com/v1/assets` as a fallback for when that third-party proxy is down. Both
+bodies go through the same PNG-magic guard, so a proxy error page can never poison the cache.
+
+**A separate bug, found while tracing this and fixed first.** `window:Create` routes every
+property through `image.assign`, which is what registers a blank icon for later rebinding. But
+`rail.luau:169`, `rail.luau:389` and `init.luau:85` called `image.resolve` *themselves* first,
+flattening the id to `""` — `idOf("")` is nil, so nothing registered and nothing could rebind. A
+warm disk hid it completely (preload resolves from disk synchronously before the rail builds); a
+cold disk left the rail brand, every tab icon and the banner blank for the whole session. That
+warm/cold asymmetry is what "the icons work sometimes" was.
+
+The `settled` flag in `image.luau` is gone. It cleared `image.pending` wholesale when preload
+finished, which is right when the only downloads are a fixed startup manifest and wrong once a hub
+can add a tab minutes later. Entry lifetime is now per-id: `onCached` clears its own, `onFailed`
+clears its own, and the weak-keyed inner table drops destroyed instances.
+
+**Verified live** on a real client, secure mode on, against the branch bundle:
+
+| Check | Result |
+|---|---|
+| Cold start, `AFKTY/Assets` deleted first | custom id `93364949241311` rendered as `rbxasset://0c6ee.../93364949241311.png`, 12 files on disk, **0** blank ImageLabels |
+| Console at thread identity 2 (game-script identity) | readable, 17 lines, **0** AFKTY lines and **0** containing any of our 11 asset ids |
+| CoreGui at identity 2 | not readable |
+| Asset ids reachable in `PlayerGui` | **0** |
+| Warm disk, no wait at all | served synchronously, 18 ms to build, **0** blanks |
+
+Not verified: an actual client restart. Warm disk was tested in-session with a fresh library
+instance over a populated cache, which proves reuse and no re-download but not that the files
+survive a restart.
+
+Design and plan: `docs/superpowers/specs/2026-07-30-hub-icon-caching-design.md`,
+`docs/superpowers/plans/2026-07-30-hub-icon-caching.md`.
 
 ## Session of 2026-07-29 (latest) — the icon set moved onto owned uploads
 
@@ -76,6 +123,12 @@ ever vanish, three demo tabs lose an icon and the library is unaffected.
    Built-in icons are deliberately exempt: the library's own chrome resolves blank too until its
    download lands, so reporting those would fire on every cold start and tell the dev to cache
    icons that were about to appear on their own.
+
+   **Superseded on 2026-07-30.** `init.luau` no longer wires `onBlock` at all, and the built-in
+   exemption is gone with it — hub icons and built-ins now take the same on-demand path, so a
+   blank icon means a download failed rather than an id the cache was never going to serve. The
+   one-shot notification is now fed by `image.onFailed` and preload's `onSettled` together.
+   `image.onBlock` itself remains in `image.luau` as an optional hook; specs use it.
 
 New specs: `tests/utility/guiProtection.spec.luau`, `tests/integration/secureIcons.spec.luau`
 (+14 specs, 214 → 228).
@@ -331,12 +384,14 @@ They never say "Rayfield", and minification strips comments, so the shipped
   reproducibility trap above** — an action that rebuilds and commits will churn the manifest on
   every run. Either make the bundler's module order stable first, or have the action rebuild and
   compare *everything but* that hunk rather than blindly committing.
-- **Secure mode has never run in a real executor** — only unit-tested. It needs
-  `getgenv().AFKTY_SECURE = true` before load, so Studio can never exercise it. Config saving
-  is no longer on this list: it is confirmed working on the Studio simulation (see above),
-  though real on-disk persistence is still executor-only.
-  **`executor.test.lua` exists to close this** — it just has to be pasted into an executor and
-  run. Nobody has done that yet, so the harness itself is also unverified.
-- **`secure-mode-gaps` is unmerged.** It is one commit (`f6cc8dd`) ahead of `main` and carries
-  the rebuilt `dist/Library.lua`, so the secure-mode fixes are not in the bundle consumers fetch
-  until it lands on `main`. The full gate passes on the branch.
+- **`hub-icon-caching` is unmerged.** Six commits ahead of `main`, carrying the rebuilt
+  `dist/Library.lua`, so hub icon caching is not in the bundle consumers fetch until it lands on
+  `main`. The full gate passes on the branch and it was verified live against the branch URL.
+  Tasks 2, 3 and 4 of that plan were never independently reviewed — the review dispatches were
+  interrupted — so a whole-branch review is the only gate they have had. Worth doing before merge.
+- **Nobody has clicked through the UI.** `studio.tour.client.luau` still has not been run, and the
+  `Show log` popup in `executor.test.lua` has never been opened. Everything verified so far was
+  read back through probes, not looked at.
+- Dead font branch in `init.luau` — cosmetic; secure mode renders the BuilderSans fallback because
+  `constants.fontAsset` is an `rbxasset://` path rather than a numeric id `fontManager` can
+  resolve. Both faces are built in, so nothing leaks either way.
