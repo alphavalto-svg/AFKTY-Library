@@ -2287,23 +2287,23 @@ AssetDownloadUrl.RoProxyDownloadUrl,{saveToDisk=true,skipCache=false,fallbackFon
 function ak.setFallbackFont(b:Enum.Font|Font)if typeof(b)=='EnumItem'then b=Font.fromEnum(b)end if typeof(b)=='Font'then
 ak.fallbackFont=b ak.fontManager.defaultOptions.fallbackFont=b end end function ak.brandFont(b:Enum.FontWeight?):Font if
 ak.secureMode then return Font.new(ak.fallbackFont.Family,b)end return Font.new(af.fontAsset,b)end return ak end)()end},
-{{1,2,{'AFKTY'},{{2,1,{'components'},{{18,2,{'slider'}},{5,2,{'chrome'}},{10,2,{'input'}},{7,2,{'descriptor'}},{23,2,{
-'toggle'}},{4,2,{'button'}},{20,2,{'tab'}},{9,2,{'group'}},{3,2,{'action'}},{16,2,{'search'}},{6,2,{'colorpicker'}},{13,
-2,{'popup'}},{24,2,{'window'}},{22,2,{'toast'}},{11,2,{'keybind'}},{8,2,{'dropdown'}},{19,2,{'stat'}},{21,2,{'tag'}},{15
-,2,{'resize'}},{14,2,{'rail'}},{17,2,{'section'}},{12,2,{'notification'}}}},{25,1,{'themes'},{{26,2,{'default'}}}},{28,1
-,{'utility'},{{43,2,{'moveable'}},{30,2,{'assetResolver'}},{45,2,{'odometer'}},{32,2,{'constants'}},{50,2,{
-'persistencePaths'}},{55,2,{'textMetrics'}},{38,2,{'functions'}},{42,2,{'log'}},{41,2,{'locale'}},{29,2,{'HapticEngine'}
-},{46,2,{'ordering'}},{56,2,{'variables'}},{39,2,{'image'}},{54,2,{'services'}},{53,2,{'runtime'}},{52,2,{
-'persistenceWrite'}},{48,2,{'persistence'}},{49,2,{'persistenceConfig'}},{51,2,{'persistenceSettings'}},{47,2,{'path'}},
-{40,2,{'imageCache'}},{33,2,{'enums'}},{36,2,{'flagNames'}},{37,2,{'fontManager'}},{31,2,{'colors'}},{35,2,{
-'filesystemManager'}},{44,2,{'network'}},{34,2,{'filesystem'}}}},{27,2,{'types'}}}}},'0.4.1','WaxRuntime',string,task,
-setmetatable,error,next,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=
-aj.insert,aj.remove,aj.freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then
-local r,s=f(e,'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,
-...)n(s)(...)end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}
-local B,C={GetFullName={{},function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end}
-,GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={
-}for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string',
+{{1,2,{'AFKTY'},{{28,1,{'utility'},{{41,2,{'locale'}},{39,2,{'image'}},{53,2,{'runtime'}},{31,2,{'colors'}},{44,2,{
+'network'}},{48,2,{'persistence'}},{50,2,{'persistencePaths'}},{30,2,{'assetResolver'}},{37,2,{'fontManager'}},{56,2,{
+'variables'}},{52,2,{'persistenceWrite'}},{34,2,{'filesystem'}},{47,2,{'path'}},{55,2,{'textMetrics'}},{49,2,{
+'persistenceConfig'}},{42,2,{'log'}},{45,2,{'odometer'}},{32,2,{'constants'}},{35,2,{'filesystemManager'}},{40,2,{
+'imageCache'}},{51,2,{'persistenceSettings'}},{36,2,{'flagNames'}},{29,2,{'HapticEngine'}},{54,2,{'services'}},{38,2,{
+'functions'}},{43,2,{'moveable'}},{33,2,{'enums'}},{46,2,{'ordering'}}}},{27,2,{'types'}},{2,1,{'components'},{{20,2,{
+'tab'}},{15,2,{'resize'}},{3,2,{'action'}},{11,2,{'keybind'}},{18,2,{'slider'}},{9,2,{'group'}},{22,2,{'toast'}},{13,2,{
+'popup'}},{8,2,{'dropdown'}},{17,2,{'section'}},{16,2,{'search'}},{24,2,{'window'}},{21,2,{'tag'}},{23,2,{'toggle'}},{19
+,2,{'stat'}},{12,2,{'notification'}},{6,2,{'colorpicker'}},{10,2,{'input'}},{5,2,{'chrome'}},{7,2,{'descriptor'}},{14,2,
+{'rail'}},{4,2,{'button'}}}},{25,1,{'themes'},{{26,2,{'default'}}}}}}},'0.4.1','WaxRuntime',string,task,setmetatable,
+error,next,table,unpack,coroutine,script,type,require,pcall,tostring,tonumber,_VERSION local k,l,m,n,o,p,q=aj.insert,aj.
+remove,aj.freeze or function(k)return k end,b.wrap,ae.sub,ae.match,ae.gmatch if i and o(i,1,4)=='Lune'then local r,s=f(e
+,'@lune/task')if r and s then af=s end end local r=af and af.defer local s,t,u,v,w,x,y,z,A=r or function(s,...)n(s)(...)
+end,{[1]='Folder',[2]='ModuleScript',[3]='Script',[4]='LocalScript',[5]='StringValue'},{},{},{},{},{},{},{}local B,C={
+GetFullName={{},function(B)local C,D=B.Name,B.Parent while D do C=D.Name..'.'..C D=D.Parent end return C end},
+GetChildren={{},function(B)local C={}for D in ai,A[B]do k(C,D)end return C end},GetDescendants={{},function(B)local C={}
+for D in ai,A[B]do k(C,D)for E,F in ai,D:GetDescendants()do k(C,F)end end return C end},FindFirstChild={{'string',
 'boolean?'},function(B,C,D)local E=A[B]for F in ai,E do if F.Name==C then return F end end if D then for F in ai,E do
 return F:FindFirstChild(C,true)end end end},FindFirstAncestor={{'string'},function(B,C)local D=B.Parent while D do if D.
 Name==C then return D end D=D.Parent end end},WaitForChild={{'string','number?'},function(B,C)return B:FindFirstChild(C)
