@@ -39,7 +39,7 @@ This task is self-contained and shippable on its own.
 
 - [ ] **Step 1: Write the failing test**
 
-Append inside the existing `describe` block in `tests/components/rail.spec.luau`. Match the file's existing window-construction helper — read the top of the file first and use whatever it already calls to build `w`.
+Append inside the existing `describe("component rail", ...)` block in `tests/components/rail.spec.luau`. The file already defines `makeWindow()` (line 9) and an `afterEach` that unloads the window (line 19), so the test neither builds nor tears down the window itself.
 
 ```lua
 it("registers rail icons as pending so they rebind once cached", function()
@@ -66,7 +66,6 @@ it("registers rail icons as pending so they rebind once cached", function()
     variables.secureMode = originalSecure
     table.clear(image.rewrites)
     table.clear(image.pending)
-    w:Unload()
 end)
 ```
 
