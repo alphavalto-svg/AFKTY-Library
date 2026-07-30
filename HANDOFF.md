@@ -1,15 +1,30 @@
 # AFKTY Library — session handoff
 
-State as of **2026-07-30** — 242/242 specs, coverage 87.47% (ratchet 86.36%). The whole gate
+State as of **2026-07-30** — 265/265 specs, coverage 87.62% (ratchet 86.36%). The whole gate
 was run and is green: `format-check`, `lint`, `typecheck`, specs.
 
-**`hub-icon-caching` is pushed but NOT merged.** It is 6 commits ahead of `main` and carries the
+**`hub-icon-caching` is pushed but NOT merged.** It is 10 commits ahead of `main` and carries the
 rebuilt `dist/Library.lua`, so hub icons do not cache on `main` yet. It was verified live against
 its own branch raw URL rather than `main`'s, deliberately, so nothing reached `main` unproven.
+
+⚠️ **`dist/Library.lua` is one commit stale.** It was last built at `a2fe67d`; the theme commit
+`4ec0c4a` touched `example.client.luau`, specs and docs only, so the bundle's behaviour is
+unchanged — but rebuild before merging so the artifact matches `src/`.
 
 Nothing else is unpushed.
 
 Open this file and say *"pick up where we left off"*.
+
+### What is NOT done
+
+- **Not merged to `main`.** Nothing above reaches consumers until it lands.
+- **Tasks 2–4 of the icon-caching plan were never independently reviewed** — the reviewer
+  dispatches were interrupted. The ledger at `.superpowers/sdd/2026-07-30-hub-icon-caching/`
+  records exactly what needs scrutiny. A whole-branch review is the only gate they have had.
+- **No real rejoin test.** Warm disk was tested in-session with a fresh library instance over a
+  populated cache; that proves reuse and no re-download, not that the files survive a restart.
+- **Nobody has visually clicked through the UI.** Every check has been a probe reading properties
+  back. `studio.tour.client.luau` has still never been run.
 
 ---
 
@@ -96,6 +111,49 @@ window retired, same-run pair both alive, unload clean. 258/258 specs at 87.58%.
 in **PlayerGui, where the game can read it**, and it is an asset the game does not use. By the
 threat model this library is built against, that is an exposure — and nothing in this repo can
 reach it.
+
+### Parity check against upstream Rayfield Gen 2
+
+Compared against Sirius's own Gen 2 docs (`docs.sirius.menu/llms.txt` indexes the pages), not
+from memory. **We match on everything except themes:**
+
+| Upstream | Ours |
+|---|---|
+| 8 element types (Button, ColorPicker, Dropdown, Input, Keybind, Slider, Stat, Toggle) | 8/8 |
+| 21 Window methods | 21/21 |
+| CreateWindow props, incl. `fallbackFont`, `customFolder`, `translations`, `translator` | all |
+| Element props `name`/`description`/`icon`/`flag`/`forgetState`; handles `.value`, `Set(v, skip)`, `MoveTo`/`Top`/`Bottom`/`Up`/`Down` | all |
+| Tab `Select`/`Deselect`/`Remove`; Section; Group `direction` | all |
+| Notify + Toast props incl. `subtitleAbove`, `avatar`, `minWidth`, `position` | all |
+| Saving incl. `window.Flags` (`window.luau:254`) | all |
+| Keybind `hold` / `holdThreshold` / `onChanged` | all |
+| **6 themes**: default, cobalt, ember, amethyst, frost, rose | **1**, by choice |
+
+Note the Move* methods come from the `moveable(Class)` mixin (`utility/moveable.luau`), applied
+at the bottom of each element module — grepping the component files for `MoveTo` finds only
+Dropdown and looks like a gap. It isn't.
+
+**We are ahead of upstream on secure mode.** Their docs state plainly that in secure mode
+"user-provided asset IDs render blank". Ours caches them on demand instead.
+
+Beyond upstream: `CreateSwitch`, `CreateRailItem`, `CreateRailProfile`, search, resize,
+`GetPath`, `SaveSettings`/`LoadSettings`, and element `Destroy()`.
+
+### One theme, deliberately
+
+`default` is the only palette and the library is built to need only that. Three places still
+assumed otherwise and were corrected: `example.client.luau` asked for `"cobalt"` (silently
+rendered as default, and secure mode gags the warning that would have said so); a workflow spec
+asked for `"frost"`, so it read as a theme swap while exercising the fallback; the tutorial called
+the README stale about a list the README no longer carries.
+
+`tests/components/theming.spec.luau` pins what keeps this drop-in: an unknown name yields a
+*complete* default rather than a half-styled window, lookup is case-insensitive, a partial table
+inherits every key it omits, a named theme is a full switch that resets what a custom table set,
+and a wrong-typed argument still builds.
+
+**Adding a palette later needs no code change.** Drop `src/themes/<name>.luau` returning a partial
+override table; the lookup at `window.luau:157` is a directory search and Rojo maps `src/` whole.
 
 ## Session of 2026-07-29 (latest) — the icon set moved onto owned uploads
 
