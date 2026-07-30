@@ -342,7 +342,9 @@ return function()
             expect(column:CreateSection({ name = "Column Section" }).__type).to.equal("Section")
             expect(column:CreateDropdown({ name = "Column Dropdown", options = { "X" } }).__type).to.equal("Dropdown")
 
-            w:ChangeTheme("frost")
+            -- named the only theme that ships. this used to ask for "frost", which does not
+            -- exist, so it silently exercised the fallback while reading like a theme swap
+            w:ChangeTheme("default")
             w:RegisterTranslations({
                 ["zz-test"] = {
                     ["Spec Window"] = "Translated Window",

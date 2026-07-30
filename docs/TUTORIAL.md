@@ -360,10 +360,15 @@ separately and automatically via `SaveSettings`. You don't call that yourself.
 Window:ChangeTheme("default")
 ```
 
-> **Only one theme ships right now: `default`.** The README's list of `amethyst`, `cobalt`,
-> `ember`, `frost` and `rose` is stale — those files aren't in `src/themes/`. Passing an unknown
-> name logs a warning and falls back to default, so `theme = "cobalt"` in `example.client.luau`
-> silently renders as default.
+> **`default` is the only theme, on purpose.** Upstream Rayfield Gen 2 ships six (`cobalt`,
+> `ember`, `amethyst`, `frost`, `rose` alongside `default`); this library ships one and expects
+> you to add your own. Passing a name that doesn't exist logs a warning and falls back to
+> `default` — and secure mode gags that warning, so a typo'd theme name is silent. Recolour with
+> a partial table (below) rather than guessing at a name.
+
+**Adding a theme later** is a drop-in: put `src/themes/<name>.luau` next to `default.luau`
+returning a partial override table, and `ChangeTheme("<name>")` finds it. The lookup is a
+directory search, and Rojo maps `src/` whole, so no code, config, or build change is needed.
 
 You can pass a partial override table instead of a name. Anything you leave out inherits from
 default:

@@ -28,7 +28,10 @@ local translations = {
 local window = AFKTY:CreateWindow({
     name = "Example",
     subtitle = "AFKTY Gen2",
-    theme = "cobalt",
+    -- `default` is the only theme in src/themes/. To recolour without writing a whole theme,
+    -- pass a partial table instead of a name -- every key you leave out inherits from default:
+    --   theme = { AccentColor = Color3.fromRGB(80, 160, 255) }
+    theme = "default",
     translations = translations,
     configuration = {
         autoSave = true,
