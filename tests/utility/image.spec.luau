@@ -8,33 +8,22 @@ return function()
     describe("utility.image", function()
         local originalAvatar
 
-        -- image.preload clears its settled flag on entry, so drive it through a stub that never
-        -- settles. otherwise a test that settles would stop every later one from tracking
-        local function resetSettled()
-            local originalPreload = imageCache.preload
-            imageCache.preload = function()
-                return true, 0
-            end
-            image.preload()
-            imageCache.preload = originalPreload
-        end
-
         beforeEach(function()
             variables.secureMode = false
             image.onBlock = nil
+            image.onFailed = nil
             originalAvatar = imageCache.avatar
             table.clear(image.rewrites)
             table.clear(image.pending)
-            resetSettled()
         end)
 
         afterEach(function()
             variables.secureMode = false
             image.onBlock = nil
+            image.onFailed = nil
             imageCache.avatar = originalAvatar
             table.clear(image.rewrites)
             table.clear(image.pending)
-            resetSettled()
         end)
 
         it("normalizes empty image values", function()
@@ -97,7 +86,12 @@ return function()
                 Parent = {},
             }
 
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
             image.assign(instance, "Image", 321)
+            imageCache.request = originalRequest
 
             expect(instance.Image).to.equal("")
             expect(image.pending[321][instance].Image).to.equal(true)
@@ -115,8 +109,13 @@ return function()
                 Parent = {},
             }
 
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
             image.assign(instance, "Image", 321)
             image.assign(instance, "HoverImage", 321)
+            imageCache.request = originalRequest
 
             image.rewrites[321] = "rbxasset://cached/icon.png"
             imageCache.onCached(321)
@@ -132,9 +131,14 @@ return function()
             }
 
             -- hot paths like a minimise toggle re-assign the same icon all session
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
             for _ = 1, 50 do
                 image.assign(instance, "Image", 321)
             end
+            imageCache.request = originalRequest
 
             local waiting = 0
             for _ in image.pending[321] do
@@ -143,32 +147,120 @@ return function()
             expect(waiting).to.equal(1)
         end)
 
-        it("stops tracking pending images once preload settles", function()
+        it("still tracks and rebinds an icon requested after preload settles", function()
             variables.secureMode = true
             local instance: any = {
                 Parent = {},
             }
-            image.assign(instance, "Image", 654) -- never caches
-            expect(image.pending[654]).to.be.ok()
 
             local originalPreload = imageCache.preload
             imageCache.preload = function(onSettled)
-                onSettled(1)
-                return false, 1
+                if onSettled then
+                    onSettled(0)
+                end
+                return true, 0
             end
-
-            local settledFailed
-            image.preload(function(failed)
-                settledFailed = failed
-            end)
+            image.preload()
             imageCache.preload = originalPreload
 
-            expect(settledFailed).to.equal(1)
-            expect(image.pending[654]).never.to.be.ok()
-
-            -- nothing can land after settle, so tracking anything more would just leak
+            -- a hub can add a tab minutes after the window opened; settle must not stop tracking
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
             image.assign(instance, "Image", 654)
-            expect(image.pending[654]).never.to.be.ok()
+            imageCache.request = originalRequest
+            expect(image.pending[654]).to.be.ok()
+
+            image.rewrites[654] = "rbxasset://cached/late.png"
+            imageCache.onCached(654)
+            expect(instance.Image).to.equal("rbxasset://cached/late.png")
+        end)
+
+        it("asks the cache for an uncached icon in secure mode", function()
+            variables.secureMode = true
+            local requested
+            local originalRequest = imageCache.request
+            imageCache.request = function(id)
+                requested = id
+                return nil, true
+            end
+
+            local instance: any = { Parent = {} }
+            image.assign(instance, "Image", 321)
+
+            imageCache.request = originalRequest
+            expect(requested).to.equal(321)
+            expect(image.pending[321][instance].Image).to.equal(true)
+        end)
+
+        it("uses a disk hit immediately instead of blanking for a frame", function()
+            variables.secureMode = true
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return "rbxasset://cached/on-disk.png", false
+            end
+
+            local instance: any = { Parent = {} }
+            image.assign(instance, "Image", 321)
+
+            imageCache.request = originalRequest
+            expect(instance.Image).to.equal("rbxasset://cached/on-disk.png")
+            expect(image.pending[321]).never.to.be.ok()
+        end)
+
+        it("does not track an icon the cache says will never arrive", function()
+            variables.secureMode = true
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, false
+            end
+
+            local instance: any = { Parent = {} }
+            image.assign(instance, "Image", 321)
+
+            imageCache.request = originalRequest
+            expect(instance.Image).to.equal("")
+            -- tracking it would leak: nothing is coming
+            expect(image.pending[321]).never.to.be.ok()
+        end)
+
+        it("drops the pending entry and forwards when a download fails for good", function()
+            variables.secureMode = true
+            local instance: any = { Parent = {} }
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
+            image.assign(instance, "Image", 321)
+            imageCache.request = originalRequest
+
+            local reported
+            image.onFailed = function(id)
+                reported = id
+            end
+            imageCache.onFailed(321)
+            image.onFailed = nil
+
+            expect(reported).to.equal(321)
+            expect(image.pending[321]).never.to.be.ok()
+        end)
+
+        it("leaves non-secure assignments alone", function()
+            variables.secureMode = false
+            local called = false
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                called = true
+                return nil, false
+            end
+
+            local instance: any = { Parent = {} }
+            image.assign(instance, "Image", 321)
+
+            imageCache.request = originalRequest
+            expect(called).to.equal(false)
+            expect(instance.Image).to.equal("rbxassetid://321")
         end)
 
         it("blocks secure-mode thumbnails and reports the blocked value", function()

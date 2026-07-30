@@ -273,7 +273,15 @@ return function()
         it("registers rail icons as pending so they rebind once cached", function()
             variables.secureMode = true
             local w = makeWindow()
+
+            -- no executor is attached in this harness, so imageCache.request would otherwise
+            -- report the icon as never coming rather than in flight
+            local originalRequest = imageCache.request
+            imageCache.request = function()
+                return nil, true
+            end
             local item = w:CreateRailItem({ icon = 9876543210, name = "Custom" })
+            imageCache.request = originalRequest
 
             -- pre-resolving to "" before Create hands it to assign meant this was never recorded
             expect(image.pending[9876543210]).to.be.ok()

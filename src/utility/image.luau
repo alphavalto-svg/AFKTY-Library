@@ -15,6 +15,7 @@ local image = {}
 
 image.rewrites = imageCache.rewrites
 image.onBlock = nil :: ((unknown) -> ())?
+image.onFailed = nil :: ((id: number) -> ())?
 
 -- images that resolve blank in secure mode (their icon isnt cached yet) register here, so the real
 -- texture can be dropped in once the background download lands instead of leaving a blank. keyed by
@@ -22,9 +23,6 @@ image.onBlock = nil :: ((unknown) -> ())?
 type PendingProperties = { [string]: boolean }
 
 image.pending = {} :: { [number]: { [Instance]: PendingProperties } }
-
--- once preload settles nothing else will ever land, so theres nothing left worth tracking
-local settled = false
 
 local imageProperties: { [string]: boolean } = {
     Image = true,
@@ -49,16 +47,7 @@ local function blocked(value: unknown): string
 end
 
 function image.preload(onSettled: PreloadCallback?): (boolean, number)
-    settled = false
-    return imageCache.preload(function(failed)
-        -- everything that cached has already rebound through onCached, and everything else never
-        -- will, so drop whats left and stop tracking rather than growing all session
-        settled = true
-        table.clear(image.pending)
-        if onSettled then
-            onSettled(failed)
-        end
-    end)
+    return imageCache.preload(onSettled)
 end
 
 function image.avatar(userId: number, onReady: AvatarCallback?): string
@@ -75,24 +64,33 @@ function image.assign(instance: Instance, property: string, value: unknown)
         target[property] = value
         return
     end
-    target[property] = image.resolve(value)
-    -- in secure mode an un-cached icon resolves blank; remember it so it appears once cached
-    if variables.secureMode and not settled then
+
+    local resolved = image.resolve(value)
+    -- in secure mode an un-cached icon resolves blank. ask the cache for it: a disk hit comes
+    -- back right away, and anything else lands through onCached once the download finishes
+    if variables.secureMode and resolved == "" then
         local id = idOf(value)
-        if id and not image.rewrites[id] then
-            local waiting = image.pending[id]
-            if not waiting then
-                waiting = setmetatable({}, { __mode = "k" }) :: any
-                image.pending[id] = waiting
+        if id then
+            local uri, pending = imageCache.request(id)
+            if uri then
+                resolved = uri
+            elseif pending then
+                local waiting = image.pending[id]
+                if not waiting then
+                    waiting = setmetatable({}, { __mode = "k" }) :: any
+                    image.pending[id] = waiting
+                end
+                local properties = waiting[instance]
+                if not properties then
+                    properties = {}
+                    waiting[instance] = properties
+                end
+                properties[property] = true
             end
-            local properties = waiting[instance]
-            if not properties then
-                properties = {}
-                waiting[instance] = properties
-            end
-            properties[property] = true
         end
     end
+
+    target[property] = resolved
 end
 
 -- imageCache calls this when a background icon download lands: drop the real texture into every
@@ -114,6 +112,15 @@ imageCache.onCached = function(id: number)
         end
     end
     image.pending[id] = nil
+end
+
+-- a download that exhausted both endpoints is never coming; stop waiting on it and let init
+-- decide whether to say so
+imageCache.onFailed = function(id: number)
+    image.pending[id] = nil
+    if image.onFailed then
+        image.onFailed(id)
+    end
 end
 
 function image.resolve(value: unknown): string
