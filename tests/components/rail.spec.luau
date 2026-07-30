@@ -255,5 +255,31 @@ return function()
             end)
             expect(ok).to.equal(false)
         end)
+
+        it("registers rail icons as pending so they rebind once cached", function()
+            local image = helpers.requireUtility("image")
+            local imageCache = helpers.requireUtility("imageCache")
+            local variables = helpers.requireUtility("variables")
+
+            local originalSecure = variables.secureMode
+            variables.secureMode = true
+            table.clear(image.rewrites)
+            table.clear(image.pending)
+
+            local w = makeWindow()
+            local item = w:CreateRailItem({ icon = 9876543210, name = "Custom" })
+
+            -- pre-resolving to "" before Create hands it to assign meant this was never recorded
+            expect(image.pending[9876543210]).to.be.ok()
+            expect(image.pending[9876543210][item.iconImage].Image).to.equal(true)
+
+            image.rewrites[9876543210] = "rbxasset://cached/custom.png"
+            imageCache.onCached(9876543210)
+            expect(item.iconImage.Image).to.equal("rbxasset://cached/custom.png")
+
+            variables.secureMode = originalSecure
+            table.clear(image.rewrites)
+            table.clear(image.pending)
+        end)
     end)
 end

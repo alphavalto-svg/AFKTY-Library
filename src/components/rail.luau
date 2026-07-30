@@ -166,7 +166,7 @@ local function ensureRail(window)
         Position = UDim2.new(0.5, 0, 0, EDGE_PADDING),
         AnchorPoint = Vector2.new(0.5, 0),
         BackgroundTransparency = 1,
-        Image = image.resolve(window.icon or constants.icons.afkty),
+        Image = window.icon or constants.icons.afkty,
         ScaleType = Enum.ScaleType.Fit,
         ZIndex = 4,
 
@@ -386,7 +386,7 @@ function Rail.new(window, properties)
         Position = UDim2.fromScale(0.5, 0.5),
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
-        Image = image.resolve(self.icon),
+        Image = self.icon,
         ScaleType = Enum.ScaleType.Fit,
         ZIndex = 5,
 

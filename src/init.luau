@@ -82,12 +82,14 @@ local function createBanner()
     banner.BackgroundTransparency = 1
     banner.BorderColor3 = Color3.fromRGB(0, 0, 0)
     banner.BorderSizePixel = 0
-    banner.Image = image.resolve(constants.icons.banner)
     banner.Position = UDim2.fromScale(0.5, 0.5)
     -- square box + Fit, so the emblem letterboxes instead of stretching. the old 262x60 was
     -- cut for a wordmark; Fit keeps this correct if the art is ever swapped for a wide one.
     banner.ScaleType = Enum.ScaleType.Fit
     banner.Size = UDim2.fromOffset(140, 140)
+    -- createBanner runs before image.preload, so on a cold disk this resolves blank; assign
+    -- rather than resolve so it rebinds when the download lands instead of staying empty
+    image.assign(banner, "Image", constants.icons.banner)
     banner.Parent = ui
 
     return ui
