@@ -70,8 +70,24 @@ local function formatChange(delta)
     end
 end
 
+-- Every value that reaches a readout goes through here first. The constructor used to take a
+-- string happily while Set asserted on one, so a hub that seeded a stat with "0" only found out
+-- on the first update -- and an assert raised outside a guarded callback lands on the console,
+-- which is the one thing secure mode exists to prevent. Coerce what is numeric, refuse the rest.
+local function asNumber(value: unknown): number?
+    if typeof(value) == "number" then
+        return if value == value and value ~= math.huge and value ~= -math.huge then value else nil
+    end
+    if typeof(value) == "string" then
+        return tonumber(value)
+    end
+    return nil
+end
+
 function Statistic.new(tab, properties)
     properties = if typeof(properties) == "table" then properties else {}
+
+    local seeded = asNumber(properties.value or properties.Value)
 
     local self = setmetatable({
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
@@ -80,10 +96,10 @@ function Statistic.new(tab, properties)
         icon = properties.icon or properties.Icon,
         description = properties.description or properties.Description,
 
-        value = if (properties.value or properties.Value) ~= nil then (properties.value or properties.Value) else 0,
+        value = seeded or 0,
         -- did we start with a real value, or is the displayed number just a placeholder?
         -- the first Set on a placeholder establishes the baseline instead of showing a change
-        _hasValue = (properties.value or properties.Value) ~= nil,
+        _hasValue = seeded ~= nil,
 
         numberEasing = if (properties.numberEasing ~= nil)
             then properties.numberEasing
@@ -101,9 +117,7 @@ function Statistic.new(tab, properties)
         compact = properties.compact or properties.Compact or tab.compact or false,
         display = (properties.display or properties.Display or "value"), -- "value" | "change"
 
-        _initialValue = if (properties.value or properties.Value) ~= nil
-            then (properties.value or properties.Value)
-            else nil,
+        _initialValue = seeded,
         _lastChange = 0,
     }, Statistic)
 
@@ -541,7 +555,13 @@ function Statistic:_updateCompactReadout(value, previousValue, targetChange, noC
 end
 
 function Statistic:Set(value)
-    assert(typeof(value) == "number", "Statistic:Set() - value must be a number, got " .. typeof(value))
+    local numeric = asNumber(value)
+    if numeric == nil then
+        -- ignoring beats throwing: a hub calling this outside a guarded callback would put the
+        -- assert straight on the console, and secure mode has no way to report it either
+        return
+    end
+    value = numeric
 
     local previousValue = self.value
     local hasNoHistory = not self._hasValue

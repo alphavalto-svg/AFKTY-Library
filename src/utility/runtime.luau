@@ -24,6 +24,7 @@ export type RuntimeState = {
     guiContainerHidden: boolean,
     resolveProtect: () -> ((Instance) -> ())?,
     parentGui: (gui: Instance) -> (),
+    retireStaleGuis: (gui: Instance) -> (),
 }
 
 local runtime = {} :: RuntimeState
@@ -86,8 +87,14 @@ runtime.guiContainer = (function(): Instance
     end
     if typeof(gethui) == "function" then
         local ok, container = pcall(gethui)
-        if ok and container then
-            containerHidden = true
+        if ok and typeof(container) == "Instance" then
+            -- Not every gethui returns somewhere hidden. Observed on a live client handing back
+            -- CoreGui.RobloxGui, an ordinary child anything walking CoreGui enumerates. Taking
+            -- that as hidden also skips the protect call below, so we would end up with neither.
+            local hidden = container ~= runtime.coreGui
+                and container ~= runtime.coreGui:FindFirstChild("RobloxGui")
+                and not container:IsDescendantOf(runtime.coreGui)
+            containerHidden = hidden
             return container
         end
     end
@@ -121,6 +128,49 @@ function runtime.resolveProtect(): ((Instance) -> ())?
         return env.protectgui
     end
     return nil
+end
+
+-- Re-running a hub script builds a fresh window while the previous run's is still parented, and
+-- nothing holds the old handle any more -- they pile up in the container, invisible to the hub and
+-- reachable by anything that can walk it. A window opened deliberately alongside another in the
+-- SAME run is legitimate, though, so the two cases have to be told apart: runToken is a new table
+-- per module load, and each loadstring gets its own. The register lives in getgenv because that is
+-- the one thing that survives between loads, which is exactly the boundary the strays cross.
+local runToken = {}
+
+function runtime.retireStaleGuis(gui: Instance)
+    if typeof(getgenv) ~= "function" then
+        return
+    end
+    local ok, env = pcall(getgenv)
+    if not ok or type(env) ~= "table" then
+        return
+    end
+
+    local live = env.__afktyLiveGuis
+    if type(live) ~= "table" then
+        live = {}
+        env.__afktyLiveGuis = live
+    end
+
+    for i = #live, 1, -1 do
+        local entry = live[i]
+        -- duck-typed rather than `typeof(gui) == "Instance"`: the spec harness stands its
+        -- instances up as plain tables, and a guard that silently never fires there is a guard
+        -- no test can hold onto
+        local tracked = if type(entry) == "table" then entry.gui else nil
+        local usable = tracked ~= nil and type(tracked.Destroy) == "function" and tracked.Parent ~= nil
+        if not usable then
+            table.remove(live, i)
+        elseif entry.token ~= runToken then
+            table.remove(live, i)
+            pcall(function()
+                tracked:Destroy()
+            end)
+        end
+    end
+
+    table.insert(live, { token = runToken, gui = gui })
 end
 
 function runtime.parentGui(gui: Instance)

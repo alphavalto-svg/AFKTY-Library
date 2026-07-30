@@ -289,11 +289,16 @@ function Window.new(properties)
         -- has to be handed to the protect call before it lands anywhere the game can see
     })
     variables.parentGui(self.screenGui)
+    -- clears out any window a previous run of the hub script left parented; windows opened
+    -- alongside this one in the same run are left alone
+    variables.retireStaleGuis(self.screenGui)
 
     -- Window
     self.main = self:Create("Frame", {
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        Name = self.name,
+        -- the ScreenGui above is already a GUID; naming this one after the window put the hub's
+        -- product name back into the tree in plaintext, undoing that for anything that can walk it
+        Name = variables.httpService:GenerateGUID(false),
         ZIndex = 1,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),

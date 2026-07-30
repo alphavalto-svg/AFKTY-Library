@@ -368,8 +368,34 @@ end
 
 -- shared tail for every CreateX: track it, order it, and reveal it if the window is
 -- already open. without this, elements added after Window:Show stay fully transparent.
+-- Elements had no way to remove themselves. A hub could drop a whole tab but not one control it
+-- had built, so anything conditional had to be rebuilt by tearing down the tab around it.
+local function destroyElement(element)
+    local tab = element.tab
+    return if tab and tab.RemoveElement then tab:RemoveElement(element) else false
+end
+
+function Tab:RemoveElement(element)
+    local index = table.find(self.elements, element)
+    if not index then
+        return false
+    end
+    table.remove(self.elements, index)
+
+    -- same teardown Tab:Remove runs, narrowed to one element: flags and connections first, so
+    -- nothing is still pointing at, or firing on, what is about to be destroyed
+    teardownElements(self.window, { element })
+    if element.main then
+        self.window:DestroySubtree(element.main)
+    end
+    return true
+end
+
 function Tab:_register(element)
     table.insert(self.elements, element)
+    if element.Destroy == nil then
+        element.Destroy = destroyElement
+    end
     assignOrder(element, #self.elements * 10)
     self.window:_restoreLate(element)
 

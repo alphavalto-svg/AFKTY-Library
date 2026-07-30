@@ -170,6 +170,61 @@ return function()
             expect(missing).to.equal(settled)
         end)
 
+        -- The first endpoint is a third-party proxy, so a blip there used to blank that icon for
+        -- the rest of the session. It gets to come back, but not forever.
+        it("lets a failed icon retry once its cooldown has passed", function()
+            getfenv().getcustomasset = function(path)
+                return "asset://" .. path
+            end
+            local attempts = 0
+            variables.assetResolver.getAssetContentFromId = function()
+                attempts += 1
+                return nil
+            end
+            variables.assetResolver.getAssetContentFromUrl = function()
+                return nil
+            end
+
+            imageCache.request(9876543210)
+            expect(attempts).to.equal(1)
+
+            -- still inside the cooldown: no second request
+            imageCache.request(9876543210)
+            expect(attempts).to.equal(1)
+
+            -- pretend the cooldown elapsed
+            imageCache.failed[9876543210].at = os.clock() - 3600
+            imageCache.request(9876543210)
+            expect(attempts).to.equal(2)
+        end)
+
+        it("stops retrying a failed icon once it hits the attempt cap", function()
+            getfenv().getcustomasset = function(path)
+                return "asset://" .. path
+            end
+            local attempts = 0
+            variables.assetResolver.getAssetContentFromId = function()
+                attempts += 1
+                return nil
+            end
+            variables.assetResolver.getAssetContentFromUrl = function()
+                return nil
+            end
+
+            -- an id that genuinely does not exist must not cost two requests on every look
+            for _ = 1, 8 do
+                local record = imageCache.failed[9876543210]
+                if record then
+                    record.at = os.clock() - 3600
+                end
+                imageCache.request(9876543210)
+            end
+
+            expect(attempts).to.equal(3)
+            local _, pending = imageCache.request(9876543210)
+            expect(pending).to.equal(false)
+        end)
+
         it("returns nothing for avatars when no file API exists", function()
             filesystem.isfile = nil
 

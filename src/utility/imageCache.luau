@@ -16,6 +16,10 @@ export type PreloadCallback = CacheSettledCallback
 export type AvatarCallback = (uri: string) -> ()
 export type OnCachedCallback = (id: number) -> ()
 export type OnFailedCallback = (id: number) -> ()
+export type FailureRecord = {
+    attempts: number,
+    at: number,
+}
 export type ThumbnailEntry = {
     state: string?,
     imageUrl: string?,
@@ -38,6 +42,11 @@ local thumbEndpoint =
 -- 420x420 is a re-render rather than the uploaded bytes, but it needs no proxy and keeps alpha
 local assetThumbEndpoint =
     "https://thumbnails.roblox.com/v1/assets?assetIds=%d&size=420x420&format=Png&isCircular=false"
+-- how long a failed id sits out before another assign is allowed to try it again, and how many
+-- times in total. long enough that a page full of dead ids is not a request storm, short enough
+-- that a proxy hiccup on window open has healed by the time anyone notices the gap.
+local failureRetryAfter = 20
+local failureAttemptCap = 3
 
 local manifest: { [number]: string } = {}
 for _, id in constants.icons do
@@ -54,7 +63,7 @@ imageCache.onCached = nil :: OnCachedCallback? -- image sets this to rebind blan
 -- public for the same reason rewrites is: this is the module's observable state, and specs
 -- reset it between cases
 imageCache.inFlight = {} :: { [number]: boolean }
-imageCache.failed = {} :: { [number]: boolean }
+imageCache.failed = {} :: { [number]: FailureRecord }
 imageCache.onFailed = nil :: OnFailedCallback? -- image clears the pending entry and forwards to init
 
 local pngMagic = "\137PNG\r\n\26\n"
@@ -246,11 +255,18 @@ function imageCache.request(id: unknown): (string?, boolean)
     if existing then
         return existing, false
     end
-    if imageCache.failed[id] then
-        return nil, false
-    end
     if imageCache.inFlight[id] then
         return nil, true
+    end
+
+    -- A failure is not always the asset's fault: the first endpoint is a third-party proxy, so a
+    -- blip there used to blank that icon for the rest of the session. Let it come back, but cap
+    -- the attempts so an id that genuinely does not exist stops costing two requests a look.
+    local priorFailure = imageCache.failed[id]
+    if priorFailure then
+        if priorFailure.attempts >= failureAttemptCap or os.clock() - priorFailure.at < failureRetryAfter then
+            return nil, false
+        end
     end
     if type(getfenv().getcustomasset) ~= "function" or typeof(filesystem.isfile) ~= "function" then
         return nil, false
@@ -276,7 +292,10 @@ function imageCache.request(id: unknown): (string?, boolean)
             end
             return
         end
-        imageCache.failed[id] = true
+        imageCache.failed[id] = {
+            attempts = (priorFailure and priorFailure.attempts or 0) + 1,
+            at = os.clock(),
+        }
         if imageCache.onFailed then
             pcall(imageCache.onFailed, id)
         end
