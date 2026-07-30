@@ -61,6 +61,42 @@ survive a restart.
 Design and plan: `docs/superpowers/specs/2026-07-30-hub-icon-caching-design.md`,
 `docs/superpowers/plans/2026-07-30-hub-icon-caching.md`.
 
+### Full adversarial audit, and the six things it found
+
+Ran the whole public surface against a live client with `LogService.MessageOut` hooked at thread
+identity 2 — a game LocalScript's identity — installed **before** the library loaded. ~100 API
+calls, callbacks that `error()`, malformed props, duplicate flags, a throwing translator, path
+traversal in a config name, six window lifecycles, three secure-mode configurations. It found six
+real problems, all now fixed:
+
+1. **`Statistic` disagreed with itself.** The constructor took a string; `Set` asserted on one. A
+   hub seeding with `"0"` only found out on first update, and an assert raised outside a guarded
+   callback lands on the console. Both ends coerce now, junk is ignored rather than thrown.
+2. **The window name was written into the instance tree.** `window.luau` named the main Frame
+   `self.name`, so the ScreenGui's random GUID was undone by the hub's product name sitting
+   directly beneath it in plaintext. It is a GUID now too.
+3. **`gethui()` was trusted to return somewhere hidden.** On the test client it returns
+   `CoreGui.RobloxGui` — an ordinary child. Worse, treating it as hidden *also* skipped the
+   protect call, so both mitigations were off at once. `runtime.luau` now checks what it got back.
+4. **Re-running a hub script orphaned the previous window.** Three had accumulated in CoreGui from
+   earlier runs. Retired via a per-load token in `getgenv`, so a second window opened deliberately
+   in the same run still survives.
+5. **A failed icon stayed blank all session.** The first endpoint is a third-party proxy, so a
+   blip there is not the asset's fault. Retries after a 20 s cooldown, capped at 3 attempts.
+6. **Elements had no `Destroy`.** A hub could drop a whole tab but not one control. `Tab:RemoveElement`
+   plus a `Destroy` on every registered element.
+
+Re-verified live after the fixes, cold cache, `AFKTY_SECURE` unset so the capability gate had to
+turn itself on: **0 console lines**, 0 remote asset ids, 12 icons cached, 12 local `rbxasset://`
+refs, and the only 2 blank images were the two deliberately dead ids (`1` and `-7`). Prior-run
+window retired, same-run pair both alive, unload clean. 258/258 specs at 87.58%.
+
+**Not fixed, because it is not ours:** the executor's own watermark
+(`PlayerGui.Watermark.TextLabel/SessionID/AccountID`) sets `FontFace = rbxassetid://16658237174`
+in **PlayerGui, where the game can read it**, and it is an asset the game does not use. By the
+threat model this library is built against, that is an exposure — and nothing in this repo can
+reach it.
+
 ## Session of 2026-07-29 (latest) — the icon set moved onto owned uploads
 
 **Every asset the library ships is now an AlphaValto upload.** Nine of the ten glyphs were still
