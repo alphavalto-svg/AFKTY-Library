@@ -5,6 +5,16 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The window itself, and the owner of nearly everything else. Holds the tabs, the topbar and
+-- its actions, the rail, the search field and the notification and toast stacks, and it is what
+-- a hub actually holds a reference to.
+--
+-- Two things here are easy to get wrong. Create and Connect exist so every instance and every
+-- connection is tracked against the window and torn down with it; building an instance directly
+-- leaks it. And there are four separate paths in and out of view, Hide, Show, _quickRestore and
+-- ToggleMinimise, which each have to agree about what is visible, so a change to one of them is
+-- almost always a change to all four.
+
 -- Utility
 local utility = script.Parent.Parent.utility
 local image = require(utility.image)
@@ -13,7 +23,7 @@ local persistence = require(utility.persistence)
 local constants = require(utility.constants)
 local locale = require(utility.locale)
 local log = require(utility.log)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 local chrome = require(script.Parent.chrome)
 local search = require(script.Parent.search)
 
@@ -30,22 +40,24 @@ Window.__index = Window
 -- Default entrance-reveal tween (elements override with their own where needed)
 local revealInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
--- The collapsed "pill" main morphs into on Hide, top-anchored the way the old standalone
--- restore button used to sit.
--- Resting transparencies for the window's lit outer edge. Every reveal path uses these so
--- the glow can't differ between first load and a reopen.
+-- The collapsed "pill" main morphs into on Hide.
+-- Resting transparencies for the window's lit outer edge, shared by every reveal path.
 local GLOW_IDLE = 0.88
 local EDGE_IDLE = 0.68
 
 local collapsedSize = UDim2.fromOffset(185, 50)
 local collapsedTop = UDim2.new(0.5, 0, 0, 20)
 
--- Minimise collapses to this exact bar, whatever the window has been resized to. Fixed on
--- purpose: the collapsed state should be one shape you learn, not a different width every time.
+-- Minimise always collapses to this fixed bar, whatever the window was resized to.
 local minimisedSize = UDim2.fromOffset(300, 66)
 
--- Width of the top-centre toast stack container. Toasts hug their own content and centre
--- within it, so this just needs to be at least the toast's own max width.
+-- The title block and the action buttons share the topbar from opposite ends: the title is
+-- left-anchored at a fixed inset, the actions are right-anchored at this one and grow leftward
+-- as more are added. Nothing related the two, so on a narrow window they ran into each other.
+local actionInset = 20
+local titleActionGap = 10
+
+-- Width of the top-centre toast stack container; at least the toast's own max width.
 local maxToastWidth = 320
 
 -- Standard element row height, shared by the compact button/toggle scaffold.
@@ -56,10 +68,8 @@ local defaultWindowSize = Vector2.new(475, 500)
 local minWindowSize = Vector2.new(300, 320)
 local viewportMargin = 60 -- keep the window comfortably inset from the edges of a small screen
 
--- The default size, shrunk to fit small screens (a phone, or a small PC window) so the window
--- never overflows the viewport. Big screens keep the full size untouched; small ones clamp to
--- the usable area minus a margin, floored so it stays usable. Computed once at open - everything
--- downstream (the reveal target, drag clamp, collapse) reads self.size, so it all inherits this.
+-- Default size clamped to the viewport so it never overflows a small screen. Computed once at
+-- open; everything downstream reads self.size.
 local function fitWindowSize()
     local camera = variables.workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize
@@ -71,9 +81,8 @@ local function fitWindowSize()
     return UDim2.fromOffset(width, height)
 end
 
--- Clamp a requested size to what the screen can actually show. Pure, and takes the viewport
--- rather than reading it, so the bounds are testable without a camera. A nil viewport (none
--- yet) applies the floor only - the same fallback fitWindowSize takes.
+-- Clamp a requested size to the viewport. Takes the viewport rather than reading it so the
+-- bounds are testable without a camera; a nil viewport applies the floor only.
 function Window.clampSize(width, height, viewport)
     local clampedWidth = math.max(minWindowSize.X, width)
     local clampedHeight = math.max(minWindowSize.Y, height)
@@ -87,8 +96,7 @@ function Window.clampSize(width, height, viewport)
     return clampedWidth, clampedHeight
 end
 
--- Pull a window centre back until the whole window sits on screen. Same clamp the drag paths
--- use, pulled out here so growing near an edge cant push the window off.
+-- Pull a window centre back until the whole window sits on screen. Same clamp the drag paths use.
 function Window.clampCentreOnScreen(x, y, size, screen)
     local margin = 8
     local halfX, halfY = size.X / 2, size.Y / 2
@@ -98,8 +106,7 @@ function Window.clampCentreOnScreen(x, y, size, screen)
     return clampedX, clampedY
 end
 
--- Keys that drive a UIGradient and so want a ColorSequence. A dev may pass a plain Color3 for
--- any of these and we widen it to a flat sequence, so a theme reads the same either way.
+-- Keys that drive a UIGradient. A plain Color3 is widened to a flat sequence.
 local gradientKeys = {
     WindowColor = true,
     ElementGradient = true,
@@ -127,8 +134,8 @@ local function edgeShade(color, amount)
     return color:Lerp(target, amount)
 end
 
--- Give a custom theme sensible strokes for free: when it recolours a surface but leaves the
--- matching stroke unset, derive one from the fill so a colours-only theme still reads coherently.
+-- When a custom theme recolours a surface but leaves the matching stroke unset, derive the
+-- stroke from the fill.
 local function deriveStrokes(resolved, overrides)
     if overrides.ElementGradient then
         local fill = firstColor(resolved.ElementGradient)
@@ -147,9 +154,8 @@ local function deriveStrokes(resolved, overrides)
     end
 end
 
--- Resolve a theme arg to its raw key set: a table is taken as-is (partial is fine), a known
--- name is required, anything else falls back to default. Read-only - callers never mutate it,
--- so the require()-cached module stays clean for other windows.
+-- Resolve a theme arg to its raw key set: a table is taken as-is, a known name is required,
+-- anything else falls back to default. Read-only: the require()-cached module is shared.
 local function themeOverrides(value)
     if typeof(value) == "table" then
         return value
@@ -158,7 +164,7 @@ local function themeOverrides(value)
         if named then
             return require(named)
         end
-        -- a typo'd name shouldnt crash the menu; warn and fall back so the UI still builds
+        -- warn and fall back rather than crash the menu on a typo'd name
         log.warn("AFKTY: unknown theme '" .. value .. "', using default")
     elseif value ~= nil then
         log.warn("AFKTY: invalid theme (expected a built-in name or a theme table), using default")
@@ -166,8 +172,7 @@ local function themeOverrides(value)
     return require(themes["default"])
 end
 
--- A complete theme for first paint: default filled in with the given overrides, so a partial
--- custom theme only needs the keys it wants to change and the rest fall back to default.
+-- A complete theme for first paint: default filled in with the given overrides.
 local function resolveTheme(value)
     local resolved = table.clone(require(themes["default"]))
     local overrides = themeOverrides(value)
@@ -179,9 +184,8 @@ local function resolveTheme(value)
         deriveStrokes(resolved, overrides)
     end
 
-    -- theme modules call brandFont at first require and are cached from then on, so a
-    -- fallbackFont set afterwards would never reach them. recompute against the current
-    -- stand-in, unless the dev named a font themselves.
+    -- theme modules cache brandFont at first require, so a fallbackFont set afterwards never
+    -- reaches them. recompute unless the dev named a font.
     local userTable = if typeof(value) == "table" then value else nil
     if not (userTable and (userTable.Font or userTable.font)) then
         resolved.Font = variables.brandFont(Enum.FontWeight.Medium)
@@ -196,9 +200,8 @@ end
 function Window.new(properties)
     properties = if typeof(properties) == "table" then properties else {}
 
-    -- Localization is global to the running UI: a dev translator (if any) and the active locale
-    -- live on the locale module. Default the locale to the player's language unless the dev pins
-    -- one. Set before any label is built so the first render is already in the right language.
+    -- Locale is global to the running UI. Set before any label is built so the first render is
+    -- already in the right language.
     if properties.translations or properties.Translations then
         locale.register(properties.translations or properties.Translations)
     end
@@ -207,8 +210,7 @@ function Window.new(properties)
     end
     locale.setActive(properties.locale or properties.Locale or locale.detect())
 
-    -- a dev can pick the stand-in font shown while the brand font downloads in secure mode; set it
-    -- before resolveTheme below so the theme's brandFont picks it up
+    -- set before resolveTheme so the theme's brandFont picks up the stand-in font
     local fallbackFont = properties.fallbackFont or properties.FallbackFont
     if fallbackFont then
         variables.setFallbackFont(fallbackFont)
@@ -249,8 +251,8 @@ function Window.new(properties)
         end)(),
     }, Window)
 
-    -- Public, always-live view of every saved control, keyed by flag. Reading returns the
-    -- control's current value; assigning routes through its Set so the UI and callback fire.
+    -- Live view of every saved control, keyed by flag. Reads return the current value;
+    -- assignment routes through the control's Set.
     self.Flags = setmetatable({}, {
         __index = function(_, flag)
             local control = self.controls[flag]
@@ -285,19 +287,17 @@ function Window.new(properties)
         Enabled = true,
         DisplayOrder = constants.displayOrder.window,
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
-        -- parented below, via parentGui: on an executor with no gethui the ScreenGui itself
-        -- has to be handed to the protect call before it lands anywhere the game can see
+        -- parented below via parentGui: without gethui the ScreenGui must reach protect before
+        -- it lands anywhere the game can see
     })
     variables.parentGui(self.screenGui)
-    -- clears out any window a previous run of the hub script left parented; windows opened
-    -- alongside this one in the same run are left alone
+    -- clear windows left by a previous run; windows opened in this run are left alone
     variables.retireStaleGuis(self.screenGui)
 
     -- Window
     self.main = self:Create("Frame", {
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        -- the ScreenGui above is already a GUID; naming this one after the window put the hub's
-        -- product name back into the tree in plaintext, undoing that for anything that can walk it
+        -- a GUID, not the window name: the name would put the hub's product name in the tree
         Name = variables.httpService:GenerateGUID(false),
         ZIndex = 1,
         AnchorPoint = Vector2.new(0.5, 0.5),
@@ -360,8 +360,7 @@ function Window.new(properties)
 
         Parent = self.bottomFade,
     }, {
-        -- Track the window's colour at its base (keypoint 0 sits at the bottom under Rotation 270)
-        -- so elements dissolve into the window instead of a fixed dark smudge on light themes.
+        -- track the window colour at its base (keypoint 0 is the bottom under Rotation 270)
         Color = {
             "WindowColor",
             function(color)
@@ -375,8 +374,7 @@ function Window.new(properties)
 
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 0, 66),
-        -- Active so empty topbar space can catch input directly - tabs/actions/search sit on
-        -- top and still get first pick, this is just the backdrop becoming a drag handle
+        -- Active so empty topbar space acts as a drag handle; tabs/actions/search sit on top
         Active = true,
 
         Parent = self.main,
@@ -388,6 +386,9 @@ function Window.new(properties)
         AutomaticSize = Enum.AutomaticSize.Y,
         AnchorPoint = Vector2.new(0, 0.5),
         BackgroundTransparency = 1,
+        -- _fitTitleWidth keeps this clear of the actions; clipping is what makes an overlong
+        -- name cut off at that boundary instead of drawing across the buttons
+        ClipsDescendants = true,
 
         Parent = self.topbar,
     })
@@ -525,8 +526,7 @@ function Window.new(properties)
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         SortOrder = Enum.SortOrder.LayoutOrder,
 
-        -- Tabs switch via the topbar only. Kill the built-in input so scrolling a long page
-        -- (or a nudge on a controller) never flips to another tab under you.
+        -- tabs switch via the topbar only; kill the built-in input so scrolling never flips tabs
         ScrollWheelInputEnabled = false,
         GamepadInputEnabled = false,
         TouchInputEnabled = false,
@@ -599,8 +599,7 @@ function Window.new(properties)
         customOrder = 1000,
 
         neglectSelector = true,
-        -- everything here is ephemeral: these controls persist to afkty.rfld via SaveSettings,
-        -- never the user's config. children inherit this, so none of them opt out individually.
+        -- these controls persist to afkty.rfld via SaveSettings, never the user's config
         forgetState = true,
     })
 
@@ -637,6 +636,16 @@ function Window.new(properties)
 
     search.build(self)
 
+    -- the action row is AutomaticSize, and the rail slides the title block sideways, so the
+    -- space between them has to be re-measured rather than worked out once here
+    self:_fitTitleWidth()
+    self:Connect(self.actionContainer:GetPropertyChangedSignal("AbsoluteSize"), function()
+        self:_fitTitleWidth()
+    end)
+    self:Connect(self.topContainer:GetPropertyChangedSignal("Position"), function()
+        self:_fitTitleWidth()
+    end)
+
     self.unloaded = false
     self.minimised = false
     self.hidden = true
@@ -651,8 +660,8 @@ function Window.new(properties)
         keepOnScreen = true, -- clamp the drag so the window cant be pulled off screen
         welcomeToast = true, -- the "signed in as" toast on first open for a new/changed account
         haptics = false, -- off by default; opt in from settings (buzzes on presses/notifications)
-        -- windowWidth/windowHeight stay unset until the window is actually resized, so a fresh
-        -- install still opens at whatever fitWindowSize picks for the screen it lands on
+        -- windowWidth/windowHeight stay unset until a resize, so a fresh install opens at
+        -- whatever fitWindowSize picks
     }
 
     self:LoadSettings()
@@ -663,8 +672,7 @@ function Window.new(properties)
         self:_applySize(self.settings.windowWidth, self.settings.windowHeight)
     end
 
-    -- On unless a hub turns it off. Behaviour belongs in the library rather than being re-typed
-    -- by every consuming script, so the default is the useful one.
+    -- on unless a hub turns it off
     local wantsResize = properties.resize ~= false and properties.Resize ~= false
     if wantsResize then
         self.resize = require(script.Parent.resize).new(self)
@@ -683,8 +691,7 @@ function Window.new(properties)
     return self
 end
 
--- start or stop the gradient drift to match the current theme. called on build and on every
--- ChangeTheme, so switching into or out of an animated theme takes effect either way.
+-- start or stop the gradient drift to match the current theme; called on build and ChangeTheme
 function Window:_syncLiveAnimation()
     if not self.theme.LiveAnimation then
         self._liveAnimating = false -- the running loop sees this and stops after its current leg
@@ -695,8 +702,7 @@ function Window:_syncLiveAnimation()
     end
 
     self._liveAnimating = true
-    -- generation stamp: an old loop parked in Completed:Wait() through a static->animated
-    -- swap wakes up stale and exits, instead of drifting alongside the new loop
+    -- generation stamp: a loop parked in Completed:Wait() across a swap wakes up stale and exits
     self._liveGeneration = (self._liveGeneration or 0) + 1
     local generation = self._liveGeneration
     task.spawn(function()
@@ -722,8 +728,7 @@ function Window:_syncLiveAnimation()
 end
 
 function Window:ChangeTheme(theme)
-    -- A named theme fully switches: resolve against default so keys it omits reset rather than
-    -- lingering from the previous theme. A partial table just overrides the keys it names.
+    -- a named theme is a full switch (omitted keys reset); a table overrides only what it names
     local overrides = if typeof(theme) == "table" then theme else resolveTheme(theme)
     for name, value in overrides do
         self.theme[name] = coerceThemeValue(name, value)
@@ -751,13 +756,10 @@ function Window:ChangeTheme(theme)
         end
     end
 
-    -- themeProperties above only carry plain colours; reveal-driven transparencies and state
-    -- colours (the toggle knob, field fills, glows) aren't, so refresh the elements to reach
-    -- them on a live swap. Every tab's elements stay shown (just page-clipped), settings
-    -- included, so refresh them all; groups forward the call to their children.
+    -- themeProperties only carry plain colours; state colours (toggle knob, field fills, glows)
+    -- need an element refresh. Every tab's elements stay shown, so refresh them all.
     if self.hidden then
-        -- a hidden window has nothing to animate into, so defer the refresh to the next Show
-        -- rather than dropping it and reopening with the old themes state colours
+        -- a hidden window has nothing to animate into; defer the refresh to the next Show
         self._themeRefreshPending = true
     else
         self:_refreshElementThemes()
@@ -781,9 +783,8 @@ function Window:CreateTab(properties)
 
     table.insert(self.tabs, newTab)
 
-    -- A tab is a subcategory of one main category, and tabs are usually created after the
-    -- rail, so hide any that belong to a category other than the selected one. Tabs with no
-    -- category stay visible, which keeps CreateTab unchanged for hubs with no rail.
+    -- hide tabs belonging to a category other than the selected one; tabs with no category stay
+    -- visible, so CreateTab is unchanged for hubs with no rail
     if newTab.railCategory and newTab.topbarItem and not newTab.railCategory.active then
         newTab.topbarItem.Visible = false
     end
@@ -800,8 +801,7 @@ function Window:CreateTab(properties)
             newTab:Select(true)
         end
 
-        -- a tab built after the window is already open reveals its pill right away, the
-        -- same way _register shows late elements. hidden/minimised windows reveal on restore.
+        -- a tab built after the window is open reveals its pill right away
         if not self.hidden and not self.minimised then
             newTab.topbarItem.Visible = true
             newTab:_applyVisual(
@@ -820,16 +820,15 @@ function Window:CreateTag(properties)
     return newTag
 end
 
--- Left icon rail. The rail itself is built on the first call and insets the window's
--- content; a window that never calls these keeps its original geometry.
+-- Left icon rail, built on first call. It insets the window content; a window that never
+-- calls these keeps its original geometry.
 function Window:CreateRailItem(properties)
     local newItem = require(script.Parent.rail).new(self, properties)
     table.insert(self.railItems, newItem)
     return newItem
 end
 
--- The player avatar chip at the bottom of the rail. Draws the headshot and reports clicks;
--- what gets shown about the account is the caller's business.
+-- The player avatar chip at the bottom of the rail: draws the headshot and reports clicks.
 function Window:CreateRailProfile(properties)
     local newProfile = require(script.Parent.rail).profile(self, properties)
     self.railProfile = newProfile
@@ -837,9 +836,8 @@ function Window:CreateRailProfile(properties)
     return newProfile
 end
 
--- Register a saveable control under its flag. Keeps flags unique so two same-named
--- elements dont clobber each other's saved value. Updates control.flag to the key we
--- actually stored under and returns it.
+-- Register a saveable control under its flag, keeping flags unique. Updates control.flag to
+-- the key actually stored under and returns it.
 function Window:_registerControl(control)
     if not control.flag or control.flag == "" or control.forgetState then
         return
@@ -866,11 +864,9 @@ function Window:_registerControl(control)
     return flag
 end
 
--- Restore an element built after the config was already loaded. autoLoad only fires once on
--- first Show, so without this a late element (one built after a remote fetch, say) keeps its
--- default and the next autosave writes that default over the saved value.
--- Called from the CreateX tails once the element is fully built, since _registerControl runs
--- mid-construction and :Set would touch instances that dont exist yet.
+-- Restore an element built after the config was loaded. autoLoad fires once on first Show, so
+-- without this a late element keeps its default and the next autosave overwrites the saved value.
+-- Called from the CreateX tails, since _registerControl runs mid-construction.
 function Window:_restoreLate(element)
     if not self._loadedConfig or not element.flag or element.forgetState then
         return
@@ -882,28 +878,24 @@ function Window:_restoreLate(element)
     self._loading = wasLoading
 end
 
--- Autosave a control's value after an interactive or programmatic change, when the window is
--- set to autoSave and the control opts into persistence. Every Set/commit path funnels here so
--- persistence stays uniform across elements.
+-- Autosave a control's value after a change, when autoSave is on and the control persists.
+-- Every Set/commit path funnels here.
 function Window:_persist(control)
-    -- _loading: a config restore fires every control's callback, but must not autosave back over
-    -- the file it's reading (or storm Save once per control)
+    -- _loading: a config restore fires every callback, but must not autosave over the file it reads
     if control.flag and not control.forgetState and self.configuration.autoSave and not self._loading then
         task.spawn(self.Save, self)
     end
 end
 
--- Drop a control from the flag registry when its element is removed, so Save/Load and the
--- Flags view never touch a destroyed instance.
+-- Drop a control from the flag registry when its element is removed.
 function Window:_unregisterControl(control)
     if control.flag and self.controls[control.flag] == control then
         self.controls[control.flag] = nil
     end
 end
 
--- find a keybind element currently bound to `key`, skipping `exclude` and unbound keys. lets
--- the menu-toggle keybind refuse a key an element keybind already owns. keybinds only live at
--- tab level (groups dont hold them), so a scan over each tab's elements catches them all.
+-- find a keybind bound to `key`, skipping `exclude` and unbound keys. keybinds only live at
+-- tab level, so scanning each tab's elements catches them all.
 function Window:_keybindUsing(key, exclude)
     if typeof(key) ~= "EnumItem" or key == Enum.KeyCode.Unknown then
         return nil
@@ -938,8 +930,7 @@ function Window:Notify(properties)
             VerticalAlignment = Enum.VerticalAlignment.Bottom,
             HorizontalAlignment = Enum.HorizontalAlignment.Center,
             SortOrder = Enum.SortOrder.LayoutOrder,
-            -- No padding here: the gap lives inside each notification so removing
-            -- one doesn't drop an external gap and jolt the stack.
+            -- gap lives inside each notification, so removing one doesn't jolt the stack
             Padding = UDim.new(0, 0),
 
             Parent = self.notifications,
@@ -949,9 +940,8 @@ function Window:Notify(properties)
     return require(script.Parent.notification).new(self, properties)
 end
 
--- Top-centre / bottom-centre toast stack. Like Notify but for brief, centred messages that drop
--- in from the top (or rise from the bottom) of the screen (newest on top). Each toast takes
--- { title, subtitle?, icon?, duration?, position? }.
+-- Top-centre / bottom-centre toast stack, newest on top.
+-- Takes { title, subtitle?, icon?, duration?, position? }.
 function Window:Toast(properties)
     if self.unloaded then
         return
@@ -992,8 +982,7 @@ function Window:Toast(properties)
 end
 
 -- Centred modal over a dimmed backdrop. Takes { title, subtitle?, icon?, content?, boxes?,
--- options?, dismissable? } - give it options for a choice dialog, or boxes for a changelog.
--- Returns the popup handle (call :Close() to dismiss it yourself).
+-- options?, dismissable? }. Returns the popup handle; call :Close() to dismiss.
 function Window:Popup(properties)
     if self.unloaded then
         return
@@ -1002,14 +991,12 @@ function Window:Popup(properties)
 end
 
 function Window:Hide()
-    -- idempotent: a second Hide while collapsed would capture the pill spot as the
-    -- restore position and teleport the window there on the next Show
+    -- idempotent: a second Hide while collapsed would capture the pill spot as the restore position
     if self.animating or self.hidden then
         return
     end
 
-    -- drop out of search first so we grow back into the normal tab view on next show. tabList
-    -- stays hidden here since the collapse hides it anyway; Show re-enables it.
+    -- drop out of search first so the next Show grows back into the normal tab view
     if self._searching then
         search.close(self, { showTabs = false, jumpTo = self.selectedTab and self.selectedTab.tabPage })
     end
@@ -1019,9 +1006,7 @@ function Window:Hide()
     self.hidden = true
     self.collapsedInteract.Visible = false -- re-shown once the collapse settles, below
 
-    -- closing while minimised closes properly rather than leaving a stale minimised state -
-    -- Show always grows back to the full (non-minimised) layout, so the flag and icon need
-    -- to agree with that
+    -- Show always grows back to the full layout, so clear the minimised flag and icon here
     if self.minimised then
         self.minimised = false
         image.assign(self.minimiseAction.iconLabel, "Image", constants.icons.minimise) -- back to the minimise icon
@@ -1033,14 +1018,12 @@ function Window:Hide()
     local home, size = self:_collapsedRect()
 
     local fadeInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    -- one continuous move for the whole collapse: size and position tween together on the
-    -- same curve so they stay perfectly in sync, no seam between separate legs
+    -- size and position tween on the same curve so the collapse has no seam
     local moveInfo = TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut)
     local cornerInfo = TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut)
     local faceInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-    -- fade the window's own chrome out; main keeps its own background/gradient/corner the
-    -- whole time, it just reshapes underneath - there's nothing to hand off to
+    -- fade the chrome out; main keeps its background/gradient/corner and reshapes underneath
     variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
     variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
     variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
@@ -1056,8 +1039,7 @@ function Window:Hide()
         variables.tweenService:Create(self.topbarIcon, fadeInfo, { ImageTransparency = 1 }):Play()
     end
 
-    -- the rail is parented to main, which reshapes rather than hides, so it has to be taken
-    -- down explicitly or it keeps drawing over the collapsed face
+    -- main reshapes rather than hides, so the rail must be taken down explicitly
     if self.rail then
         require(script.Parent.rail).setShown(self, false, fadeInfo)
     end
@@ -1085,13 +1067,11 @@ function Window:Hide()
 
     self:_fadeSelectedElementsOut()
 
-    -- collapse into the pill in one continuous move - size and position tweened together
-    -- so they stay perfectly in sync throughout
+    -- collapse into the pill in one move: size and position tween together
     variables.tweenService:Create(self.main, moveInfo, { Size = size, Position = home }):Play()
     variables.tweenService:Create(self.windowCorner, cornerInfo, { CornerRadius = UDim.new(1, 0) }):Play()
 
-    -- once the chrome's faded, drop it and the scrolling content so nothing squashes/pokes
-    -- out as the frame shrinks around it, then bring the collapsed face up over the top
+    -- once the chrome has faded, drop it and the content so nothing pokes out as the frame shrinks
     task.delay(0.18, function()
         if not self.hidden then
             return
@@ -1149,6 +1129,9 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = GLOW_IDLE }):Play()
         if self.rail then
             require(script.Parent.rail).setShown(self, true, fadeInfo)
+            if self.topbarIcon then
+                self.topbarIcon.Visible = true
+            end
         end
         if self.resize then
             self.resize:SetShown(true)
@@ -1156,8 +1139,7 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
-        -- once the window's grown back, fade the content and tab pills in rather than
-        -- snapping them visible
+        -- fade the content and tab pills in once the window has grown back
         task.delay(0.2, function()
             if self.minimised or self.hidden then
                 return -- re-minimised or hidden mid animation
@@ -1182,8 +1164,7 @@ function Window:ToggleMinimise()
         self.minimised = true
         image.assign(self.minimiseAction.iconLabel, "Image", constants.icons.maximise) -- maximise icon while minimised
 
-        -- fade the content + tab pills out instead of cutting them, then hide them once faded
-        -- so they don't sit clipped under the collapsed bar
+        -- fade the content and tab pills out, then hide them so they don't clip under the bar
         self:_fadeSelectedElementsOut()
         for _, tab in pairs(self.tabs) do
             if not tab.neglectSelector and tab.topbarItem then
@@ -1207,17 +1188,20 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowShadow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowGlow, fadeInfo, { Transparency = 1 }):Play()
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = 1 }):Play()
-        -- minimise shrinks main to just the topbar, so the rail has to come down with it - all
-        -- but the emblem, which stays so the collapsed bar still reads as the product
+        -- minimise shrinks main to the topbar, so the rail comes down with it except the emblem
         if self.rail then
             require(script.Parent.rail).setShown(self, false, fadeInfo, true)
+            -- the emblem the rail keeps is drawn from window.icon, which is the same image the
+            -- topbar icon carries. Side by side in a 300px bar that reads as the icon twice.
+            if self.topbarIcon then
+                self.topbarIcon.Visible = false
+            end
         end
         if self.resize then
             self.resize:SetShown(false)
         end
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 1 }):Play()
-        -- a fixed bar, deliberately not the resized width: collapsed is a consistent shape you
-        -- learn the position of, not a reminder of how wide you left the window
+        -- a fixed bar, not the resized width
         variables.tweenService:Create(self.main, sizeInfo, { Size = minimisedSize }):Play()
 
         task.delay(0.5, function()
@@ -1226,9 +1210,22 @@ function Window:ToggleMinimise()
     end
 end
 
--- The one funnel every size change goes through: the grip drag, and a size restored from disk.
--- It writes self.size, which every reveal target reads - so Hide, Show, _quickRestore and
--- ToggleMinimise inherit the new size without any of them knowing that resizing exists.
+-- Give the title block whatever the topbar has left once the actions have taken their side.
+-- Both ends move: the rail insets the title, and the action row grows with each action, so
+-- this is measured rather than fixed. The 300px minimise bar is the case that needs it most,
+-- where a hardcoded width put the tag and the title underneath the buttons.
+function Window:_fitTitleWidth()
+    if not self.topContainer or not self.actionContainer then
+        return
+    end
+
+    local left = self.topContainer.Position.X.Offset
+    local reserved = left + self.actionContainer.AbsoluteSize.X + actionInset + titleActionGap
+    self.topContainer.Size = UDim2.new(1, -reserved, 0, 24)
+end
+
+-- The single funnel for every size change (grip drag, size restored from disk). Writes
+-- self.size, which every reveal target reads.
 function Window:_applySize(width, height)
     local camera = variables.workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize
@@ -1237,10 +1234,8 @@ function Window:_applySize(width, height)
     local previous = self.size
     self.size = UDim2.fromOffset(newWidth, newHeight)
 
-    -- Nothing on screen to resize. Hidden: main is still parked at its pre-reveal start state,
-    -- and snapping it to full size would leave the intro animation with nothing to sweep out, so
-    -- keep that start state in step instead. Minimised: the collapsed bar is a fixed size, and
-    -- only what it restores to changes.
+    -- nothing on screen to resize: hidden keeps its pre-reveal start state in step, minimised
+    -- only changes what it restores to
     local offScreen = self.hidden or self.minimised
     if offScreen then
         if not self.hasShownOnce then
@@ -1249,16 +1244,14 @@ function Window:_applySize(width, height)
         return
     end
 
-    -- main is centre-anchored, so growing by d moves both edges out by d/2. Shifting the centre
-    -- by that same half-delta pins the top-left corner, which is what makes the grip feel like
-    -- it is dragging the corner rather than stretching the window from the middle.
+    -- main is centre-anchored, so growing by d moves both edges by d/2. Shifting the centre by
+    -- the same half-delta pins the top-left corner under the grip.
     local halfDeltaX = (newWidth - previous.X.Offset) / 2
     local halfDeltaY = (newHeight - previous.Y.Offset) / 2
 
     self.main.Size = self.size
 
-    -- resolve to absolute pixels, the same space the topbar drag already leaves Position in, so
-    -- a resized window and a dragged one are positioned the same way
+    -- resolve to absolute pixels, the same space the topbar drag leaves Position in
     local screen = self.screenGui.AbsoluteSize
     local position = self.main.Position
     local centreX = position.X.Scale * screen.X + position.X.Offset + halfDeltaX
@@ -1294,8 +1287,7 @@ function Window:_bindMouseOverride()
         if not active() then
             return
         end
-        -- hands off while the right button is held: thats the camera panning in third person,
-        -- and it needs to lock the mouse to do it. we free again the moment it lets go.
+        -- hands off while the right button is held: that is the camera panning, which locks the mouse
         if uis:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             return
         end
@@ -1307,13 +1299,11 @@ function Window:_bindMouseOverride()
         end
     end
 
-    -- react to the game re-locking instead of racing it each frame. it sets LockCenter, we set
-    -- it back, so we always get the last word. same deal if it hides the mouse icon.
+    -- react to the game re-locking rather than racing it each frame
     self:Connect(uis:GetPropertyChangedSignal("MouseBehavior"), free)
     self:Connect(uis:GetPropertyChangedSignal("MouseIconEnabled"), free)
 
-    -- right-release doesnt always flip MouseBehavior back (so the signals above wouldnt fire),
-    -- so re-free explicitly once the pan ends
+    -- right-release doesnt always flip MouseBehavior back, so re-free explicitly once the pan ends
     self:Connect(uis.InputEnded, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
             free()
@@ -1324,16 +1314,15 @@ function Window:_bindMouseOverride()
     self._freeMouse = free
 end
 
--- Grabbing the topbar drags the whole window too, its own separate handle from the bar
--- underneath - tracks the cursor 1:1 with no lag, unlike the bars own deliberate smoothing, and
--- the bar just glues to wherever main currently is each frame so it never drifts off on its own
+-- Grabbing the topbar drags the whole window, tracking the cursor 1:1. The bar glues to
+-- wherever main is each frame so it never drifts.
 function Window:_bindTopbarDrag()
     local uis = variables.userInputService
     local dragging = false
     local relative = Vector2.zero
 
-    -- main.Position lives in a space shifted from AbsolutePosition by the gui inset, even
-    -- though the ScreenGui ignores it - add it back or the window jumps on the first move
+    -- main.Position is shifted from AbsolutePosition by the gui inset; add it back or the
+    -- window jumps on the first move
     local offset = Vector2.zero
     if self.screenGui and self.screenGui.IgnoreGuiInset then
         offset = variables.guiService:GetGuiInset()
@@ -1355,9 +1344,8 @@ function Window:_bindTopbarDrag()
         return UDim2.fromOffset(x, y)
     end
 
-    -- Global ZIndexBehavior still delivers InputBegan to an Active ancestor even when a child
-    -- button covers that exact pixel, so checking the event alone isnt enough - a press over the
-    -- tabs or the actions has to be rejected by where it actually landed, not just left to bubble
+    -- Global ZIndexBehavior delivers InputBegan to an Active ancestor even when a child button
+    -- covers that pixel, so a press has to be rejected by where it landed, not left to bubble
     local function overInteractiveChild(x, y)
         for _, region in { self.tabList, self.actionContainer } do
             local position, size = region.AbsolutePosition, region.AbsoluteSize
@@ -1403,8 +1391,7 @@ function Window:_bindTopbarDrag()
         end
     end)
 
-    -- alt-tabbing with the button still down never delivers InputEnded, so without this the
-    -- grab stays armed and the window snaps to the cursor the moment youre back
+    -- alt-tabbing with the button down never delivers InputEnded, which would leave the grab armed
     self:Connect(uis.WindowFocusReleased, function()
         dragging = false
     end)
@@ -1414,8 +1401,7 @@ function Window:_bindTopbarDrag()
             return
         end
 
-        -- hidden or mid-animation means the grab went stale under us, so drop it here rather
-        -- than let it wake up later and yank the window to wherever the cursor drifted
+        -- hidden or mid-animation means the grab went stale; drop it rather than let it wake later
         if not self:_interactive() then
             dragging = false
             return
@@ -1493,8 +1479,7 @@ function Window:_buildSettingsUI()
         end,
     })
 
-    -- Configurations: save the current setup under a name and switch between saved ones.
-    -- Only shown once the developer opts into config saving.
+    -- Configurations: only shown once the developer opts into config saving.
     if next(self.configuration) ~= nil then
         self.rfSettings:CreateSection({ name = "Configurations" })
 
@@ -1601,8 +1586,7 @@ function Window:LoadSettings()
     return persistence.loadSettings(self)
 end
 
--- Fade the open tab's elements out - the only ones actually on screen, since the page
--- navigation keeps the other tabs' elements invisible. Shared by Hide and minimise.
+-- Fade the open tab's elements out (the only ones on screen). Shared by Hide and minimise.
 function Window:_fadeSelectedElementsOut()
     if self.selectedTab then
         for _, element in ipairs(self.selectedTab.elements) do
@@ -1611,13 +1595,9 @@ function Window:_fadeSelectedElementsOut()
     end
 end
 
--- Reveal the open tab's elements with a quick top-to-bottom stagger, but only for the ones
--- actually within the scroll viewport - whatever's scrolled off (above or below) just snaps in,
--- since nobody's looking at it. So reopening a page scrolled halfway down animates from where
--- you left off, not from the very top. Everything is measured live off the scrolling frame's
--- real viewport + each element's real position, so it's correct at any window size, any scroll.
--- Other tabs snap ready off-screen too. `budget` caps how long the stagger runs before the
--- remaining on-screen elements come in together, so a tall viewport doesn't crawl.
+-- Reveal the open tab's elements with a top-to-bottom stagger, but only for those inside the
+-- scroll viewport; anything scrolled off snaps in. Measured live off the scrolling frame's
+-- viewport and each element's position. `budget` caps how long the stagger runs.
 function Window:_revealElements(perElementDelay, budget)
     for _, tab in pairs(self.tabs) do
         if tab ~= self.selectedTab then
@@ -1661,9 +1641,7 @@ function Window:Show()
     self.animating = true
     self._revealing = true
 
-    -- autoLoad reflects the saved config once, on first open. Re-loading on every show would
-    -- wipe any changes the user made and closed without saving. a load that throws must not
-    -- strand animating=true, or the window could never open again.
+    -- autoLoad applies once, on first open. A load that throws must not strand animating=true.
     if self.configuration.autoLoad and not self._autoLoaded then
         self._autoLoaded = true
         local ok, err = pcall(self.Load, self)
@@ -1702,15 +1680,12 @@ function Window:_quickRestore()
     local cornerInfo = TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut)
     local fadeInfo = TweenInfo.new(0.28, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
-    -- Phase 1: nothing but the pill morphing back into the window frame. The collapsed face
-    -- fades off, main grows + un-rounds. No chrome, no content - so you never see the topbar,
-    -- tabs or bottom fade floating over a frame that isn't a window yet.
+    -- Phase 1: the pill morphs back into the window frame. No chrome or content yet.
     chrome.setCollapsedShown(self, false, TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out))
     variables.tweenService:Create(self.main, growInfo, { Size = self.size, Position = target }):Play()
     variables.tweenService:Create(self.windowCorner, cornerInfo, { CornerRadius = self.theme.CornerRoundness }):Play()
 
-    -- Phase 2: once the frame actually reads as a window, fade its chrome in and stagger the
-    -- open tab's elements. Other tabs snap ready off-screen - nobody's looking, so no animation.
+    -- Phase 2: fade the chrome in and stagger the open tab's elements. Other tabs snap ready.
     task.delay(0.22, function()
         self.topbar.Visible = true
         self.tabList.Visible = true
@@ -1745,8 +1720,7 @@ function Window:_quickRestore()
             end
         end
 
-        -- if we were hidden with the settings page open, bring its cog back lit (its open
-        -- state) rather than the default resting brightness the loop above just set
+        -- hidden with the settings page open: bring its cog back lit rather than resting
         if self.settingsAction and self.selectedTab == self.rfSettings then
             variables.tweenService:Create(self.settingsAction.iconLabel, fadeInfo, { ImageTransparency = 0.2 }):Play()
         end
@@ -1792,9 +1766,7 @@ function Window:_firstShow()
             { Transparency = 0.6 }
         )
         :Play()
-    -- the lit edge belongs to the first reveal too. Hide/_quickRestore/ToggleMinimise each
-    -- drive these as well, and leaving them out here meant the window only ever glowed after
-    -- it had been collapsed and reopened once, never on the initial load.
+    -- the lit edge belongs to the first reveal too, not just to collapse/restore
     variables.tweenService
         :Create(
             self.windowGlow,
@@ -1888,8 +1860,7 @@ function Window:_firstShow()
     self.animating = false
     self._revealing = false
 
-    -- Welcome the user once if this is a new/changed account on this device (unless they've
-    -- turned it off in settings). Just a toast now - the profile chip is a toast like any other.
+    -- welcome the user once on a new or changed account, unless turned off in settings
     local localPlayer = variables.localPlayer
     if localPlayer and self.settings.welcomeToast and chrome.isNewUser() then
         self:Toast({
@@ -1902,10 +1873,7 @@ function Window:_firstShow()
     end
 end
 
--- The config file's full path. persistence.getPath hands back (dir, fullPath), and returning
--- both meant `local path = Window:GetPath()` bound the *directory* - so every caller doing
--- isfile(path) got false against a folder that plainly existed. The type has always said one
--- string, and a method called GetPath singular means the file.
+-- The config file's full path. persistence.getPath returns (dir, fullPath); return only the file.
 function Window:GetPath()
     local _, fullPath = persistence.getPath(self)
     return fullPath
@@ -1927,9 +1895,7 @@ function Window:Load(name)
     return persistence.load(self, name)
 end
 
--- Load a named config and make it the live state autoLoad restores next session. Loading only
--- applies to the running UI; writing it back to the default file is what carries it across
--- sessions, so the config manager can pick a config once and have it stick.
+-- Load a named config and write it back to the default file, so autoLoad restores it next session.
 function Window:_applyNamedConfig(name)
     if not self:Load(name) then
         return false
@@ -1963,19 +1929,16 @@ function Window:Set(flag, value)
     return true
 end
 
--- Jump to a tab by handle, name, or its page instance. No-ops on an unknown tab rather
--- than handing JumpTo something it cant resolve.
--- Move the page view only. Tab:Select owns the selection state and the pill, and calls this
--- for the scroll; nothing else should jump pages without going through it.
+-- Jump to a tab by handle, name, or page instance. No-ops on an unknown tab.
+-- Move the page view only. Tab:Select owns the selection state and the pill and calls this.
 function Window:_jumpTo(page)
     if page then
         self.elementsLayout:JumpTo(page)
     end
 end
 
--- Go to a tab, by name or by the tab itself. Routes through Tab:Select so the selection,
--- the pill and the page all agree; jumping the page alone would leave the wrong tab lit and
--- the reveal animations pointed at the wrong elements.
+-- Go to a tab by name or by the tab itself. Routes through Tab:Select so the selection, the
+-- pill and the page agree.
 function Window:Navigate(tab)
     if tab == nil then
         return
@@ -2000,8 +1963,8 @@ function Window:Create(className, properties, themeProperties)
     assert(typeof(className) == "string", "Invalid argument #1 (string expected)")
     local instance = Instance.new(className)
 
-    -- Themed properties apply first so animation start-states in `properties` (e.g. a hidden
-    -- BackgroundTransparency = 1) still win at build; the theme value is the reveal target.
+    -- themed properties apply first so start-states in `properties` win at build; the theme
+    -- value is the reveal target
     if themeProperties and self.theme then
         for property, value in themeProperties do
             instance[property] = (
@@ -2026,9 +1989,7 @@ function Window:Create(className, properties, themeProperties)
     return instance
 end
 
--- Bind instance[property] to a source string: set it to the active locale's form now and remember
--- it so SetLocale can re-resolve in place without rebuilding anything. Mirrors how themeProperties
--- lets ChangeTheme re-apply themed values later.
+-- Bind instance[property] to a source string so SetLocale can re-resolve it in place later.
 function Window:_bindLocale(instance, property, source)
     instance[property] = locale.resolve(source)
 
@@ -2040,9 +2001,8 @@ function Window:_bindLocale(instance, property, source)
     entries[property] = source
 end
 
--- Swap every localized label to `localeId` in place. Element values, slider readouts and other
--- data aren't copy, so they're untouched. AutomaticSize reflows widths for us; the few manually
--- measured labels (toasts) are transient enough not to need a re-measure.
+-- Swap every localized label to `localeId` in place. Values and readouts are data, not copy,
+-- so they are untouched; AutomaticSize reflows widths.
 function Window:SetLocale(localeId)
     locale.setActive(localeId)
     for instance, entries in self.localeProperties do
@@ -2052,22 +2012,21 @@ function Window:SetLocale(localeId)
     end
 end
 
--- Swap the dev translation hook (source, localeId) -> string?. Follow with SetLocale (or pass the
--- same locale back) to re-resolve everything already on screen through the new hook.
+-- Swap the dev translation hook (source, localeId) -> string?. Follow with SetLocale to
+-- re-resolve what is already on screen.
 function Window:SetTranslator(translator)
     locale.translator = translator
 end
 
--- Merge more translation tables in at runtime ({ [localeId] = { [source] = translated } }) and
--- re-apply the active locale, so a language pack added after the UI is built lands immediately.
+-- Merge more translation tables ({ [localeId] = { [source] = translated } }) and re-apply the
+-- active locale, so a late language pack lands immediately.
 function Window:RegisterTranslations(tables)
     locale.register(tables)
     self:SetLocale(locale.current)
 end
 
--- Soft glow behind a GuiObject via a native UIShadow (no image). ZIndex -1 keeps it behind.
--- `color` is a Color3 for a fixed glow, or a theme key (string) for a shadow that tracks the
--- theme and re-tints on ChangeTheme - a ColorSequence key resolves to its first keypoint.
+-- Soft glow behind a GuiObject via a native UIShadow. ZIndex -1 keeps it behind. `color` is a
+-- Color3 for a fixed glow, or a theme key that re-tints on ChangeTheme.
 function Window:CreateGlow(parent, color, blur, transparency)
     local properties = {
         BlurRadius = UDim.new(0, blur),
@@ -2092,9 +2051,8 @@ function Window:CreateGlow(parent, color, blur, transparency)
     return self:Create("UIShadow", properties)
 end
 
--- Flash an element's inset box + glow to signal a set landed: green for a good set, red for a
--- rejected one, then settle back to the box's idle look. green/red are our universal accents.
--- The element supplies `box`, an optional `glow`, and its idle transparencies (_boxIdle/_glowIdle).
+-- Flash an element's inset box and glow to signal a set landed: green for accepted, red for
+-- rejected. The element supplies `box`, an optional `glow`, and _boxIdle/_glowIdle.
 function Window:_flashResult(element, ok)
     local box = element.box
     if not box then
@@ -2162,8 +2120,7 @@ function Window:_wireElementHover(element)
     local info = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local theme = self.theme
 
-    -- marks the row as one that lights under the cursor, so reveal knows to rest it hidden
-    -- rather than at the constant panel edge
+    -- marks the row as hover-lit, so reveal rests it hidden rather than at the panel edge
     element.hoverLit = true
 
     self:Connect(element.main.MouseEnter, function()
@@ -2203,9 +2160,8 @@ function Window:_wireElementHover(element)
     end)
 end
 
--- run a callback with the red error-flash on failure, debounced via element._errored so a
--- slider firing every frame flashes once. shared by every interactive element. elements whose
--- `main` is a transparent wrapper (the dropdown) set `flashTarget` to the frame to tint.
+-- run a callback with the red error-flash on failure, debounced via element._errored. Elements
+-- whose `main` is a transparent wrapper (the dropdown) set `flashTarget` to the frame to tint.
 function Window:_runGuarded(element, fn, ...)
     local args = table.pack(...)
     task.spawn(function()
@@ -2267,8 +2223,7 @@ function Window:StyleElementBody(main)
         Parent = main,
     }, { CornerRadius = "ElementCornerRadius" })
 
-    -- rests hidden and lights on hover; every element built through here wires that up, so
-    -- the resting key is the row one rather than the panel one
+    -- rests hidden and lights on hover, so the resting key is the row one, not the panel one
     return self:Create("UIStroke", {
         Transparency = 1,
 
@@ -2276,9 +2231,8 @@ function Window:StyleElementBody(main)
     }, { Color = "ElementStroke", Transparency = "ElementStrokeRestTransparency" })
 end
 
--- Shared scaffold for the compact button/toggle row: the white body + stroke, the fill flex
--- so it shares the row width, and the click surface. Callers add their own padding + content
--- into the returned interact, keeping the two elements identical where they should be.
+-- Shared scaffold for the compact button/toggle row: body, stroke, fill flex and click surface.
+-- Callers add their own padding and content into the returned interact.
 function Window:_buildCompactRow(host, name, interactZIndex)
     local main = self:Create("Frame", {
         Name = name,
@@ -2331,9 +2285,8 @@ function Window:_buildCompactRow(host, name, interactZIndex)
     return main, stroke, interact
 end
 
--- Like StyleElementBody but with a gradient stroke (subtle sheen) instead of a flat one.
--- White stroke base tinted by the ElementStrokeGradient. Used by the dropdown's header +
--- options cards. Returns the stroke.
+-- Like StyleElementBody but with a gradient stroke tinted by ElementStrokeGradient.
+-- Used by the dropdown header and options cards. Returns the stroke.
 function Window:StyleElementPanel(frame)
     self:Create("UIGradient", {
         Rotation = 270,
@@ -2377,8 +2330,7 @@ end
 
 -- Reveal the parts every non-Section element shares (fill/stroke/title/icon/descriptor).
 function Window:_revealCommon(element, animate)
-    -- a row that lights on hover rests hidden; a stat tile has no hover state, so it keeps the
-    -- constant edge or it would have no outline at all
+    -- hover-lit rows rest hidden; a stat tile has no hover state, so it keeps the constant edge
     local restStroke = if element.hoverLit
         then self.theme.ElementStrokeRestTransparency
         else self.theme.ElementStrokeTransparency
@@ -2406,9 +2358,8 @@ function Window:_hideCommon(element, animate)
     end
 end
 
--- The rect main morphs into once collapsed: the same top-centre spot the old standalone
--- restore pill used to sit at, translated into main's own centre-anchored space (main never
--- changes AnchorPoint, so its Position always addresses its centre, not its top edge).
+-- The rect main morphs into once collapsed, in main's centre-anchored space (main never
+-- changes AnchorPoint, so Position always addresses its centre).
 function Window:_collapsedRect()
     local size = collapsedSize
     local home = UDim2.new(
@@ -2420,15 +2371,13 @@ function Window:_collapsedRect()
     return home, size
 end
 
--- true only when the window is fully shown and idle. hover/press animations gate on this so
--- nothing lights up mid show/hide/minimise reveal, while elements are still tweening in.
+-- true only when the window is fully shown and idle; hover/press animations gate on this
 function Window:_interactive()
     return not self.animating and not self.hidden
 end
 
--- true when the window is up and not mid reveal or hide. action icons settle on this rather
--- than _interactive: minimise animates too, but it never repaints the icons the way show and
--- hide do, so an icon settling during it has nothing to fight and would otherwise stay lit.
+-- true when the window is up and not mid reveal or hide. Action icons settle on this rather
+-- than _interactive, because minimise never repaints them the way show and hide do.
 function Window:_settled()
     return not self.hidden and not self._revealing
 end
@@ -2439,9 +2388,8 @@ function Window:Connect(signal, callback)
     return connection
 end
 
--- Like Connect, but also files the connection on the element that owns it, so Tab:Remove can
--- tear an element's connections down instead of leaving them tracked until Unload. Every
--- persistent element connection funnels through here.
+-- Like Connect, but files the connection on the owning element so Tab:Remove can tear it down
+-- rather than leaving it tracked until Unload.
 function Window:ConnectFor(owner, signal, callback)
     local connection = self:Connect(signal, callback)
     owner.connections = owner.connections or {}
@@ -2449,9 +2397,8 @@ function Window:ConnectFor(owner, signal, callback)
     return connection
 end
 
--- Disconnect a connection from Window:Connect and drop it from the tracked list.
--- Transient UI (dropdown popups, removed tabs) calls this so open/close churn doesnt
--- pile up dead entries that only get cleared at Unload.
+-- Disconnect a connection from Window:Connect and drop it from the tracked list. Transient UI
+-- calls this so open/close churn doesn't pile up dead entries.
 function Window:Disconnect(connection)
     if not connection then
         return
@@ -2463,9 +2410,8 @@ function Window:Disconnect(connection)
     connection:Disconnect()
 end
 
--- Destroy a subtree and forget every tracked instance inside it. Transient elements
--- (notifications) use this instead of a bare Destroy so self.instances doesnt grow
--- for the whole session.
+-- Destroy a subtree and forget every tracked instance inside it, so self.instances doesn't
+-- grow for the whole session.
 function Window:DestroySubtree(root)
     if not root then
         return
@@ -2489,8 +2435,7 @@ end
 
 function Window:Unload()
     self.unloaded = true
-    -- drop our effects and release the gui they hung on, but leave the enabled flag alone -
-    -- another window may still be open and haptics arent ours to switch off for it
+    -- release the effects but leave the enabled flag alone; another window may still be open
     hapticEngine.teardown()
     hapticEngine.releaseContainer(self.screenGui)
     if self._liveTween then
@@ -2504,9 +2449,8 @@ function Window:Unload()
         self.instances[i]:Destroy()
     end
 
-    -- destroying isnt forgetting: a hub that loads and unloads repeatedly would keep the whole
-    -- dead instance graph reachable through the handle it still holds. DestroySubtree already
-    -- clears as it goes, so match it here.
+    -- clear the tracked instances too, or a hub that loads and unloads repeatedly keeps the
+    -- dead instance graph reachable through the handle it holds
     table.clear(self.connections)
     table.clear(self.instances)
     table.clear(self.themeProperties)

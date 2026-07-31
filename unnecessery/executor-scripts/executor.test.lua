@@ -89,7 +89,9 @@ if not ok then
     return
 end
 
-log("library loaded. secure mode =", SECURE)
+-- print the version first: an executor caches HttpGet per URL, so a run that disagrees with
+-- the repo is usually an old bundle rather than a bug
+log("library loaded. version =", Library.version, "secure mode =", SECURE)
 
 local Window = Library:CreateWindow({
     name = "AFKTY Executor Test",
@@ -101,7 +103,8 @@ local Window = Library:CreateWindow({
     },
 })
 
-Window:CreateTag({ text = if SECURE then "secure" else "normal" })
+Window:CreateTag({ text = "secure" })
+Window:CreateTag({ text = Library.version })
 
 -- The avatar chip takes a different secure-mode path from the icons: image.avatar caches to
 -- avatar_<userId>.png rather than <id>.png. Without one on screen that branch never runs, so

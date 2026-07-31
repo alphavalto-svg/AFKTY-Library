@@ -9,16 +9,19 @@
 
 local constants = {}
 
--- Brand font family. A built-in Roblox family, so nothing has to be uploaded or downloaded
--- at runtime, and it matches the typography of the original hand-built hub.
+-- Bundle version, surfaced as AFKTY.version. The bundle is fetched over HttpGet and executors
+-- cache that per URL, so a hub can be running a build several days old with nothing to show
+-- for it. Keep this in step with version.txt.
+constants.version = "1.0.3"
+
+-- Brand font family. Built into Roblox, so nothing is uploaded or downloaded at runtime.
 constants.fontAsset = "rbxasset://fonts/families/GothamSSm.json"
 
 -- the input/keybind fields hug their text, tweening width instead of AutomaticSize so it animates
 constants.pillResizeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
--- Every built-in icon AFKTY ships, by name. Single source of truth: secure mode caches
--- exactly these (see utility/image) so the UI never has to fall back to a raw asset id at
--- runtime. Add a new built-in icon here and it's cached automatically.
+-- Every built-in icon AFKTY ships, by name. Secure mode caches exactly these, so the UI never
+-- has to fall back to a raw asset id at runtime.
 constants.icons = {
     close = 90172788330629,
     minimise = 136031305763694,
@@ -60,11 +63,9 @@ constants.statAccents = {
 -- Named stacking layers for window furniture (assumes Global ZIndexBehavior)
 constants.zIndex = {
     bottomFade = 100,
-    -- the resize grip sits over the bottom fade it shares a corner with, but under the
-    -- notification cards that land on top of that same corner
+    -- over the bottom fade it shares a corner with, but under the notification cards
     resizeGrip = 200,
-    -- bottom-right notification cards, above the bottom fade and the resize grip so they aren't
-    -- dimmed or pierced by them (they land over the window's lower-right corner)
+    -- bottom-right cards, above the fade and the grip so they are not dimmed or pierced
     notification = 1500,
     -- top-centre and bottom-centre toasts float over the whole window
     toast = 2000,

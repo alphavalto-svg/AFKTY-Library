@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The library's entry point: the table a hub gets back from the bundle. Re-exports the public
+-- types, puts the loading banner up before the window exists, and owns the two things that can
+-- only happen once secure mode is on, caching icons and swapping the brand font in.
+
 local variables = require(script.utility.variables)
 local image = require(script.utility.image)
 local locale = require(script.utility.locale)
@@ -61,6 +65,10 @@ type WindowModule = { new: (types.WindowProps) -> types.Window }
 
 local afkty = {} :: AFKTY
 
+-- read it back off the table to tell which bundle actually loaded, since a cached HttpGet
+-- looks identical to a fresh one from the calling side
+afkty.version = constants.version
+
 local function createBanner()
     local ui = Instance.new("ScreenGui")
     ui.Name = variables.httpService:GenerateGUID(false)
@@ -83,12 +91,11 @@ local function createBanner()
     banner.BorderColor3 = Color3.fromRGB(0, 0, 0)
     banner.BorderSizePixel = 0
     banner.Position = UDim2.fromScale(0.5, 0.5)
-    -- square box + Fit, so the emblem letterboxes instead of stretching. the old 262x60 was
-    -- cut for a wordmark; Fit keeps this correct if the art is ever swapped for a wide one.
+    -- square box + Fit, so the emblem letterboxes instead of stretching if the art is swapped
     banner.ScaleType = Enum.ScaleType.Fit
     banner.Size = UDim2.fromOffset(140, 140)
-    -- createBanner runs before image.preload, so on a cold disk this resolves blank; assign
-    -- rather than resolve so it rebinds when the download lands instead of staying empty
+    -- createBanner runs before image.preload, so on a cold disk this resolves blank. assign
+    -- rather than resolve so it rebinds when the download lands.
     image.assign(banner, "Image", constants.icons.banner)
     banner.Parent = ui
 
@@ -99,9 +106,8 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
     local banner = createBanner()
 
     local window: types.Window? -- forward declared so the settle callback below can reach it
-    -- these can fire before the window is built; hold them until it is. a list rather than one
-    -- slot, because caching and icon-blocking can both have something to say and the second
-    -- would otherwise silently replace the first
+    -- these can fire before the window is built, so hold them until it is. a list rather than one
+    -- slot: caching and icon-blocking can both report, and one would otherwise replace the other
     local queuedNotifies: { () -> () } = {}
 
     local function notifyWhenReady(notify: () -> ())
@@ -114,8 +120,7 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
 
     if variables.secureMode then
         -- cache icons locally so secureMode doesnt leak asset ids. non-blocking: whats already on
-        -- disk applies now, the rest download in the background and rebind once ready. an icon a
-        -- hub passes in takes the same path on demand, so both failure sources report here.
+        -- disk applies now, the rest download in the background and rebind once ready.
         local warnedFailed = false
         local function reportFailure()
             if warnedFailed then
@@ -142,8 +147,8 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
         image.onFailed = reportFailure
     end
 
-    -- the banner is only torn down once the window is up, so a throw in here (bad props) would
-    -- otherwise strand it in the gui container for the rest of the session
+    -- the banner is only torn down once the window is up, so a throw in here would otherwise
+    -- strand it in the gui container for the rest of the session
     local made, result = pcall(function()
         return (require(script.components.window) :: WindowModule).new(properties)
     end)
@@ -161,8 +166,8 @@ function afkty:CreateWindow(properties: types.WindowProps): types.Window
     table.clear(queuedNotifies)
 
     if variables.secureMode then
-        -- secure mode renders the fallback up front (variables.brandFont), then downloads the real
-        -- brand faces off the main thread and swaps them in once ready, so startup never blocks
+        -- secure mode renders the fallback up front, then downloads the real brand faces off the
+        -- main thread and swaps them in once ready, so startup never blocks
         task.spawn(function()
             local body = variables.fontManager:loadFont(constants.fontAsset, Enum.FontWeight.Medium)
             local title = variables.fontManager:loadFont(constants.fontAsset, Enum.FontWeight.SemiBold)

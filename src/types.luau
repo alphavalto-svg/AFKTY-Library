@@ -42,15 +42,13 @@ export type WindowProps = {
 export type TabProps = {
     name: string?,
     icon: (string | number)?,
-    -- Owning rail category. A tab is a subcategory of exactly one main category, so each
-    -- category carries its own tab strip. Omit it and the tab stays visible under every
-    -- category, which keeps CreateTab unchanged for hubs that never build a rail.
+    -- Owning rail category. Omit it and the tab stays visible under every category, so
+    -- CreateTab is unchanged for hubs that never build a rail.
     category: RailItem?,
 }
 
 -- Left rail ----------------------------------------------------------------
--- An icon button in the rail's category stack. The icon is not optional: rail.new asserts
--- on it, so a table without one throws rather than rendering blank.
+-- An icon button in the rail's category stack. The icon is required: rail.new asserts on it.
 export type RailItemProps = {
     icon: string | number,
     name: string?, -- shown as the hover tooltip
@@ -60,7 +58,7 @@ export type RailItemProps = {
 }
 
 -- The player avatar chip, pinned to the bottom of the rail. The library draws the headshot
--- and reports the click; what gets shown about the account is the caller's business.
+-- and reports the click.
 export type RailProfileProps = {
     userId: number?, -- defaults to the local player
     callback: ((profile: RailItem) -> ())?,
@@ -299,8 +297,8 @@ export type Popup = {
 }
 
 -- A group lays elements along one axis and nests, so a row of columns builds a grid.
--- A row accepts the compact elements (button/toggle/stat) + slider; a column also takes
--- dropdown and section. Input, keybind and colorpicker stay tab-level for now.
+-- A row accepts the compact elements (button/toggle/stat) and slider; a column also takes
+-- dropdown and section. Input, keybind and colorpicker stay tab-level.
 export type Group = Moveable & {
     CreateButton: (self: Group, props: ButtonProps) -> Button,
     CreateToggle: (self: Group, props: ToggleProps) -> Toggle,
@@ -366,6 +364,7 @@ export type Window = {
 }
 
 export type AFKTY = {
+    version: string,
     CreateWindow: (self: AFKTY, props: WindowProps) -> Window,
 }
 
