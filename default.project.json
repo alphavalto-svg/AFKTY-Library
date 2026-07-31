@@ -13,12 +13,6 @@
       "StarterPlayerScripts": {
         "Client": {
           "$path": "studio.client.luau"
-        },
-        "Tour": {
-          "$path": "studio.tour.client.luau",
-          "$properties": {
-            "Disabled": true
-          }
         }
       }
     },

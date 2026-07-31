@@ -77,8 +77,7 @@ call and then `RobloxGui` (`src/utility/runtime.luau:58`).
 
 - Every id in `constants.icons` has a file here, and no file is orphaned.
 - In Studio, the window builds with no blank icons.
-- In an executor with secure mode on, `AFKTY/Assets/` fills with the new `.png` filenames —
-  `executor.test.lua` has a button that counts them.
+- In an executor with secure mode on, `AFKTY/Assets/` fills with the new `.png` filenames.
 
 ## Icons a hub passes in
 
@@ -87,11 +86,9 @@ set and is not cached. In secure mode those resolve blank, and the library raise
 saying so. A hub that wants its own artwork in secure mode has to cache it itself and pass the
 resulting `getcustomasset` string.
 
-**The demos are consumers.** `example.client.luau`, `studio.client.luau`,
-`studio.tour.client.luau` and `docs/TUTORIAL.md` pass ids as illustrative icons. Everything they
-used that overlapped with this set has been repointed at the owned ids, so the only art in the
-repo that is not AlphaValto's is three icons uploaded by `shlexr` (Roblox user 304343782, the
-upstream author):
+The demo scripts (`example.client.luau`, `studio.client.luau`, `docs/TUTORIAL.md`) pass ids as
+illustrative icons only. Three of them are uploads by `shlexr` (Roblox user 304343782, the
+upstream author) rather than AlphaValto's own art:
 
 | Id | Called | Used for |
 |---|---|---|
@@ -99,11 +96,5 @@ upstream author):
 | 84750991656135 | `sword` | Combat / Layout tabs |
 | 85925158736685 | `chart` | Stats tab |
 
-All three resolve and render — they are a live dependency, not a broken one.
-
-**Keeping them is a decision, not an oversight.** It was weighed against uploading replacements
-and against dropping the icons entirely, and left deliberately: replacing them needs new art (no
-owned glyph substitutes sensibly — a Combat tab with a chevron on it is worse than one with
-someone else's sword), and the exposure does not justify it. If those uploads ever vanish, three
-demo tabs lose an icon. The library is untouched either way, because nothing in `constants.icons`
-depends on them any more. Don't re-litigate this without a reason that has changed.
+They are demo-only. Nothing in `constants.icons` depends on them, so if those uploads ever
+vanish, three demo tabs lose an icon and the library is unaffected.
