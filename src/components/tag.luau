@@ -110,7 +110,9 @@ function Tag.new(window, properties)
         Parent = self.main,
     }, { FontFace = "Font" })
 
-    self.window.tagContainer.Visible = true
+    -- minimise hides the row wholesale, and restoring is what decides it comes back, so a tag
+    -- added while the bar is down must not pull it up on its own
+    self.window.tagContainer.Visible = not self.window.minimised
 
     -- if the window's already up, fade in now; otherwise its show handles it
     if not self.window.hidden then

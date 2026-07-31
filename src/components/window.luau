@@ -1139,10 +1139,17 @@ function Window:ToggleMinimise()
         variables.tweenService:Create(self.windowStroke, fadeInfo, { Transparency = EDGE_IDLE }):Play()
         variables.tweenService:Create(self.bottomFade, fadeInfo, { BackgroundTransparency = 0 }):Play()
 
+        -- the row comes back only if something is still in it, so a tag removed while the bar
+        -- was down does not leave an empty container behind
+        self.tagContainer.Visible = #self.tags > 0
+
         -- fade the content and tab pills in once the window has grown back
         task.delay(0.2, function()
             if self.minimised or self.hidden then
                 return -- re-minimised or hidden mid animation
+            end
+            for _, tag in ipairs(self.tags) do
+                tag:_setShown(true, fadeInfo)
             end
             self.elements.Visible = true
             self.tabList.Visible = true
@@ -1172,10 +1179,17 @@ function Window:ToggleMinimise()
             end
         end
 
+        -- the bar has room for the title or the tags, not both, and a tag cut in half by the
+        -- clip reads as breakage rather than as intent
+        for _, tag in ipairs(self.tags) do
+            tag:_setShown(false, fadeInfo)
+        end
+
         task.delay(0.3, function()
             if not self.minimised then
                 return -- restored mid animation
             end
+            self.tagContainer.Visible = false
             self.elements.Visible = false
             self.tabList.Visible = false
             for _, tab in pairs(self.tabs) do

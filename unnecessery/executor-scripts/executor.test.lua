@@ -103,8 +103,9 @@ local Window = Library:CreateWindow({
     },
 })
 
-Window:CreateTag({ text = "secure" })
-Window:CreateTag({ text = Library.version })
+-- the bundle comes off HttpGet and executors cache that per URL, so the build on screen is
+-- worth more here than the mode, which the subtitle already carries
+Window:CreateTag({ text = "v" .. Library.version })
 
 -- The avatar chip takes a different secure-mode path from the icons: image.avatar caches to
 -- avatar_<userId>.png rather than <id>.png. Without one on screen that branch never runs, so

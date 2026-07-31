@@ -103,5 +103,64 @@ return function()
                 expect(w.topbarIcon.Visible).to.equal(true)
             end)
         end)
+
+        describe("tags while minimised", function()
+            -- the row is hidden inside a task.delay, which the harness runs straight through,
+            -- so the settled state is already in place when ToggleMinimise returns
+            local function minimise(w)
+                w:ToggleMinimise()
+                return w
+            end
+
+            local function restore(w)
+                w.animating = false
+                w:ToggleMinimise()
+                return w
+            end
+
+            local function taggedWindow()
+                window = Window.new({
+                    name = "Topbar Spec",
+                    configuration = { autoSave = false, autoLoad = false },
+                })
+                window.hidden = false
+                window.hasShownOnce = true
+                window:CreateTag({ text = "v1.0.3" })
+                return window
+            end
+
+            it("takes the tag row down with the rest of the bar", function()
+                local w = taggedWindow()
+                expect(w.tagContainer.Visible).to.equal(true)
+
+                minimise(w)
+
+                expect(w.tagContainer.Visible).to.equal(false)
+            end)
+
+            it("brings the tag row back on restore", function()
+                local w = restore(minimise(taggedWindow()))
+
+                expect(w.tagContainer.Visible).to.equal(true)
+            end)
+
+            it("leaves the row down when its last tag went away while minimised", function()
+                local w = taggedWindow()
+                minimise(w)
+
+                w.tags[1]:Remove()
+                restore(w)
+
+                expect(w.tagContainer.Visible).to.equal(false)
+            end)
+
+            it("does not let a tag added while minimised pull the row up", function()
+                local w = minimise(taggedWindow())
+
+                w:CreateTag({ text = "late" })
+
+                expect(w.tagContainer.Visible).to.equal(false)
+            end)
+        end)
     end)
 end
