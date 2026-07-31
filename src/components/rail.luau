@@ -103,6 +103,21 @@ local function insetForRail(window)
     end
 end
 
+-- Leave the category stack for a page that belongs to no category (search or settings),
+-- remembering the one to come back to. Arriving from the *other* of those two means nothing
+-- is active, so the existing memory is kept rather than cleared: clearing it unconditionally
+-- meant settings-then-search stranded you with no category to return to.
+local function leaveCategories(window, rail)
+    for _, item in ipairs(window.railItems) do
+        if item.main and item.main.Parent == rail.top then
+            if item.active then
+                rail._lastCategory = item
+            end
+            item:SetActive(false)
+        end
+    end
+end
+
 -- Build the rail frame and its two stacks (icons from the top, avatar pinned bottom).
 local function ensureRail(window)
     if window.rail then
@@ -250,15 +265,7 @@ local function ensureRail(window)
                     return
                 end
                 -- opening search leaves the category, so drop the highlight
-                rail._lastCategory = nil
-                for _, entry in ipairs(window.railItems) do
-                    if entry.main and entry.main.Parent == rail.top then
-                        if entry.active then
-                            rail._lastCategory = entry
-                        end
-                        entry:SetActive(false)
-                    end
-                end
+                leaveCategories(window, rail)
                 searchModule.toggle(window)
             end,
         })
@@ -283,15 +290,7 @@ local function ensureRail(window)
                         tab.topbarItem.Visible = false
                     end
                 end
-                rail._lastCategory = nil
-                for _, item in ipairs(window.railItems) do
-                    if item.main and item.main.Parent == rail.top then
-                        if item.active then
-                            rail._lastCategory = item
-                        end
-                        item:SetActive(false)
-                    end
-                end
+                leaveCategories(window, rail)
                 window.rfSettings:Select()
             end,
         })

@@ -51,7 +51,7 @@ export type TabProps = {
 -- An icon button in the rail's category stack. The icon is required: rail.new asserts on it.
 export type RailItemProps = {
     icon: string | number,
-    name: string?, -- shown as the hover tooltip
+    name: string?, -- kept on the handle for the caller; the rail is icon-only and draws no tooltip
     callback: ((item: RailItem) -> ())?,
     active: boolean?, -- start selected; the first category selects itself regardless
     order: number?,

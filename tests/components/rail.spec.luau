@@ -156,6 +156,46 @@ return function()
             expect(w.rail.searchItem.main.Parent).to.equal(w.rail.bottom)
         end)
 
+        it("comes back to the category after a settings visit, then search", function()
+            local w = makeWindow()
+            -- search refuses to open on a window that is not up, and the reveal tween never
+            -- settles in the harness, so stand it up the way the resize spec does
+            w.hidden = false
+            w.hasShownOnce = true
+
+            local function categoryOf(name, icon)
+                return w:CreateRailItem({
+                    icon = icon,
+                    name = name,
+                    callback = function(item)
+                        item:Select()
+                    end,
+                })
+            end
+
+            local main = categoryOf("Main", 85628806611332)
+            local tools = categoryOf("Tools", 139478662436110)
+            local mainTab = w:CreateTab({ name = "Main Page", category = main })
+            w:CreateTab({ name = "Tools Page", category = tools })
+
+            main:Select()
+            expect(main.active).to.equal(true)
+
+            -- settings and search are both non-categories, and the second of the two used to
+            -- overwrite the remembered category with the nothing the first had left selected
+            w.rail.settingsItem.main.MouseButton1Click:Fire()
+            expect(w.selectedTab).to.equal(w.rfSettings)
+
+            w.rail.searchItem.main.MouseButton1Click:Fire()
+            expect(w._searching).to.equal(true) -- guard: the rest is meaningless if search never opened
+
+            w.rail.searchItem.main.MouseButton1Click:Fire()
+            expect(w._searching).to.equal(false)
+            expect(main.active).to.equal(true)
+            expect(mainTab.topbarItem.Visible).to.equal(true)
+            expect(w.selectedTab).to.equal(mainTab)
+        end)
+
         it("fires an item's callback when clicked", function()
             local w = makeWindow()
             local clicks = 0
