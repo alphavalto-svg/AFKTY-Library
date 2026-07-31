@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The drag handle that resizes the window, in main's bottom-right corner. Sizing runs off
+-- cursor travel since the grab rather than cursor position, and the new size is written to
+-- disk on release rather than per frame.
+
 local Resize = {}
 Resize.__index = Resize
 Resize.__type = "Resize"
@@ -16,8 +20,8 @@ local utility = script.Parent.Parent.utility
 local variables = require(utility.variables)
 local constants = require(utility.constants)
 
--- Deliberately small and quiet. It sits inside main's bottom-right corner, while the drag bar
--- hangs below the window entirely, so the two can never contend for the same grab.
+-- Sits inside main's bottom-right corner. The drag bar hangs below the window entirely, so the
+-- two can never contend for the same grab.
 local GRIP_SIZE = 16
 local GRIP_INSET = 4
 local GRIP_IDLE = 0.75
@@ -72,8 +76,7 @@ function Resize.new(window, properties)
     end)
 
     -- Letting go, however it happens: the button coming up, or the client losing focus with it
-    -- still held. Without the second, an alt-tab mid-grab leaves the resize armed and the
-    -- window jumps the moment you are back - the same trap the drag bar had.
+    -- still held. Without the second, an alt-tab mid-grab leaves the resize armed.
     local function release()
         if not grabbed then
             return
@@ -123,16 +126,15 @@ function Resize.new(window, properties)
 
     self.window:Connect(variables.userInputService.WindowFocusReleased, release)
 
-    -- Size by how far the cursor has travelled since the grab, never to where it happens to
-    -- be: the corner keeps whatever offset it was grabbed at instead of snapping to the
-    -- pointer on the first frame.
+    -- Size by how far the cursor has travelled since the grab, never to where it happens to be, so
+    -- the corner keeps the offset it was grabbed at instead of snapping to the pointer.
     self.window:Connect(variables.runService.RenderStepped, function()
         if not grabbed then
             return
         end
 
-        -- hidden or mid-animation means the grab went stale under us, so drop it here rather
-        -- than let it wake up later and yank the window to whatever size the cursor implies
+        -- hidden or mid-animation means the grab went stale, so drop it rather than let it
+        -- wake up later at whatever size the cursor implies
         if not self.window:_interactive() then
             release()
             return
@@ -145,8 +147,7 @@ function Resize.new(window, properties)
     return self
 end
 
--- Collapse takes the grip down with the rest of the window furniture, and restore brings it
--- back. Minimised, there is nothing left to size.
+-- Minimised there is nothing left to size, so the grip collapses with the rest of the furniture.
 function Resize:SetShown(shown)
     self.grip.Visible = shown
 end

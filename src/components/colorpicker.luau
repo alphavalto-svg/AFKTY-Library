@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A colour field with a saturation/value map, a hue strip and an alpha strip. Dragging is
+-- pumped once per frame from the last cursor position rather than per input event, so a fast
+-- drag costs the same as a slow one. Transparency is optional and hidden when not asked for.
+
 local ColorPicker = {}
 ColorPicker.__index = ColorPicker
 ColorPicker.__type = "ColorPicker"
@@ -18,7 +22,7 @@ local functions = require(utility.functions)
 local moveable = require(utility.moveable)
 local constants = require(utility.constants)
 local locale = require(utility.locale)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 -- Full hue wheel top (red) to bottom (back to red) for the vertical hue bar.
 local hueSequence = ColorSequence.new({
@@ -31,26 +35,24 @@ local hueSequence = ColorSequence.new({
     ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
 })
 
--- Layout. The card is one frame that grows from a header row into the full picker; every
--- offset below is measured from the card's own top-left, no inner padding frame.
+-- Layout. The card grows from a header row into the full picker; every offset below is
+-- measured from the card's own top-left.
 local headerHeight = 41
 local contentY = 52 -- picker controls start just under the header
 local mapSize = Vector2.new(150, 120)
 local hueX = 184 -- map left (20) + 150 + 14 gap
 local hueWidth = 10
--- big gap so the two handles (which overhang their bars by ~6px each, more when held) never touch
+-- big gap so the two handles, which overhang their bars by ~6px, never touch
 local alphaX = 214 -- hue right (194) + 20 gap
 local alphaWidth = 10
 local rightX = 240 -- alpha right (224) + 16 gap: left edge of the wide preview/field column
 local alphaFieldWidth = 62 -- the alpha % input, sits right of the hex field
 local fieldGap = 8
--- below this element width the preview + fields cant sit beside the map/bars without getting
--- too narrow, so they reflow to a full-width row under the map (see _applyLayout)
+-- below this width the preview and fields reflow to a full-width row under the map (_applyLayout)
 local narrowWidth = 400
 
--- Per-mode geometry for the bits that move between layouts. map + hue + alpha stay top-left in
--- both. "open" rects are where the preview morphs to and where the hex + alpha fields sit;
--- "height" is the card's open height. The preview morphs between its closed pill and this rect.
+-- Per-mode geometry. map/hue/alpha stay top-left in both; "open" rects are where the preview
+-- morphs to and where the hex and alpha fields sit, "height" is the card's open height.
 local layoutSpec = {
     wide = {
         height = 190,
@@ -72,16 +74,15 @@ local layoutSpec = {
     },
 }
 
--- The preview is a single frame that morphs between the closed header pill and the mode's open
--- rect. AnchorPoint stays (1, 0.5) so only pos/size tween.
+-- The preview morphs between the closed header pill and the mode's open rect. AnchorPoint
+-- stays (1, 0.5) so only pos/size tween.
 local previewClosedPos = UDim2.new(1, -16, 0, headerHeight / 2)
 local previewClosedSize = UDim2.fromOffset(40, 22)
 
 local openInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 local fadeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local followInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
--- short enough to track the mouse tightly, long enough that the cursor glides instead of
--- snapping. this is the "animated" feel a hard snap lost.
+-- short enough to track the mouse tightly, long enough that the cursor glides
 local dragInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local heldInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
@@ -230,8 +231,7 @@ function ColorPicker.new(tab, properties)
         Color3.fromRGB(255, 255, 255)
     )
 
-    -- hue is kept alongside sat/val so dragging into a grey (where hue is undefined) doesnt
-    -- lose the colour you were on, same as the classic pickers
+    -- hue is kept alongside sat/val so dragging into a grey doesnt lose the colour you were on
     self.hue, self.sat, self.val = self.value:ToHSV()
 
     -- alpha (0..1). the callback gets it as a second arg; opacity of the preview + alpha slider
@@ -243,8 +243,7 @@ function ColorPicker.new(tab, properties)
         or (not self.forgetState and functions.deriveFlagFromName(self.name) or nil)
     self.window:_registerControl(self)
 
-    -- One card that grows from the header row into the full picker. No clip: the controls
-    -- below the header just sit fully transparent while collapsed, so nothing shows through.
+    -- one card that grows from the header row; no clip, the controls below sit transparent
     self.main = self.window:Create("Frame", {
         Size = UDim2.new(1, -20, 0, headerHeight),
         BorderSizePixel = 0,
@@ -308,12 +307,11 @@ function ColorPicker.new(tab, properties)
     self:_applyPickerVisibility(false, false)
     self:_setControlsVisible(false) -- and keep the collapsed controls out of input entirely
 
-    -- pick wide/narrow from the real width and keep it in sync as that width changes (the
-    -- column resolves a frame after we build, and the window can be resized). Ignore the
-    -- transient widths swept while the window animates/hides, same as the slider.
+    -- pick wide/narrow from the real width and keep it in sync as that width changes;
+    -- ignore the transient widths swept while the window animates
     self.window:ConnectFor(self, self.main:GetPropertyChangedSignal("AbsoluteSize"), function()
-        -- hasShownOnce: the initial layout pass happens while the window is still hidden,
-        -- and blocking it would freeze the width-0 layout mode (same fix as the slider)
+        -- the initial layout pass runs while the window is hidden; blocking it would freeze
+        -- the width-0 layout mode
         if self.window.animating or (self.window.hidden and self.window.hasShownOnce) then
             return
         end
@@ -378,8 +376,7 @@ function ColorPicker:_buildHeader()
         Parent = self.container,
     }, { TextColor3 = "ContentColor", FontFace = "Font" })
 
-    -- The colour preview. Starts as the header pill; on open it morphs (pos + size) into the
-    -- big swatch. No stroke - it reads as pure colour.
+    -- the colour preview: starts as the header pill, morphs into the big swatch on open
     self.preview = self.window:Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         Position = previewClosedPos,
@@ -398,12 +395,10 @@ function ColorPicker:_buildHeader()
         Parent = self.preview,
     })
 
-    -- Soft glow behind the preview, tinted to the colour. Its transparency tracks alpha
-    -- (0.6 solid -> 1 fully clear). One shadow follows the preview through the mini<->full morph.
+    -- soft glow behind the preview, tinted to the colour; transparency tracks alpha (0.6 -> 1)
     self.previewShadow = self.window:CreateGlow(self.preview, self.value, 20, 1)
 
-    -- Shown centred on the (open) preview once alpha reaches 0, since the swatch is fully clear
-    -- then: an icon + "Invisible" so it doesnt just look empty.
+    -- shown centred on the open preview once alpha reaches 0, so it doesnt just look empty
     self.invisibleGroup = self.window:Create("Frame", {
         Size = UDim2.fromScale(1, 1),
         Position = UDim2.fromScale(0.5, 0.5),
@@ -467,9 +462,9 @@ function ColorPicker:_buildHeader()
     })
 end
 
--- Sat/val field, built from gradients (no image asset): a hue-tinted Frame with a white
--- left->right saturation gradient and a black top->bottom value gradient layered on top. Each
--- layer rounds its own corners so nothing needs clipping (which would clip the cursor).
+-- Sat/val field built from gradients, no image asset: a hue-tinted Frame with a white
+-- saturation gradient and a black value gradient over it. Each layer rounds its own corners,
+-- so nothing needs clipping (which would clip the cursor).
 function ColorPicker:_buildMap()
     self.map = self.window:Create("Frame", {
         Position = UDim2.fromOffset(20, contentY),
@@ -534,8 +529,7 @@ function ColorPicker:_buildMap()
     })
 end
 
--- The picker guts: sat/val map, hue bar and an editable hex field, all sitting under the
--- header. They're fully transparent while collapsed and fade in on open.
+-- The picker body: sat/val map, hue bar and hex field. Transparent while collapsed.
 function ColorPicker:_buildPicker()
     self:_buildMap()
 
@@ -640,9 +634,8 @@ function ColorPicker:_buildPicker()
         Parent = self.hueBar,
     })
 
-    -- Alpha bar: the colour fading top(opaque)->bottom(transparent). The bar's own transparency
-    -- gradient does the fade (0 at top -> 1 at bottom), so the card shows through as it clears.
-    -- The round handle tracks self.alpha.
+    -- Alpha bar: the colour fading opaque (top) to clear (bottom) via its own transparency
+    -- gradient. The round handle tracks self.alpha.
     self.alphaBar = self.window:Create("Frame", {
         Position = UDim2.fromOffset(alphaX, contentY),
         Size = UDim2.fromOffset(alphaWidth, mapSize.Y),
@@ -830,8 +823,7 @@ function ColorPicker:_buildPicker()
         end
     end)
 
-    -- commit the field on enter/click-away, parsing whatever format they typed. anything
-    -- unrecognised just snaps back to the current colour.
+    -- commit on enter/click-away; anything unrecognised snaps back to the current colour
     self.window:ConnectFor(self, self.hexInput.FocusLost, function()
         local color = parseColor(self.hexInput.Text)
         if color then
@@ -852,12 +844,10 @@ function ColorPicker:_buildPicker()
     end)
 end
 
--- start following the mouse for the given region ("sat" or "hue"). Mirrors the slider: one
--- RenderStepped loop that self-terminates if the window unloads mid-drag. For a mouse drag
--- it also bails the moment the button is up, so a dropped InputEnded cant leave it running.
+-- Follow the mouse for the given region ("sat" or "hue"). One RenderStepped loop that
+-- self-terminates if the window unloads mid-drag, or the moment the button is up.
 function ColorPicker:_beginDrag(region, isMouse)
-    -- the interacts stay visible through the close fade, so a click landing in that window
-    -- would drag a picker thats already shut
+    -- the interacts stay visible through the close fade, so guard against a click after shut
     if not self._isOpen then
         return
     end
@@ -900,8 +890,8 @@ function ColorPicker:_endDrag()
     self.window:_persist(self)
 end
 
--- grow only the grabbed control a touch while dragging, so it reads as a press (same idea as
--- the slider handle swelling when held). region is "sat"/"hue"/"alpha" while held, nil on release.
+-- grow the grabbed control while dragging so it reads as a press.
+-- region is "sat"/"hue"/"alpha" while held, nil on release.
 function ColorPicker:_setHeld(region)
     local satSize = if region == "sat" then UDim2.fromOffset(16, 16) else UDim2.fromOffset(12, 12)
     local hueSize = if region == "hue" then UDim2.fromOffset(hueWidth + 12, 10) else UDim2.fromOffset(hueWidth + 8, 8)
@@ -914,9 +904,7 @@ function ColorPicker:_setHeld(region)
 end
 
 -- Mouse in AbsolutePosition space. GetMouseLocation() sits one gui-inset below where
--- AbsolutePosition measures from (verified in play: GetGuiObjectsAtPosition lines up with
--- AbsolutePosition, and GetMouseLocation is +inset.Y off it), so subtract the inset. Only Y
--- matters here since the inset is vertical, but subtract both to be safe.
+-- AbsolutePosition measures from, so subtract the inset.
 function ColorPicker:_mouseLocation()
     local mouse = variables.userInputService:GetMouseLocation()
     local screenGui = self.window.screenGui
@@ -958,9 +946,8 @@ function ColorPicker:_pump()
         return
     end
 
-    -- held but stationary: nothing moved, so dont re-render and hammer the callback every frame.
-    -- compare the channels, not the colour they make: at val 0 (or sat 0) every hue is the same
-    -- black, so a colour check would freeze the handles for the whole drag.
+    -- held but stationary: dont re-render every frame. Compare the channels, not the colour
+    -- they make: at val 0 every hue is the same black, which would freeze the handles.
     if self.hue == prevHue and self.sat == prevSat and self.val == prevVal and self.alpha == prevAlpha then
         return
     end
@@ -971,10 +958,9 @@ function ColorPicker:_pump()
 end
 
 -- paint every surface from the current hue/sat/val/alpha.
--- mode "instant": everything snaps (initial build / Set while collapsed).
--- mode "drag":    map tint + cursors glide on a short tween so they track the mouse smoothly.
--- mode "animate": everything eases on the slower tween (a discrete Set while the picker's open).
--- Cursors/handles are tinted to the colour under them; the preview shows the colour at its alpha.
+-- mode "instant": everything snaps (initial build, or Set while collapsed).
+-- mode "drag":    map tint and cursors glide on a short tween.
+-- mode "animate": everything eases on the slower tween.
 function ColorPicker:_render(mode)
     local mapHue = Color3.fromHSV(self.hue, 1, 1)
     local satPos = UDim2.new(self.sat, 0, 1 - self.val, 0)
@@ -1028,8 +1014,7 @@ function ColorPicker:_render(mode)
     self:_renderInvisible(mode ~= "instant")
 end
 
--- Fade the "Invisible" overlay in as alpha nears 0 (only on the open preview - it wouldnt fit
--- the header pill). Fully in at alpha 0, gone by ~12% alpha.
+-- Fade the "Invisible" overlay in as alpha nears 0, on the open preview only.
 function ColorPicker:_renderInvisible(animate)
     local inv = 0
     if self._isOpen and not self.window.hidden then
@@ -1114,8 +1099,7 @@ function ColorPicker:_close()
         :Play()
     variables.tweenService:Create(self.main, openInfo, { Size = UDim2.new(1, -20, 0, headerHeight) }):Play()
 
-    -- once the controls have faded, drop them out of input so a transparent field below the
-    -- collapsed header cant grab the cursor
+    -- once faded, drop the controls out of input so a transparent field cant grab the cursor
     task.delay(fadeInfo.Time, function()
         if not self._isOpen then
             self:_setControlsVisible(false)
@@ -1123,10 +1107,8 @@ function ColorPicker:_close()
     end)
 end
 
--- One source of truth for the picker controls' shown/hidden transparencies. Used both to hide
--- them instantly at build and to fade them on open/close, so every control is listed in exactly
--- one place - adding one cant re-introduce the bleed-through we'd get from a stray opaque fill
--- (there's no clip). The card height + preview morph animate separately.
+-- One source of truth for the picker controls' shown/hidden transparencies, used both to hide
+-- them at build and to fade them on open/close. The card height and preview morph separately.
 function ColorPicker:_applyPickerVisibility(open, animate)
     local set = {
         [self.map] = { BackgroundTransparency = if open then 0 else 1 },
@@ -1160,19 +1142,16 @@ function ColorPicker:_applyPickerVisibility(open, animate)
     end
 end
 
--- The picker controls sit below the header even while collapsed (the card doesnt clip), so a
--- transparent TextBox or button down there would still catch the cursor and clicks. Toggling the
--- top control frames off drops the whole cluster out of input when closed. The preview pill is
--- separate, so it stays.
+-- The controls sit below the header even while collapsed (the card doesnt clip), so a
+-- transparent TextBox down there would still catch clicks. Toggle the top frames off instead.
 function ColorPicker:_setControlsVisible(visible)
     for _, frame in { self.map, self.hueBar, self.alphaBar, self.hexBox, self.alphaBox } do
         frame.Visible = visible
     end
 end
 
--- Pick side-by-side (wide) vs stacked (narrow) from the real width and apply the mode's
--- geometry. map + hue stay top-left in both; only the preview's open rect, the hex field and
--- the open height change. Re-tweens live if the mode flips while open.
+-- Pick side-by-side (wide) vs stacked (narrow) from the real width and apply that geometry.
+-- Re-tweens live if the mode flips while open.
 function ColorPicker:_applyLayout()
     local width = self.main.AbsoluteSize.X
     local mode = if width > 0 and width < narrowWidth then "narrow" else "wide"
@@ -1225,8 +1204,8 @@ function ColorPicker:_serialize()
     return self.value:ToHex() .. string.format("%02x", math.clamp(math.round((self.alpha or 1) * 255), 0, 255))
 end
 
--- Restore colour + alpha from that hex. Old 6-char configs (no alpha byte) still load. Alpha is
--- set silently first so the Set fires the callback just once, with the final colour and alpha.
+-- Restore colour and alpha from that hex; old 6-char configs still load. Alpha is set silently
+-- first so Set fires the callback once, with the final colour and alpha.
 function ColorPicker:_deserialize(raw)
     local hex = tostring(raw)
     if #hex >= 8 then

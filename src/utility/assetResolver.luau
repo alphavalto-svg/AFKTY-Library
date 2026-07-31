@@ -5,6 +5,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Pulls raw asset bytes down over HTTP for the caches that need a file rather than an id.
+-- Two delivery endpoints are configured because executors differ in which they can reach, and
+-- because they disagree on what a response looks like, a body is only trusted when the status
+-- information the executor does provide says the request actually succeeded.
+
 local network = require(script.Parent.network)
 local log = require(script.Parent.log)
 
@@ -36,15 +41,10 @@ export type AssetResolver = AssetResolverState & {
     getAssetContentFromUrl: (self: AssetResolver, url: string, cacheKey: CacheKey?, forced: boolean?) -> string?,
     getAssetContentFromId: (self: AssetResolver, id: AssetId, forced: boolean?) -> string?,
 }
--- example asset ids:
---[[
-rbxassetid://12187277209,
-rbxassetid://12187293441
-]]
 
 -- bodies are whole pngs and ttfs, and every caller gates on isfile, so a cached body is only ever
--- re-read inside a retry loop. keep the last few for that and evict the oldest, rather than pinning
--- a session's worth of assets in memory for readers that never come back
+-- re-read inside a retry loop. keep the last few for that and evict the oldest, rather than
+-- pinning a session's worth of assets in memory for readers that never come back
 local contentCacheLimit = 8
 
 function assetResolver.new(useCache: boolean?, assetContentDownloadUrl: AssetDownloadUrl?): AssetResolver

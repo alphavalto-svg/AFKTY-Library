@@ -5,6 +5,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The disk half of secure-mode icons. Downloads an asset once, keeps it under the assets folder
+-- and hands back a local content id, so the asset id never reaches the wire again in a later
+-- session. Downloads run off the main thread; callers get a blank now and a rebind later rather
+-- than a stall. Avatar headshots come through the thumbnail API and are cached the same way.
+
 local filesystem = require(script.Parent.filesystem)
 local path = require(script.Parent.path)
 local variables = require(script.Parent.variables)
@@ -42,9 +47,7 @@ local thumbEndpoint =
 -- 420x420 is a re-render rather than the uploaded bytes, but it needs no proxy and keeps alpha
 local assetThumbEndpoint =
     "https://thumbnails.roblox.com/v1/assets?assetIds=%d&size=420x420&format=Png&isCircular=false"
--- how long a failed id sits out before another assign is allowed to try it again, and how many
--- times in total. long enough that a page full of dead ids is not a request storm, short enough
--- that a proxy hiccup on window open has healed by the time anyone notices the gap.
+-- how long a failed id sits out before another assign may retry, and how many attempts total
 local failureRetryAfter = 20
 local failureAttemptCap = 3
 
@@ -60,8 +63,7 @@ end
 
 imageCache.rewrites = {} :: RewriteMap
 imageCache.onCached = nil :: OnCachedCallback? -- image sets this to rebind blank instances when a background download lands
--- public for the same reason rewrites is: this is the module's observable state, and specs
--- reset it between cases
+-- public like rewrites: observable module state that specs reset between cases
 imageCache.inFlight = {} :: { [number]: boolean }
 imageCache.failed = {} :: { [number]: FailureRecord }
 imageCache.onFailed = nil :: OnFailedCallback? -- image clears the pending entry and forwards to init
@@ -154,9 +156,9 @@ local function fetchAvatar(userId: number): string?
     return cacheFile(avatarPath(userId), cdnUrl)
 end
 
--- roproxy assetdelivery returns the exact uploaded bytes, and is the same call fontManager
--- already uses for font faces. The thumbnail endpoint is a re-render, but it does not depend on
--- the proxy being up, so it covers the case where roproxy is down or rate limiting.
+-- roproxy assetdelivery returns the exact uploaded bytes, the same call fontManager uses for
+-- font faces. The thumbnail endpoint is a re-render but needs no proxy, so it covers roproxy
+-- being down or rate limiting.
 local function fetchIcon(id: number, filePath: string): string?
     local direct = writeCached(filePath, assetResolver:getAssetContentFromId(id, false))
     if direct then
@@ -172,8 +174,8 @@ local function fetchIcon(id: number, filePath: string): string?
     return writeCached(filePath, assetResolver:getAssetContentFromUrl(cdnUrl, filePath, false))
 end
 
--- onSettled(failed) fires once every background download has finished, with the count that never
--- cached (a genuine failure), so callers can surface it without spamming per-icon.
+-- onSettled(failed) fires once every background download has finished, with the count that
+-- never cached, so callers can surface it without spamming per-icon.
 function imageCache.preload(onSettled: PreloadCallback?): (boolean, number)
     local env = getfenv()
     if type(env.getcustomasset) ~= "function" or typeof(filesystem.isfile) ~= "function" then
@@ -243,9 +245,9 @@ function imageCache.preload(onSettled: PreloadCallback?): (boolean, number)
     return missing == 0, missing
 end
 
--- Cache an icon the built-in manifest does not cover. Returns a uri when one can be served right
--- now, plus whether a download is in flight: a caller that gets `true` should register for a
--- rebind through onCached, and one that gets `false` with no uri will never get this icon.
+-- Cache an icon the built-in manifest does not cover. Returns a uri when one can be served now,
+-- plus whether a download is in flight: `true` means register for a rebind through onCached,
+-- `false` with no uri means this icon will never arrive.
 function imageCache.request(id: unknown): (string?, boolean)
     if type(id) ~= "number" then
         return nil, false
@@ -259,9 +261,8 @@ function imageCache.request(id: unknown): (string?, boolean)
         return nil, true
     end
 
-    -- A failure is not always the asset's fault: the first endpoint is a third-party proxy, so a
-    -- blip there used to blank that icon for the rest of the session. Let it come back, but cap
-    -- the attempts so an id that genuinely does not exist stops costing two requests a look.
+    -- the first endpoint is a third-party proxy, so a blip there is not the asset's fault. Allow
+    -- a retry, but cap the attempts so a genuinely dead id stops costing two requests a look.
     local priorFailure = imageCache.failed[id]
     if priorFailure then
         if priorFailure.attempts >= failureAttemptCap or os.clock() - priorFailure.at < failureRetryAfter then

@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A small chip beside the window title, for a label like a build or a mode. Sits in the
+-- topbar's title block, so it is bound by the room the action buttons leave.
+
 local Tag = {}
 Tag.__index = Tag
 Tag.__type = "Tag"
@@ -117,8 +120,8 @@ function Tag.new(window, properties)
     return self
 end
 
--- animate is a boolean like every other element's _setShown, or a TweenInfo when a caller
--- (the window's show/hide) wants its own timing. true uses the tag's default fade.
+-- animate is a boolean like every other element's _setShown, or a TweenInfo when the caller
+-- wants its own timing. true uses the tag's default fade.
 function Tag:_setShown(shown, animate)
     local target = if shown then 0 else 1
     local info = if typeof(animate) == "TweenInfo" then animate elseif animate then setTweenInfo else nil

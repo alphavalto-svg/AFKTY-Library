@@ -13,7 +13,7 @@ local variables = require(utility.variables)
 local filesystem = require(utility.filesystem)
 local constants = require(utility.constants)
 local locale = require(utility.locale)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 local chrome = {}
 

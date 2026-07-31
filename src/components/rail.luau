@@ -1,17 +1,17 @@
 --!nonstrict
 
+-- Copyright (c) 2026 Corridon Capital
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 -- Left icon rail: a vertical strip of icon buttons down the window's left edge, with an
--- optional player avatar pinned at the bottom.
+-- optional player avatar pinned at the bottom. Built lazily on the first CreateRailItem or
+-- CreateRailProfile call, so a window that never asks for one keeps its original geometry.
 --
--- The rail is built lazily on the first CreateRailItem/CreateRailProfile call. A window that
--- never asks for one keeps its original geometry exactly, so adding this cannot shift any
--- existing layout.
---
--- Rail items carry no navigation model on purpose. Each is an icon plus a callback, and the
--- consuming script decides what one means -- switch tabs, open a popup, toggle something.
--- The avatar is the same: the library fetches and draws the headshot, and hands you a click.
--- What it *shows* (subscription tier, expiry, account state) is script logic, not library
--- policy.
+-- Rail items carry no navigation model: each is an icon plus a callback, and the consuming
+-- script decides what it means. The avatar is the same, the library draws the headshot and
+-- reports clicks.
 
 local Rail = {}
 Rail.__index = Rail
@@ -40,13 +40,12 @@ local BRAND_BLOCK = BRAND_SIZE + 8 + 1 + ITEM_PADDING
 local hoverInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 local activeInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
--- Where the title sits while the window is collapsed to the minimise bar. Only the emblem is
--- left of it there, so the full rail-width inset would strand it in an empty gap - and on a
--- 300px bar it lands under the action icons.
+-- Where the title sits while collapsed to the minimise bar. Only the emblem is left of it
+-- there, so the full rail-width inset would strand it in an empty gap.
 local COLLAPSED_TITLE_X = RAIL_WIDTH / 2 + BRAND_SIZE / 2 + 10
 
--- Slide the title between its expanded home (inset past the whole rail) and its collapsed one
--- (tucked just clear of the emblem). Idempotent, so repeated show/hide can't walk it away.
+-- Slide the title between its expanded home and its collapsed one. Idempotent, so repeated
+-- show/hide can't walk it away.
 local function setTitleInset(window, expanded, info)
     if not window.topContainer or window._titleExpanded == nil then
         return -- no rail was ever built, so the title was never inset
@@ -70,8 +69,8 @@ end
 local function insetForRail(window)
     local half = RAIL_WIDTH / 2
 
-    -- tabList and elements are centre-anchored and full width: narrow them and nudge right
-    -- by half the amount, which keeps them centred in the space that is left.
+    -- tabList and elements are centre-anchored and full width: narrow them and nudge right by
+    -- half the amount to keep them centred
     if window.tabList then
         local size = window.tabList.Size
         window.tabList.Size = UDim2.new(size.X.Scale, size.X.Offset - RAIL_WIDTH, size.Y.Scale, size.Y.Offset)
@@ -86,8 +85,7 @@ local function insetForRail(window)
         window.elements.Position = UDim2.new(pos.X.Scale, pos.X.Offset + half, pos.Y.Scale, pos.Y.Offset)
     end
 
-    -- the search field is centre-anchored and full width like tabList, so without this it
-    -- runs straight under the rail icons when search opens
+    -- the search field is centre-anchored and full width like tabList
     if window.searchPill then
         local size = window.searchPill.Size
         window.searchPill.Size = UDim2.new(size.X.Scale, size.X.Offset - RAIL_WIDTH, size.Y.Scale, size.Y.Offset)
@@ -111,9 +109,8 @@ local function ensureRail(window)
         return window.rail
     end
 
-    -- annotated open rather than left to inference: _lastCategory is only ever assigned from
-    -- inside the search and settings callbacks, and Luau seals the literal before it sees
-    -- them, so reading it back reported the key as missing.
+    -- annotated open: _lastCategory is only assigned inside the search/settings callbacks, and
+    -- Luau seals the literal before it sees them
     local rail: { [string]: any } = {}
 
     rail.main = window:Create("Frame", {
@@ -127,8 +124,7 @@ local function ensureRail(window)
         Parent = window.main,
     }, { BackgroundColor3 = "StatBackground" })
 
-    -- square off the right edge so the rail meets the content flush while the window's own
-    -- rounded corners still shape its left side
+    -- square off the right edge so the rail meets the content flush
     window:Create("UICorner", {
         CornerRadius = window.theme and window.theme.CornerRoundness or UDim.new(0, 8),
 
@@ -158,8 +154,7 @@ local function ensureRail(window)
         Parent = rail.main,
     }, { BackgroundColor3 = "SurfaceStroke" })
 
-    -- Brand mark. Deliberately not a button and never selectable: it marks the product, and
-    -- letting it take the selection meant the menu opened on something that was not a page.
+    -- Brand mark: not a button and never selectable, so the menu cannot open on a non-page
     rail.brand = window:Create("ImageLabel", {
         Name = "RailBrand",
         Size = UDim2.fromOffset(BRAND_SIZE, BRAND_SIZE),
@@ -185,8 +180,7 @@ local function ensureRail(window)
         Parent = rail.main,
     }, { BackgroundColor3 = "SurfaceStroke" })
 
-    -- Category stack, below the brand. This is the caller's space: CreateRailItem lands here,
-    -- so scripts can add their own sections without fighting the built-in controls below.
+    -- Category stack, below the brand. CreateRailItem lands here.
     rail.top = window:Create("Frame", {
         Name = "RailItems",
         Size = UDim2.new(1, 0, 1, -(BOTTOM_STACK_HEIGHT + BRAND_BLOCK + EDGE_PADDING * 2)),
@@ -207,9 +201,8 @@ local function ensureRail(window)
         Parent = rail.top,
     })
 
-    -- Built-in controls, pinned bottom: search, settings, then the avatar last so it sits
-    -- in the corner. Kept apart from the caller's stack so adding categories above never
-    -- pushes these around.
+    -- Built-in controls, pinned bottom: search, settings, avatar. Kept apart from the caller's
+    -- stack so adding categories above never pushes these around.
     rail.bottom = window:Create("Frame", {
         Name = "RailControls",
         Size = UDim2.new(1, 0, 0, BOTTOM_STACK_HEIGHT),
@@ -236,9 +229,8 @@ local function ensureRail(window)
     -- assigned before the built-ins below are made, so their own ensureRail call short-circuits
     window.rail = rail
 
-    -- The rail takes search and settings over from the topbar rather than duplicating them,
-    -- leaving only minimise and close at the top right. They live in the bottom stack above
-    -- the avatar, so the top of the rail stays free for the caller's categories.
+    -- the rail takes search and settings over from the topbar rather than duplicating them,
+    -- leaving only minimise and close at the top right
     if window.searchAction and window.searchAction.action then
         window.searchAction.action.Visible = false
         local item = Rail.new(window, {
@@ -257,9 +249,7 @@ local function ensureRail(window)
                     end
                     return
                 end
-                -- Opening search is leaving the category, so drop the highlight. Otherwise
-                -- the rail keeps showing a category as selected while search is what is
-                -- actually on screen.
+                -- opening search leaves the category, so drop the highlight
                 rail._lastCategory = nil
                 for _, entry in ipairs(window.railItems) do
                     if entry.main and entry.main.Parent == rail.top then
@@ -287,9 +277,7 @@ local function ensureRail(window)
                 if not window.rfSettings then
                     return
                 end
-                -- Settings is not a main category, so it has no subcategories. Leaving the
-                -- previous category's strip up made it look like you were still inside that
-                -- category while actually being in settings, with no way back to its pages.
+                -- settings is not a category, so clear the previous category's strip
                 for _, tab in ipairs(window.tabs or {}) do
                     if tab.topbarItem and tab.railCategory ~= nil then
                         tab.topbarItem.Visible = false
@@ -341,8 +329,7 @@ local function buildButton(self, window, parent, order, cornerRadius)
         Parent = self.main,
     }, { Color = "AccentStroke" })
 
-    -- the glow is the same UIShadow primitive the toggles use, kept fully transparent until
-    -- the item goes active
+    -- the same UIShadow primitive the toggles use, transparent until the item goes active
     self.glow = window:CreateGlow(self.main, "AccentStroke", 14, 1)
 
     self.hover = window:CreateHoverOverlay(self.main)
@@ -404,8 +391,7 @@ function Rail.new(window, properties)
         end
     end)
 
-    -- The first category selects itself. A hub should not have to remember to mark one
-    -- active, and the brand is not a category, so the selection can never land on it.
+    -- the first category selects itself, so a hub need not mark one active
     local isCategory = slot == rail.top
     local wantsActive = properties.active == true or properties.Active == true
     if isCategory and not rail._hasActiveCategory then
@@ -420,8 +406,7 @@ function Rail.new(window, properties)
     return self
 end
 
--- Select this category and clear every sibling, so callers get single-selection behaviour
--- without tracking the previous item themselves.
+-- Select this category and clear every sibling (single-selection).
 function Rail:Select()
     if self.destroyed then
         return
@@ -439,21 +424,15 @@ function Rail:Select()
     self:_applyTabs()
 end
 
--- Show only this category's subcategory tabs.
---
--- A tab belongs to exactly one main category, so each category carries its own strip rather
--- than every category sharing one set. Tabs created with no category are treated as global
--- and stay visible throughout, which keeps CreateTab working unchanged for hubs that never
--- use the rail.
+-- Show only this category's subcategory tabs. A tab belongs to exactly one category; tabs
+-- created with no category are global and stay visible, so CreateTab works without a rail.
 function Rail:_applyTabs()
     local window = self.window
     if not window.tabs then
         return
     end
 
-    -- Picking a category means leaving search. Without this the strip reappears while the
-    -- search field is still up and the page still shows results, so the category looks
-    -- selected but nothing under it is reachable.
+    -- picking a category leaves search, or the strip reappears over live search results
     if window._searching then
         require(script.Parent.search).close(window, { showTabs = true })
     end
@@ -469,10 +448,8 @@ function Rail:_applyTabs()
         end
     end
 
-    -- Land on a tab that is actually in this category. Checking "is the open tab now one of
-    -- the visible ones" rather than "does it belong to another category" matters: the
-    -- settings page has no category at all, so the narrower check left you stranded on
-    -- settings with the strip restored but the content unchanged.
+    -- land on a tab that is actually visible in this category; the settings page has no
+    -- category, so a "belongs to another category" check would strand you on it
     local open = window.selectedTab
     local openVisible = false
     if open and open.topbarItem and not open.neglectSelector then
@@ -483,9 +460,8 @@ function Rail:_applyTabs()
     end
 end
 
--- The player avatar, pinned bottom-left. properties: userId, callback.
--- Defaults to the local player. The library draws the headshot and reports clicks; anything
--- shown about the account is the caller's job.
+-- The player avatar, pinned bottom-left. properties: userId, callback. Defaults to the local
+-- player; the library draws the headshot and reports clicks.
 function Rail.profile(window, properties)
     properties = if typeof(properties) == "table" then properties else {}
 
@@ -519,8 +495,7 @@ function Rail.profile(window, properties)
 
     self:SetUserId(self.userId)
 
-    -- the avatar always carries its accent ring, so it reads as the account chip rather than
-    -- just another icon
+    -- the accent ring marks it as the account chip rather than another icon
     self.stroke.Transparency = 0.35
     self.glow.Transparency = 0.55
 
@@ -545,8 +520,7 @@ function Rail:SetUserId(userId)
     end
     self.userId = userId
 
-    -- secure mode returns a cached-file uri asynchronously, so take the callback form and
-    -- re-assign if a later value arrives while the chip is still alive
+    -- secure mode resolves the uri asynchronously, so re-assign if a later value arrives
     local uri = image.avatar(userId, function(ready)
         if self.destroyed or not self.iconImage or not self.iconImage.Parent then
             return
@@ -573,8 +547,7 @@ function Rail:SetActive(active)
     variables.tweenService:Create(self.glow, activeInfo, { Transparency = glowTarget }):Play()
 end
 
--- Fade one item's own parts. Split out so setShown can drive every item without knowing
--- which are icons and which is the avatar.
+-- Fade one item's own parts, so setShown can drive icons and the avatar the same way.
 function Rail:_setShown(shown, info)
     if self.destroyed or not self.main then
         return
@@ -597,13 +570,10 @@ function Rail:_setShown(shown, info)
     end
 end
 
--- Fade the whole rail with the window.
---
--- The rail is parented to `main`, and Hide collapses main into a small pill rather than
--- hiding it -- so without this the rail keeps drawing over the collapsed "Tap to show" face.
--- Visible is only dropped once the fade has finished, so the collapse still animates.
---- `keepBrand` collapses everything except the emblem, for minimise: the bar still has to read
---- as the product. Hide passes it up, because the collapsed pill draws its own face.
+-- Fade the whole rail with the window. The rail is parented to `main`, which Hide collapses
+-- rather than hides, so without this it keeps drawing over the collapsed face. Visible drops
+-- only once the fade has finished, so the collapse still animates.
+-- `keepBrand` collapses everything except the emblem, for minimise.
 function Rail.setShown(window, shown, info, keepBrand)
     local rail = window.rail
     if not rail or not rail.main then
@@ -620,16 +590,14 @@ function Rail.setShown(window, shown, info, keepBrand)
         variables.tweenService:Create(rail.brand, info, { ImageTransparency = brandFade }):Play()
     end
 
-    -- the divider under the emblem separates it from the category stack, and there is no stack
-    -- while collapsed - so it goes even when the mark stays
+    -- no category stack while collapsed, so the divider goes even when the mark stays
     if rail.brandDivider then
         variables.tweenService
             :Create(rail.brandDivider, info, { BackgroundTransparency = if shown then 0.8 else 1 })
             :Play()
     end
 
-    -- token so a quick hide/show doesn't let a stale delayed Visible=false land on a rail
-    -- that has since been brought back
+    -- token so a stale delayed Visible=false cant land on a rail that came back
     rail._shownToken = (rail._shownToken or 0) + 1
     local token = rail._shownToken
 
@@ -651,8 +619,7 @@ function Rail.setShown(window, shown, info, keepBrand)
         item:_setShown(shown, info)
     end
 
-    -- keeping the emblem means the rail frame has to stay up to carry it; everything else on it
-    -- has already been faded out above
+    -- keeping the emblem means the rail frame stays up to carry it
     if not shown and not brandStays then
         task.delay(info.Time, function()
             if rail._shownToken ~= token or not rail.main or not rail.main.Parent then

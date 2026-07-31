@@ -69,6 +69,10 @@ function persistenceSettings.saveSettings(window: SettingsWindow): boolean
     return true
 end
 
+-- Window state that outlives a session: position, size, which tab was open, the toggle key.
+-- One file for the whole library rather than one per window, and separate from saved
+-- configurations because it belongs to the user, not to whatever the hub chose to persist.
+
 -- Decode the settings file. Also hands back the raw text, so a parked copy can be put back.
 local function decodeFile(fullPath: string): (DecodedSettings?, string?)
     local fileExists = false

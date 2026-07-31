@@ -1,16 +1,17 @@
 --!strict
 
--- AFKTY theme. This is the only palette in the library.
+-- Copyright (c) 2026 Corridon Capital
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+-- AFKTY theme. The only palette in the library, and the fallback every other theme resolves
+-- against: window.luau clones this table and layers overrides on top, so an unset key lands
+-- here. `afkty` is an alias onto this file.
 --
--- It lives in default.luau because window.luau resolves every theme by cloning this table
--- and layering overrides on top, so `default` is the fallback any missing key lands on.
--- Keeping the brand palette here means an unset key falls back to AFKTY green rather than
--- a leftover neutral grey. `afkty` is an alias onto this file.
---
--- Sampled from the emblem (assets/source/85628806611332-1254px.png): ~48% pure black
--- ground, a lime ramp averaging hue 100.6 degrees across ~120k green pixels, near-white
--- highlights. The ramp's blue channel is at or near zero throughout, so these are
--- yellow-shifted limes, not sea-green.
+-- Sampled from the emblem: ~48% pure black ground, a lime ramp averaging hue 100.6 degrees,
+-- near-white highlights. The ramp's blue channel is at or near zero throughout, so these are
+-- yellow-shifted limes rather than sea-green.
 --
 --   glow    rgb(166, 250,  92)   lit edges, slider head, accent stroke
 --   accent  rgb(144, 231,  68)   emblem highlight
@@ -18,14 +19,12 @@
 --   mid     rgb( 57,  87,  43)   emblem median
 --   deep    rgb( 27,  42,  12)   emblem shadow
 --
--- The lit look comes from accent fills sitting a step darker than their strokes, so every edge
--- reads lit rather than flat, plus stroke gradients running bright through their midpoint. The
--- halo itself (AccentGlow) is deliberately restrained - it is trim, not a light source.
+-- Accent fills sit a step darker than their strokes, so every edge reads lit rather than flat.
+-- The halo (AccentGlow) is restrained on purpose: trim, not a light source.
 local variables = require(script.Parent.Parent.utility.variables)
 
 return {
-    -- Tighter than stock, carried over from the hand-built v1 hub (8px window / 6px element).
-    -- It is a large part of why that GUI read sharper.
+    -- tighter than stock: 8px window, 6px element
     CornerRoundness = UDim.new(0, 8),
     ElementCornerRadius = UDim.new(0, 6),
     PillCornerRadius = UDim.new(1, 0),
@@ -51,12 +50,10 @@ return {
     }),
     ElementStrokeHover = Color3.fromRGB(144, 231, 68),
     ElementTransparency = 0,
-    -- Resting edge for panels and other surfaces that never light up: dropdown cards, popup
-    -- boxes, stat tiles. Constant, because nothing else tells you where they end.
+    -- resting edge for surfaces that never light up: dropdown cards, popup boxes, stat tiles
     ElementStrokeTransparency = 0,
-    -- Resting edge for the hoverable rows (button, toggle, slider, input, keybind, colour
-    -- picker). Hidden, so a page of elements reads as a quiet list and only the row under the
-    -- cursor is outlined. Set this to 0 to get the old always-on edges back.
+    -- resting edge for the hoverable rows; hidden, so only the row under the cursor is
+    -- outlined. Set to 0 for always-on edges.
     ElementStrokeRestTransparency = 1,
     ElementStrokeHoverTransparency = 0,
     ElementTextHoverColor = Color3.fromRGB(255, 255, 255),
@@ -99,8 +96,7 @@ return {
     NeutralButtonHover = Color3.fromRGB(40, 58, 30),
     NeutralButtonStroke = Color3.fromRGB(255, 255, 255),
 
-    -- Red stays red. It is the one signal that must not read as brand green, and it holds a
-    -- wide hue separation against this lime.
+    -- red stays red: the one signal that must not read as brand green
     ErrorColor = Color3.fromRGB(190, 48, 48),
     ErrorStrokeColor = Color3.fromRGB(244, 78, 78),
 

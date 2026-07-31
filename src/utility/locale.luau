@@ -5,14 +5,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- AFKTY's localization core. Two kinds of copy pass through here: the library's own chrome
--- (search placeholder, "Signed in as", the settings page, and so on) and whatever names a dev
--- gives its elements. Both resolve the same way - the dev translator first, then the built-in
--- table for the active locale, then the source string itself - so anything untranslated still
--- reads in plain English instead of a blank or a raw key.
+-- Localization core. Both the library's own chrome and the names a hub gives its elements
+-- resolve the same way: the dev translator first, then the built-in table for the active
+-- locale, then the source string itself, so anything untranslated still reads in English.
 --
 -- Only strings wrapped in locale.t() are treated as copy. Element values, slider readouts,
--- keybind keys and hex codes are data, not language, so they're deliberately left alone.
+-- keybind keys and hex codes are data, not language, and are left alone.
 
 local variables = require(script.Parent.variables)
 local log = require(script.Parent.log)
@@ -24,28 +22,25 @@ export type Translator = (source: string, localeId: string) -> string?
 export type TranslationTables = { [string]: { [string]: string } }
 
 -- English is canonical: every wrapped string in src is written in it, so the source text is
--- also its own lookup key. A new language is just a table keyed by those same source strings;
--- any key it omits falls back to English on its own. Regional tables ("pt-br") win over the
--- bare language ("pt") when both exist.
+-- also its own lookup key. A new language is a table keyed by those same source strings.
+-- Regional tables ("pt-br") win over the bare language ("pt") when both exist.
 locale.strings = {} :: TranslationTables
 -- ["fr"] = { ["Signed in as"] = "Connecte en tant que", ... },
 
--- active locale id and the optional dev hook (source, localeId) -> string?. both start neutral,
--- so with no setup at all everything renders in English.
+-- active locale id and the optional dev hook (source, localeId) -> string?, both neutral by default
 locale.current = "en"
 locale.translator = nil :: Translator?
 
--- a wrapped string carries this tag as a key so Window:Create can tell copy apart from a plain
--- value. property values are always Roblox datatypes or primitives, never plain tables, so the
--- table-with-tag shape is unambiguous.
+-- a wrapped string carries this tag so Window:Create can tell copy from a plain value; property
+-- values are never plain tables, so the shape is unambiguous
 local tokenTag = {}
 
 local function languageOf(id: string): string
     return string.match(id, "^(%a+)") or id
 end
 
--- Wrap a string so it localizes. Returns the value untouched when there's nothing to translate
--- (non-strings, empty) so callers can wrap unconditionally without special-casing nil names.
+-- Wrap a string so it localizes. Returns the value untouched when there is nothing to
+-- translate, so callers can wrap unconditionally.
 function locale.t(source: unknown): unknown
     if type(source) ~= "string" or source == "" then
         return source
@@ -62,9 +57,8 @@ function locale.sourceOf(token: LocaleToken): string
     return token[tokenTag]
 end
 
--- Resolve a source string to the active locale: dev translator wins, then an exact-locale table,
--- then the language-only table, then the source itself. The translator is pcall'd so a dev's bad
--- hook can't take the UI down with it.
+-- Resolve a source string to the active locale: dev translator, exact-locale table,
+-- language-only table, then the source itself. The translator is pcall'd.
 function locale.resolve(source: unknown): any
     if type(source) ~= "string" then
         return source
@@ -90,13 +84,9 @@ function locale.resolve(source: unknown): any
     return source
 end
 
--- Merge dev-supplied translation tables into the built-in set. Keyed by locale id (lowercased),
--- each a map of source string -> translation. Merges rather than replaces, so repeated calls (or
--- several windows) accumulate instead of clobbering. These sit alongside the library's own tables;
--- a dev translator, if set, still wins over both.
---
--- Entries are checked here rather than trusted: a non-string translation would sail through
--- resolve() into a Text property and only blow up at render, nowhere near the register call.
+-- Merge dev-supplied translation tables into the built-in set, keyed by lowercased locale id.
+-- Merges rather than replaces, so repeated calls accumulate. A dev translator still wins.
+-- Entries are type-checked here: a non-string translation would otherwise only fail at render.
 function locale.register(tables: TranslationTables?)
     if type(tables) ~= "table" then
         return
@@ -120,15 +110,15 @@ function locale.register(tables: TranslationTables?)
     end
 end
 
--- Point the active locale at `localeId` (lowercased), falling back to English when it isn't a
--- usable string. Setting it alone touches nothing on screen; callers re-resolve their own labels.
+-- Point the active locale at `localeId`, falling back to English. Touches nothing on screen;
+-- callers re-resolve their own labels.
 function locale.setActive(localeId: string?): string
     locale.current = if type(localeId) == "string" and localeId ~= "" then string.lower(localeId) else "en"
     return locale.current
 end
 
--- The player's language from Roblox's locale id (e.g. "fr-fr"), lowercased and kept whole so a
--- translator sees the exact region. resolve() narrows to the language part when it needs to.
+-- The player's language from Roblox's locale id (e.g. "fr-fr"), kept whole so a translator sees
+-- the region; resolve() narrows to the language part when it needs to.
 function locale.detect(): string
     local id = variables.localizationService.RobloxLocaleId
     if type(id) == "string" and id ~= "" then

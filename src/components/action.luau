@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- One icon button in the window's title bar. Close, minimise and settings are built this way,
+-- and order decides where it lands in the row. Linking a tab makes the press select that tab
+-- as well, which is how the settings gear reaches its own page.
+
 local Action = {}
 Action.__index = Action
 Action.__type = "Action"
@@ -15,7 +19,7 @@ local utility = script.Parent.Parent.utility
 -- Variables
 local variables = require(utility.variables)
 local log = require(utility.log)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 function Action.new(window, properties)
     properties = if typeof(properties) == "table" then properties else {}

@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Flat re-export of the helpers elements reach for most often, so a component requires one
+-- module instead of three. Nothing is implemented here; each helper still lives in the module
+-- that owns it.
+
 local functions = {}
 
 local textMetrics = require(script.Parent.textMetrics)

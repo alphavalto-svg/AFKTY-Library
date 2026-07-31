@@ -5,10 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- Haptic feedback. A thin wrapper over HapticEffect that buzzes the player's device
--- (phone, gamepad, VR controller) on two interactions: a press and a notification. We map
--- them to the presets that feel best in practice - the softer UIHover tick for a press, the
--- crisper UIClick for a notification. No-ops on devices without haptics, off from settings.
+-- Haptic feedback: a thin wrapper over HapticEffect that buzzes the player's device on two
+-- interactions, a press and a notification. The softer UIHover preset maps to a press, the
+-- crisper UIClick to a notification. No-ops on devices without haptics.
 
 local variables = require(script.Parent.variables)
 
@@ -16,9 +15,8 @@ local hapticEngine = {}
 
 hapticEngine.enabled = false -- off by default; the settings toggle flips it (see setEnabled)
 
--- Resolve the presets once. HapticEffect (and its enum) only exist on newer clients, so
--- everything below is gated on this: on an old client `types` stays empty and every call
--- is a no-op. pcall guards the enum lookup too, since indexing a missing value would throw.
+-- Resolve the presets once. HapticEffect and its enum only exist on newer clients, so on an
+-- old client `types` stays empty and every call is a no-op. The enum lookup is pcall'd.
 type HapticTypes = {
     click: Enum.HapticEffectType?,
     notify: Enum.HapticEffectType?,
@@ -37,22 +35,18 @@ if supported then
 end
 
 -- One reusable effect per preset, made on first use and kept parented for the session.
---
--- These live with the interface, not in the Workspace the docs examples use. Workspace is
--- readable by the game's own scripts, so a pooled effect sitting there is the one piece of
--- AFKTY a game could find by walking the tree - everything else hides behind gethui with
--- a random name. An effect only needs *a* parent to play, not a world one.
+-- They live with the interface rather than in Workspace, which the game's own scripts can
+-- read: an effect only needs a parent to play, not a world one.
 local effects: { [Enum.HapticEffectType]: Instance } = {}
 local container: Instance? = nil
 
--- Where new effects get parented. The window hands us its ScreenGui; until then (or after it
--- goes away) fall back to the container every AFKTY gui lives in.
+-- Where new effects get parented. The window hands over its ScreenGui; until then, fall back
+-- to the container every AFKTY gui lives in.
 function hapticEngine.setContainer(target: Instance?)
     container = target
 end
 
--- Let go of a gui thats being torn down, without stamping on a container another window may
--- have set since. Passing nil clears whatever is held.
+-- Let go of a gui being torn down, without stamping on a container another window has set.
 function hapticEngine.releaseContainer(target: Instance?)
     if target == nil or container == target then
         container = nil
@@ -110,8 +104,7 @@ function hapticEngine.notify()
     play(types.notify)
 end
 
--- Global on/off for the settings toggle. Turning it off tears the pooled effects down so
--- nothing lingers behind; they're remade lazily if it's turned back on.
+-- Global on/off for the settings toggle. Turning it off tears the pool down; it is remade lazily.
 function hapticEngine.setEnabled(state: boolean?)
     hapticEngine.enabled = state and true or false
     if not hapticEngine.enabled then
@@ -119,8 +112,8 @@ function hapticEngine.setEnabled(state: boolean?)
     end
 end
 
--- Drop the pool without touching the enabled flag, so a window can clean up after itself
--- without deciding haptics for anyone else.
+-- Drop the pool without touching the enabled flag, so one window's cleanup does not decide
+-- haptics for another.
 function hapticEngine.teardown()
     for hapticType, effect in effects do
         pcall(effect.Destroy, effect)

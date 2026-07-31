@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Saved configurations: every persisting element's value in one file, keyed by flag. A hub can
+-- keep several under its own name, so this also lists and deletes them. Loading applies values
+-- through each element's own Set, so a restored config fires the same callbacks a click would.
+
 local variables = require(script.Parent.variables)
 local filesystem = require(script.Parent.filesystem)
 local log = require(script.Parent.log)
@@ -58,9 +62,8 @@ function persistenceConfig.save(window: ConfigWindow, name: unknown?): boolean
         end
     end
 
-    -- carry forward saved values whose elements aren't built yet; without this an early
-    -- autosave would permanently drop a late element's saved value. only into the file they
-    -- came from though, or Load("A") then Save("B") would smuggle A's flags into B.
+    -- carry forward saved values whose elements are not built yet, but only into the file they
+    -- came from, or Load("A") then Save("B") would smuggle A's flags into B
     local loadedConfig = window._loadedConfig
     if loadedConfig and window._loadedConfigPath == fullPath then
         for flag, value in loadedConfig do
@@ -111,8 +114,8 @@ local function decodeFile(fullPath: string): ({ [string]: unknown }?, string?)
     return parsed :: { [string]: unknown }, contents
 end
 
--- Every corrupt file gets its own backup. Reusing one name would let a second corruption
--- destroy the salvageable data the first backup exists to keep.
+-- Every corrupt file gets its own backup; reusing one name would let a second corruption
+-- destroy what the first backup exists to keep.
 local function backupPathFor(fullPath: string): string
     -- same path logic as getConfigPath, so the backup lands next to the file it mirrors
     local stem = path.stripExtension(fullPath, ".rfld")
@@ -135,8 +138,8 @@ function persistenceConfig.load(window: ConfigWindow, name: unknown?): boolean
 
     local parsedFlags, raw = decodeFile(fullPath)
 
-    -- a save that died mid-overwrite leaves its whole copy parked beside the wreck, so take
-    -- that instead. only when the real file is really there, or a deleted config could come back.
+    -- a save that died mid-overwrite parks a whole copy beside the wreck; take that instead,
+    -- but only when the real file exists, or a deleted config could come back
     if not parsedFlags and filesystem.isfile(fullPath) then
         local parked, parkedRaw = decodeFile(atomic.tempPathFor(fullPath))
         if parked and parkedRaw then
@@ -175,9 +178,7 @@ function persistenceConfig.load(window: ConfigWindow, name: unknown?): boolean
         log.warn("AFKTY: Failed to apply configuration - " .. tostring(applyErr))
     end
 
-    -- kept so elements built after this load can still restore themselves (see
-    -- Window:_restoreLate). without it a late element shows its default and the next
-    -- autosave writes that default over the saved value.
+    -- kept so elements built after this load can still restore themselves (Window:_restoreLate)
     window._loadedConfig = flags
     window._loadedConfigPath = fullPath
 
@@ -213,8 +214,7 @@ function persistenceConfig.list(window: ConfigWindow): { string }
 
     for _, filePath in files do
         local file = path.basename(filePath)
-        -- listfiles returns folders and anything else in the dir; only our own configs are
-        -- real names, so require the extension rather than listing whatever is lying around
+        -- listfiles returns folders and anything else in the dir, so require the extension
         if file:sub(-5) == ".rfld" then
             local base = path.stripExtension(file, ".rfld")
             if base and base ~= "" and not base:find(" %(Incorrect Format[^%)]*%)$") then

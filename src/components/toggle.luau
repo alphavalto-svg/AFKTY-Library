@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- An on/off switch, in a full-width row or a compact one inside a group. Persists through its
+-- flag, so a saved configuration restores it by calling Set, which fires the hub's callback
+-- exactly as a click would.
+
 local Toggle = {}
 Toggle.__index = Toggle
 Toggle.__type = "Toggle"
@@ -17,7 +21,7 @@ local variables = require(utility.variables)
 local functions = require(utility.functions)
 local moveable = require(utility.moveable)
 local locale = require(utility.locale)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 function Toggle.new(tab, properties)
     properties = if typeof(properties) == "table" then properties else {}

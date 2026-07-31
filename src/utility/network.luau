@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Finds the executor's HTTP request function. Every executor exposes one under a different
+-- name, so the caller gets whichever is present and nil when none is.
+
 local network = {}
 network.__index = network
 

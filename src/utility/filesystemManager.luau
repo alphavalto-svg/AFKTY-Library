@@ -8,7 +8,9 @@
 local filesystem = require(script.Parent.filesystem)
 local path = require(script.Parent.path)
 
--- defaults
+-- Owns the on-disk layout. Everything the library writes lives under a single root folder with
+-- an Assets folder inside it, both created here so no caller has to check first.
+
 local DEFAULT_ROOT_PATH = "AFKTY"
 
 local fileSystemManager = {}
@@ -23,7 +25,6 @@ export type FileSystemManager = {
 }
 
 function fileSystemManager.new(name: string?): FileSystemManager
-    -- ensure the folder exists
     local root = name or DEFAULT_ROOT_PATH
     local self = setmetatable({
         root = root,

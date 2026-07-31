@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- What the library learns about its host the moment it loads: the services it needs, whether
+-- secure mode was asked for, and where a ScreenGui can be parented so the game cannot find it.
+-- Read once here rather than per call site, so the answers cannot drift mid-session.
+
 local services = require(script.Parent.services)
 
 export type RuntimeState = {
@@ -29,20 +33,16 @@ export type RuntimeState = {
 
 local runtime = {} :: RuntimeState
 
--- Secure mode is ON by default wherever it can actually do its job.
---
--- getgenv lives in the executor's script environment, not _G, same as gethui below. Its absence
--- means Studio or the test harness, where secure mode cannot work at all and where silencing the
--- library's own console output would only make the demos harder to read.
+-- Secure mode is on by default wherever it can do its job. getgenv lives in the executor's
+-- script environment, not _G; its absence means Studio or the test harness, where secure mode
+-- cannot work at all.
 --
 --   AFKTY_SECURE = false  opt out, whatever the executor can do
---   AFKTY_SECURE = true   opt in strictly, honoured even where icons cannot be cached: someone
---                         who asked for it by name would rather have blank icons than leaked ids
+--   AFKTY_SECURE = true   opt in strictly, honoured even where icons cannot be cached
 --   unset                 on, but only where the icon cache can actually be served
 --
--- That last branch is the point. An uncached icon resolves to "" in secure mode, so defaulting it
--- on unconditionally would blank every icon in the UI on an executor without getcustomasset --
--- a far worse default than rendering asset ids. Degrading beats bricking when nobody asked.
+-- An uncached icon resolves to "" in secure mode, so defaulting it on unconditionally would
+-- blank every icon on an executor without getcustomasset.
 runtime.secureMode = (function()
     if typeof(getgenv) ~= "function" then
         return false
@@ -76,10 +76,9 @@ runtime.httpService = services.getService("HttpService") :: HttpService
 runtime.textService = services.getService("TextService") :: TextService
 runtime.replicatedStorage = services.getService("ReplicatedStorage") :: ReplicatedStorage
 runtime.localizationService = services.getService("LocalizationService") :: LocalizationService
--- a gethui stub that returns nil would parent every ScreenGui nowhere, so fall back to CoreGui.
--- guiContainerHidden records whether what we landed on is actually out of reach of the game:
--- gethui()'s container is, raw CoreGui is not, and the difference decides whether each
--- ScreenGui still needs an individual protect call below.
+-- a gethui stub returning nil would parent every ScreenGui nowhere, so fall back to CoreGui.
+-- guiContainerHidden records whether the container is actually out of the game's reach, which
+-- decides whether each ScreenGui still needs its own protect call below.
 local containerHidden = false
 runtime.guiContainer = (function(): Instance
     if runtime.runService:IsStudio() then
@@ -88,9 +87,8 @@ runtime.guiContainer = (function(): Instance
     if typeof(gethui) == "function" then
         local ok, container = pcall(gethui)
         if ok and typeof(container) == "Instance" then
-            -- Not every gethui returns somewhere hidden. Observed on a live client handing back
-            -- CoreGui.RobloxGui, an ordinary child anything walking CoreGui enumerates. Taking
-            -- that as hidden also skips the protect call below, so we would end up with neither.
+            -- not every gethui returns somewhere hidden: one observed handing back
+            -- CoreGui.RobloxGui, which anything walking CoreGui enumerates
             local hidden = container ~= runtime.coreGui
                 and container ~= runtime.coreGui:FindFirstChild("RobloxGui")
                 and not container:IsDescendantOf(runtime.coreGui)
@@ -98,9 +96,8 @@ runtime.guiContainer = (function(): Instance
             return container
         end
     end
-    -- RobloxGui is a child of CoreGui rather than CoreGui itself, so a script walking
-    -- CoreGui:GetChildren() looking for stray ScreenGuis does not trip over us. Weaker than
-    -- gethui, better than sitting at the top level.
+    -- RobloxGui is a child of CoreGui, so a script walking CoreGui:GetChildren() for stray
+    -- ScreenGuis does not trip over us. Weaker than gethui, better than the top level.
     local robloxGui = runtime.coreGui:FindFirstChild("RobloxGui")
     if robloxGui then
         return robloxGui
@@ -109,12 +106,10 @@ runtime.guiContainer = (function(): Instance
 end)()
 runtime.guiContainerHidden = containerHidden
 
--- Executors without gethui often still expose a protect call, and unlike gethui it takes the
--- ScreenGui itself rather than handing back a container. Every ScreenGui therefore goes through
--- here instead of assigning Parent directly: protect first, then parent, which is the order
--- these implementations expect.
--- a field rather than a local so specs can hand back a stub; outside an executor the lookup
--- below finds nothing anyway, which is why there is no separate Studio guard
+-- Executors without gethui often still expose a protect call, which takes the ScreenGui itself
+-- rather than handing back a container. Every ScreenGui goes through here rather than assigning
+-- Parent directly: protect first, then parent, which is the order these implementations expect.
+-- a field rather than a local so specs can hand back a stub
 function runtime.resolveProtect(): ((Instance) -> ())?
     local ok, env = pcall(getfenv)
     if not ok or type(env) ~= "table" then
@@ -131,11 +126,9 @@ function runtime.resolveProtect(): ((Instance) -> ())?
 end
 
 -- Re-running a hub script builds a fresh window while the previous run's is still parented, and
--- nothing holds the old handle any more -- they pile up in the container, invisible to the hub and
--- reachable by anything that can walk it. A window opened deliberately alongside another in the
--- SAME run is legitimate, though, so the two cases have to be told apart: runToken is a new table
--- per module load, and each loadstring gets its own. The register lives in getgenv because that is
--- the one thing that survives between loads, which is exactly the boundary the strays cross.
+-- nothing holds the old handle, so they pile up in the container. A second window opened in the
+-- same run is legitimate, so the two are told apart by runToken, a new table per module load.
+-- The register lives in getgenv because that is what survives between loads.
 local runToken = {}
 
 function runtime.retireStaleGuis(gui: Instance)
@@ -156,8 +149,7 @@ function runtime.retireStaleGuis(gui: Instance)
     for i = #live, 1, -1 do
         local entry = live[i]
         -- duck-typed rather than `typeof(gui) == "Instance"`: the spec harness stands its
-        -- instances up as plain tables, and a guard that silently never fires there is a guard
-        -- no test can hold onto
+        -- instances up as plain tables
         local tracked = if type(entry) == "table" then entry.gui else nil
         local usable = tracked ~= nil and type(tracked.Destroy) == "function" and tracked.Parent ~= nil
         if not usable then

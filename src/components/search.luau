@@ -5,10 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- Search: a pill that takes over the tab strip and searches every page at once. The Search
--- action toggles it; while open the tab selector hides and every content tab's elements are
--- gathered into one results page, filtered live by name. Closing puts everything back exactly
--- where it was. Search box sizing values, tuned against the original design.
+-- Search: a pill that takes over the tab strip and searches every page at once. While open the
+-- tab selector hides and every content tab's elements are gathered into one results page,
+-- filtered live by name. Closing puts everything back where it was.
 
 local utility = script.Parent.Parent.utility
 local variables = require(utility.variables)
@@ -45,8 +44,7 @@ local function unitText(unit)
     return unit.name or ""
 end
 
--- Every top-level element across the real content pages (the settings page and other
--- neglected tabs aren't pages you search). Sections are headers, so skip them.
+-- Every top-level element across the real content pages; sections are headers, so skip them.
 local function collectUnits(window)
     local units = {}
     for _, tab in window.tabs do
@@ -87,8 +85,7 @@ local function setTabsShown(window, shown, info)
     end
 end
 
--- Toggle each unit's visibility against the query. Empty query shows everything, so the
--- open field doubles as a browse-all-pages view.
+-- Toggle each unit's visibility against the query; an empty query shows everything.
 local function applyFilter(window, query)
     query = string.lower(query or "")
     local anyVisible = false
@@ -131,7 +128,7 @@ local function gatherUnits(window)
 end
 
 -- Put every unit back in the tab it came from, at its original order. Guards a unit whose
--- element was removed mid-search (its frame is gone).
+-- element was removed mid-search.
 local function restoreUnits(window)
     for _, entry in window._searchUnits do
         local unit = entry.unit
@@ -254,8 +251,7 @@ function search.build(window)
         Parent = window.searchPage,
     })
 
-    -- Empty state, floated over the content area rather than in the results list so it centres
-    -- cleanly. Only shown when a query matches nothing.
+    -- empty state, floated over the content area so it centres cleanly
     window.searchEmpty = window:Create("TextLabel", {
         Name = "NoResults",
         Text = locale.t("No results"),
@@ -359,7 +355,7 @@ function search.build(window)
             search.toggle(window)
         end,
     })
-    -- keep the icon lit while the field is open, the way the settings cog stays lit on its page
+    -- keep the icon lit while the field is open, like the settings cog
     window.searchAction.isLit = function()
         return window._searching
     end

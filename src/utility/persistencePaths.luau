@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Where persistence writes. Both entry points return the folder and the full file path, since
+-- every caller has to ensure the folder before it writes. Names reaching a config path come
+-- from the consuming hub, so they are sanitized here rather than trusted.
+
 local variables = require(script.Parent.variables)
 local path = require(script.Parent.path)
 

@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A numeric readout card, in a full shape or a 41px compact one. Values roll through the
+-- odometer when number easing is on, and the accent follows the direction of travel against
+-- the previous value. Only numbers reach a readout; anything else is refused rather than shown.
+
 local Statistic = {}
 Statistic.__index = Statistic
 Statistic.__type = "Statistic"
@@ -70,10 +74,8 @@ local function formatChange(delta)
     end
 end
 
--- Every value that reaches a readout goes through here first. The constructor used to take a
--- string happily while Set asserted on one, so a hub that seeded a stat with "0" only found out
--- on the first update -- and an assert raised outside a guarded callback lands on the console,
--- which is the one thing secure mode exists to prevent. Coerce what is numeric, refuse the rest.
+-- Every value that reaches a readout goes through here first: coerce what is numeric, refuse
+-- the rest. Both the constructor and Set use it, so they cannot disagree about what is valid.
 local function asNumber(value: unknown): number?
     if typeof(value) == "number" then
         return if value == value and value ~= math.huge and value ~= -math.huge then value else nil
@@ -97,8 +99,7 @@ function Statistic.new(tab, properties)
         description = properties.description or properties.Description,
 
         value = seeded or 0,
-        -- did we start with a real value, or is the displayed number just a placeholder?
-        -- the first Set on a placeholder establishes the baseline instead of showing a change
+        -- a placeholder rather than a real value: the first Set establishes the baseline
         _hasValue = seeded ~= nil,
 
         numberEasing = if (properties.numberEasing ~= nil)
@@ -112,8 +113,7 @@ function Statistic.new(tab, properties)
         prefix = properties.prefix or properties.Prefix or "",
         suffix = properties.suffix or properties.Suffix or "",
 
-        -- 41px single-readout card. config opt-in, forced on in a row. only room for
-        -- one number, so `display` picks value or % change.
+        -- 41px single-readout card, forced on in a row. `display` picks value or % change.
         compact = properties.compact or properties.Compact or tab.compact or false,
         display = (properties.display or properties.Display or "value"), -- "value" | "change"
 
@@ -195,8 +195,7 @@ function Statistic:_buildFull()
         Parent = self.main,
     })
 
-    -- Soft accent halo behind the card. UIShadow (no image) is our glow standard; its colour
-    -- follows the stat direction and it reveals from hidden to 0.7 like the rest of the card.
+    -- soft accent halo behind the card; its colour follows the stat direction
     self.glow = window:CreateGlow(self.main, glowColor(accents.neutral), 13, 1)
 
     self.title = window:Create("TextLabel", {
@@ -293,8 +292,7 @@ function Statistic:_buildFull()
     self._accentGradients = { self.strokeGradient, self.mainGradient }
 end
 
--- compact 41px card: icon+title left, one readout right. accent gradient sits on
--- the card (the flexed child), not a separate overlay
+-- compact 41px card: icon and title left, one readout right; the accent gradient sits on the card
 function Statistic:_buildCompact()
     local window = self.window
 
@@ -510,8 +508,8 @@ function Statistic:_formatChange(delta)
     end
 end
 
--- Put a value on a readout: rolls when number easing is on and there's a previous number to
--- roll from, snaps otherwise. Both card shapes and ResetBaseline go through here.
+-- Put a value on a readout: rolls when number easing is on and there is a previous number,
+-- snaps otherwise. Both card shapes and ResetBaseline go through here.
 function Statistic:_showValue(odo, value, previousValue, hasNoHistory)
     if self.numberEasing and not hasNoHistory then
         odo:to(self:_formatValue(value), value >= previousValue)
@@ -557,8 +555,7 @@ end
 function Statistic:Set(value)
     local numeric = asNumber(value)
     if numeric == nil then
-        -- ignoring beats throwing: a hub calling this outside a guarded callback would put the
-        -- assert straight on the console, and secure mode has no way to report it either
+        -- ignore rather than throw: an assert outside a guarded callback reaches the console
         return
     end
     value = numeric
@@ -668,8 +665,7 @@ function Statistic:_setShown(shown, animate)
     end
 end
 
--- Room the compact card needs: padding + icon (and gap) if shown + title text + the gap
--- to the readout + the readout number itself. Lets a horizontal group wrap sensibly.
+-- Room the compact card needs: padding, icon, title, gap and readout. Lets a row wrap sensibly.
 function Statistic:_minWidth()
     local w = 30 + 10 -- 15+15 card padding, 10 gap between title and readout
     if self.icon then

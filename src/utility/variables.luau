@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Shared library state, built once when this module is first required. Extends the runtime
+-- snapshot with the managers every other module reaches through (filesystem, assets, fonts)
+-- and with the brand typography, which depends on whether secure mode is on.
+
 local runtime = require(script.Parent.runtime)
 local constants = require(script.Parent.constants)
 local log = require(script.Parent.log)
@@ -32,7 +36,7 @@ log.setSecureModeSource(function()
 end)
 
 -- built-in stand-in shown in secure mode until the real brand faces download. a dev can override
--- it per window with the FallbackFont prop (see setFallbackFont); defaults to BuilderSans.
+-- it per window with the FallbackFont prop.
 variables.fallbackFont = Font.fromEnum(Enum.Font.BuilderSans)
 
 variables.fileSystemManager = fileSystemManager.new()
@@ -63,7 +67,7 @@ function variables.setFallbackFont(font: Enum.Font | Font)
 end
 
 -- brand font at a weight, non-blocking. normal mode streams the family id direct; secure mode
--- shows the fallback until the real faces download and swap in (see init).
+-- shows the fallback until the real faces download and swap in.
 function variables.brandFont(weight: Enum.FontWeight?): Font
     if variables.secureMode then
         return Font.new(variables.fallbackFont.Family, weight)

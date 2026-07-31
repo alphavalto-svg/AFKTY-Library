@@ -10,6 +10,9 @@ local textService = variables.textService
 
 local textMetrics = {}
 
+-- Text measurement for layout. Elements ask how much room their text needs before they lay
+-- out, which happens far too often to yield on, so widths are cached and heights are not.
+
 -- Width (px) a string renders at for a given font+size, cached since GetTextBoundsAsync
 -- yields. Elements use this to report how much room they need before they'd overlap,
 -- so a horizontal group can decide how many fit per row.

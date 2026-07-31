@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A key capture field, and the hold/toggle behaviour bound to whatever it captured. Keys
+-- serialize by name rather than by EnumItem so a saved binding survives a rejoin, which is
+-- why this carries its own _serialize and _deserialize.
+
 local Keybind = {}
 Keybind.__index = Keybind
 Keybind.__type = "Keybind"
@@ -18,7 +22,7 @@ local functions = require(utility.functions)
 local moveable = require(utility.moveable)
 local locale = require(utility.locale)
 local constants = require(utility.constants)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 local enums = require(utility.enums)
 local log = require(utility.log)
 
@@ -39,8 +43,7 @@ local function keyName(value)
     return mouseNames[value] or value.Name
 end
 
--- accept an EnumItem, a KeyCode name, or a mouse button name, fall back to unbound.
--- mouse buttons bind like any other key, so a string has to reach them too.
+-- accept an EnumItem, a KeyCode name, or a mouse button name; fall back to unbound
 local function coerceKey(value)
     if typeof(value) == "EnumItem" then
         return value
@@ -73,8 +76,8 @@ function Keybind.new(tab, properties)
         description = properties.description or properties.Description,
         forgetState = properties.forgetState or properties.ForgetState or tab.forgetState,
 
-        -- the settings' menu-toggle keybind. it drives settings.toggleKeybind, so its clash
-        -- check runs the other way: reject keys an element keybind already owns.
+        -- the menu-toggle keybind: its clash check runs the other way, rejecting keys an
+        -- element keybind already owns
         isMenuToggle = properties.isMenuToggle or properties.IsMenuToggle or false,
 
         -- fires when the bound key is pressed (or, in hold mode, with true/false)
@@ -82,8 +85,7 @@ function Keybind.new(tab, properties)
         -- fires when the binding changes (rebind or :Set), gets the new key
         onChanged = properties.onChanged or properties.OnChanged or function() end,
 
-        -- hold mode: callback(true) once the key survives holdThreshold, callback(false) on release.
-        -- the threshold means a quick accidental tap fires nothing.
+        -- hold mode: callback(true) once the key survives holdThreshold, callback(false) on release
         hold = properties.hold or properties.Hold or false,
         holdThreshold = properties.holdThreshold or properties.HoldThreshold or 0.2,
 
@@ -213,10 +215,8 @@ function Keybind.new(tab, properties)
         end
     end)
 
-    -- one persistent listener: captures the next key while recording, otherwise fires the
-    -- callback when the bound key is pressed. `processed` is Roblox's gameProcessedEvent, true
-    -- when the input was already consumed (typing in a box, core UI), so we skip it either way
-    -- and keybinds never go off mid-type.
+    -- one persistent listener: captures the next key while recording, otherwise fires on the
+    -- bound key. `processed` is gameProcessedEvent, so keybinds never go off mid-type.
     self.window:ConnectFor(self, variables.userInputService.InputBegan, function(input, processed)
         if processed then
             return
@@ -225,8 +225,7 @@ function Keybind.new(tab, properties)
             self:_capture(input)
             return
         end
-        -- another keybind is mid-rebind: the key being pressed is meant for it, dont let it
-        -- also trigger us
+        -- another keybind is mid-rebind, so the key being pressed is meant for it
         if self.window._recordingKeybind then
             return
         end
@@ -278,9 +277,8 @@ end
 -- revert the glow + label and relabel to whatever value we ended up with
 function Keybind:_stopRecording()
     self.recording = false
-    -- clear next frame, not now: the key that stops us (a toggle-key clash) is still being
-    -- dispatched, and the window's toggle listener may run after us. keep the flag up so it
-    -- still bails instead of hiding the window on the same press.
+    -- clear next frame: the key that stopped us is still being dispatched, and the window's
+    -- toggle listener may run after us
     if self.window._recordingKeybind == self then
         local window = self.window
         task.defer(function()
@@ -320,8 +318,7 @@ function Keybind:_capture(input)
     end
 
     if self.isMenuToggle then
-        -- the menu toggle cant land on a key an element keybind already owns, else that press
-        -- would both fire the element and open/close the window. bail and keep the old binding.
+        -- a shared bind would both fire the element and toggle the window; keep the old binding
         local clash = self.window:_keybindUsing(key, self)
         if clash then
             self.window:Notify({
@@ -338,8 +335,7 @@ function Keybind:_capture(input)
             return
         end
     elseif key == self.window.settings.toggleKeybind then
-        -- an element keybind cant clash with the menu toggle key, same double-fire problem the
-        -- other way round. bail, tell them, and keep the old binding.
+        -- same double-fire problem the other way round; keep the old binding
         self.window:Notify({
             title = locale.resolve("Keybind unavailable"),
             content = string.format(
@@ -380,8 +376,8 @@ function Keybind:_matches(input)
     return false
 end
 
--- hold mode: arm after holdThreshold (a quick tap never counts), fire callback(true) then
--- callback(false) once, edge-triggered off this exact press ending.
+-- hold mode: arm after holdThreshold, fire callback(true) then callback(false) once,
+-- edge-triggered off this exact press ending.
 function Keybind:_beginHold(input)
     if self._holding or self._holdPress then
         return -- already tracking a hold
@@ -389,8 +385,7 @@ function Keybind:_beginHold(input)
     local press = {}
     self._holdPress = press
 
-    -- match the release against the exact key that started this hold, not self.value, so a
-    -- rebind mid-hold still lets the original key release and fire callback(false).
+    -- match the release against the key that started this hold, so a rebind mid-hold still fires
     local heldKeyCode = input.KeyCode
     local heldInputType = input.UserInputType
 
@@ -402,9 +397,8 @@ function Keybind:_beginHold(input)
         self.window:_runGuarded(self, self.callback, true)
     end)
 
-    -- release edge off the global InputEnded (robust to synthetic input, where the original
-    -- InputObject's state doesnt always transition). filed on the element so Tab:Remove drops it
-    -- and a release cant fire the callback against a torn-down keybind.
+    -- release edge off the global InputEnded, which synthetic input also drives. Filed on the
+    -- element so Tab:Remove drops it.
     local conn
     conn = self.window:ConnectFor(self, variables.userInputService.InputEnded, function(ended)
         local released = if heldKeyCode ~= Enum.KeyCode.Unknown
@@ -434,8 +428,7 @@ end
 function Keybind:Set(value, skipChanged)
     local key = coerceKey(value)
 
-    -- same clash rules as interactive capture: a shared bind double-fires, so refuse it and
-    -- keep the current one. covers programmatic sets and config restores alike.
+    -- same clash rules as interactive capture, covering programmatic sets and config restores
     if key ~= Enum.KeyCode.Unknown then
         if self.isMenuToggle then
             local clash = self.window:_keybindUsing(key, self)
@@ -508,8 +501,7 @@ function Keybind:_setShown(shown, animate)
     end
 end
 
--- Re-apply the box's theme-driven fill transparency on a runtime ChangeTheme (its colour rides
--- a themeProperty). Called on the visible tab only, so the box is shown.
+-- Re-apply the box's theme-driven fill transparency on a runtime ChangeTheme. Visible tab only.
 function Keybind:_refreshTheme()
     variables.tweenService
         :Create(

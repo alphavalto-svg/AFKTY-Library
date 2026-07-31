@@ -5,9 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- Popup: a modal that dims the screen and floats a card in the centre. Modular by design -
--- give it a title and buttons for a choice dialog, or a list of boxes for a changelog. Built
--- from the window's own gradient/corner/stroke/shadow so it reads as part of the same UI.
+-- Popup: a modal that dims the screen and floats a card in the centre. Give it a title and
+-- buttons for a choice dialog, or a list of boxes for a changelog. Built from the window's own
+-- gradient, corner, stroke and shadow.
 
 local Popup = {}
 Popup.__index = Popup
@@ -20,7 +20,7 @@ local functions = require(utility.functions)
 local constants = require(utility.constants)
 local locale = require(utility.locale)
 local log = require(utility.log)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 -- Timings (Exponential Out, matching the notification/toast feel).
 local enterInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out) -- card rise-in
@@ -64,9 +64,8 @@ local buttonTextSize = 16
 
 local backdropShown = 0.5 -- how dark the dim gets
 
--- Open popups, oldest first. Escape only ever closes the last one so two stacked popups dont
--- both vanish on a single press. A popup torn down some other way (its window went with it)
--- never runs Close, so entries are pruned by liveness rather than trusted to remove themselves.
+-- Open popups, oldest first. Escape closes only the last one. A popup torn down with its
+-- window never runs Close, so entries are pruned by liveness rather than self-removal.
 local stack = {}
 
 local function topmost(popup)
@@ -115,8 +114,8 @@ function Popup.new(window, properties)
     return self
 end
 
--- Register a transparency-driven instance so _show can fade it in (to `to`) and _dismiss can
--- fade it back out (to 1). Every fadeable funnels here so the two directions stay in sync.
+-- Register a transparency-driven instance so _show fades it in (to `to`) and _dismiss fades it
+-- back out to 1. Every fadeable funnels here so the two directions stay in sync.
 function Popup:_fade(instance, prop, to)
     table.insert(self._reveal, { instance = instance, prop = prop, to = to })
     return instance
@@ -138,9 +137,7 @@ function Popup:_build()
     })
     variables.parentGui(self.screenGui)
 
-    -- Dim backdrop, also the click-to-dismiss surface and the input sink for everything below.
-    -- A plain Active frame, not a button - it only needs to swallow input, so a frame is the
-    -- right primitive.
+    -- dim backdrop, click-to-dismiss surface and input sink; an Active frame is enough
     self.backdrop = window:Create("Frame", {
         Name = "Backdrop",
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
@@ -210,9 +207,8 @@ function Popup:_build()
         Parent = self.card,
     })
 
-    -- Pre-measure like the notifications do, then lock the card to a fixed height. Otherwise the
-    -- card grows a few pixels a moment after it shows, as the brand font's glyphs finish loading
-    -- and AutomaticSize re-measures the text - reads as the font "settling" after the reveal.
+    -- pre-measure, then lock the card to a fixed height: AutomaticSize would re-measure once
+    -- the brand font's glyphs land and grow the card after the reveal
     local headerHeight = self:_measureHeader(hasIcon)
     self:_buildHeader(hasIcon, headerHeight)
     local contentHeight = self:_buildContent()
@@ -348,8 +344,8 @@ function Popup:_buildHeader(hasIcon, headerHeight)
     end
 end
 
--- The middle region: a paragraph, a list of boxes, or nothing. Whichever it is, it lives in a
--- scrolling frame capped at maxContentHeight so a long changelog scrolls instead of running off.
+-- The middle region: a paragraph, a list of boxes, or nothing, in a scrolling frame capped at
+-- maxContentHeight so a long changelog scrolls.
 function Popup:_buildContent()
     if (not self.content or self.content == "") and (not self.boxes or #self.boxes == 0) then
         return 0 -- title + buttons only (a plain confirm dialog)
@@ -422,8 +418,7 @@ function Popup:_buildContent()
     return viewHeight
 end
 
--- One changelog box: a card in the element-panel style (gradient stroke sheen), icon optional,
--- a semibold title and a softer description.
+-- One changelog box: a card in the element-panel style, optional icon, title and description.
 function Popup:_buildBox(parent, box, order)
     local window = self.window
     box = if typeof(box) == "table" then box else { title = tostring(box) }
@@ -568,8 +563,7 @@ function Popup:_buildFooter()
     end
 end
 
--- One footer button. Neutral matches the element body; "primary" and "danger" tint it green/red
--- the way the library flags a good or destructive action.
+-- One footer button. Neutral matches the element body; "primary" and "danger" tint it green/red.
 function Popup:_buildButton(parent, option, order)
     local window = self.window
     option = if typeof(option) == "table" then option else { text = tostring(option) }
@@ -577,8 +571,7 @@ function Popup:_buildButton(parent, option, order)
     local label = option.text or option.Text or option.name or option.Name or "Okay"
     local callback = option.callback or option.Callback
 
-    -- flat fills so hover just tweens the colour (no overlay). neutral takes a faint white edge
-    -- so it recedes; the accents carry their own colour and a bolder edge.
+    -- flat fills so hover just tweens the colour; neutral takes a faint white edge to recede
     local restColor, hoverColor, edgeColor, strokeShown
     if style == "primary" then
         restColor, hoverColor, edgeColor, strokeShown =
@@ -684,9 +677,8 @@ function Popup:_buildButton(parent, option, order)
     )
 end
 
--- Measure the header parts once and stash them, so both the card height and the header's own
--- fixed layout use the same numbers. Everything is sized off these, so nothing re-measures on
--- screen once the font's glyphs land. Returns the header row height.
+-- Measure the header parts once so the card height and the header layout use the same numbers
+-- and nothing re-measures once the font's glyphs land. Returns the header row height.
 function Popup:_measureHeader(hasIcon)
     local textWidth = innerWidth - (if hasIcon then headerIconSize + headerIconGap else 0)
     self._titleH = functions.textHeight(self.window.theme.Font, titleSize, locale.resolve(self.title), textWidth)
@@ -703,9 +695,8 @@ function Popup:_measureText()
     return functions.textHeight(self.window.theme.Font, contentSize, locale.resolve(self.content), contentWidth)
 end
 
--- Every measurement one box needs: its frame height (content + padding), its title and
--- description text heights, and the text column height. Both the card sizing and the box build
--- read from here, so a box is built at a fixed size rather than auto-sizing (which re-measures).
+-- Every measurement one box needs: frame height, title and description heights, text column
+-- height. Both the card sizing and the box build read from here, so a box is built fixed.
 function Popup:_measureBox(box)
     box = if typeof(box) == "table" then box else { title = tostring(box) }
     local hasIcon = box.icon ~= nil and box.icon ~= 0 and box.icon ~= ""
@@ -740,8 +731,8 @@ function Popup:_measureBoxes()
     return total
 end
 
--- Enter: darken the backdrop, drift the card up into place and fade everything in. No UIScale -
--- scaling the card scales its text, which reads as the font size settling after the reveal.
+-- Enter: darken the backdrop, drift the card up and fade everything in. No UIScale, which
+-- would scale the text too.
 function Popup:_show()
     if not self.screenGui.Parent then
         return

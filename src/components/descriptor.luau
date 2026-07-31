@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Body copy on a tab page. Not an element in its own right: sections attach one to carry their
+-- explanatory text, so it has no value, no flag and nothing to persist.
+
 local Descriptor = {}
 Descriptor.__index = Descriptor
 Descriptor.__type = "Descriptor"

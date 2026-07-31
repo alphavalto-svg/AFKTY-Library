@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A heading that breaks a tab page into groups. Spacing above it depends on whether anything
+-- precedes it, so the first thing on a page does not open with a gap.
+
 local Section = {}
 Section.__index = Section
 Section.__type = "Section"

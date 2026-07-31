@@ -91,6 +91,11 @@ export type FontManager = FontManagerState & {
 
 export type fontManager = FontManager
 
+-- Fonts, the same way imageCache does icons: fetch the family manifest, download each face,
+-- keep them on disk and hand back a Font built from local files. Everything here comes off the
+-- network, so nothing about it is trusted, and every failure path returns the fallback font
+-- rather than throwing. Without a filesystem there is only the fallback.
+
 -- the manifest comes off the network, so trust nothing about its shape. names feed straight
 -- into disk paths, so sanitize them here too. returns nil for anything we cant use.
 local function validateManifest(manifest: unknown): FontManifest?
@@ -226,7 +231,6 @@ function fontManager.loadFont(
         log.warn("Invalid font id: " .. tostring(id))
         return self.defaultOptions.fallbackFont
     end
-    -- if the font is already cached, return it
     local fontCache = self.fontCache
     if fontCache and not skipCache then
         local cachedFont = fontCache[resolvedId]
@@ -257,7 +261,7 @@ function fontManager.loadFont(
         end
     end
 
-    -- if saveToDisk is false, we cannot load the font from disk, so we return the default font
+    -- the whole point of the disk cache is keeping the fetch off the wire; without it, fall back
     if not saveToDisk then
         if self._debug then
             log.warn("Font loading without saving to disk can be detected by Anti-cheats.")
@@ -266,7 +270,6 @@ function fontManager.loadFont(
         return self.defaultOptions.fallbackFont
     end
 
-    -- if the font is not cached, we need to load it from the asset resolver
     local manifestPath = self.rootFolder .. "/" .. resolvedId .. ".json"
     -- fonts only load through the disk cache; without a file API there is just the fallback
     if typeof(fileSystem.isfile) ~= "function" then
@@ -317,13 +320,12 @@ function fontManager.loadFont(
     end
     local fontDirectory = self.rootFolder .. "/" .. fontManifest.name
     local madeAllFontsLocal = true
-    -- create folder for the font
     if not pcall(fileSystem.ensureFolder, fontDirectory) then
         return self.defaultOptions.fallbackFont
     end
 
-    -- iterate over each face, caching each to disk like we do images: a face only downloads once,
-    -- later sessions reuse the local file and just re-resolve it
+    -- faces are cached to disk like images: one downloads once, later sessions reuse the local
+    -- file and just re-resolve it
     for i, face in ipairs(fontManifest.faces) do
         local fontFacePath = fontDirectory .. "/" .. face.name:gsub(" ", "-") .. ".ttf"
         if not fileSystem.isfile(fontFacePath) then
@@ -375,7 +377,6 @@ function fontManager.loadFont(
         end
         return self.defaultOptions.fallbackFont
     end
-    -- load the font using the manifest
     local ok, loadedFont = pcall(Font.new, fontManifestId :: any, requestedFontWeight, requestedFontStyle)
     if not ok or not loadedFont then
         if self._debug then
@@ -384,7 +385,7 @@ function fontManager.loadFont(
         return self.defaultOptions.fallbackFont
     end
 
-    -- write the font manifest to the disk
+    -- keep the resolved variant in memory so later requests skip the whole flow
     fontCache = self.fontCache
     if fontCache then
         fontCache[resolvedId] = {

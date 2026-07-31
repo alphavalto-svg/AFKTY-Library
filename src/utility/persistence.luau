@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The persistence facade. Saved element values (configurations) and window state (settings)
+-- are separate files with separate lifetimes; callers use this and never the two halves.
+
 local persistence = {}
 
 local config = require(script.Parent.persistenceConfig)

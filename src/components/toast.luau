@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A floating message above the whole window, top or bottom centre. Unlike a notification it is
+-- not tied to the window's corner and stays legible while the window is collapsed, which is why
+-- the sign-in greeting uses one.
+
 local Toast = {}
 Toast.__index = Toast
 Toast.__type = "Toast"
@@ -15,7 +19,7 @@ local variables = require(utility.variables)
 local functions = require(utility.functions)
 local constants = require(utility.constants)
 local image = require(utility.image)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 -- Timings (Exponential Out, matching the notification feel).
 local slideInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out) -- entry travel
@@ -28,8 +32,7 @@ local iconSize = 24 -- a glyph icon
 local avatarSize = 32 -- a user headshot (matches the old "signed in as" card)
 local leftPadding = 18 -- inside the pill, before the icon/text
 local rightPadding = 18 -- trailing room after the text
--- the avatar (profile-chip) variant sits its headshot closer to the edge like the old card
--- and gives the text extra trailing room
+-- the avatar variant sits its headshot closer to the edge and gives the text trailing room
 local avatarLeftPadding = 10
 local avatarRightPadding = 28
 local iconGap = 12 -- icon to text
@@ -62,14 +65,11 @@ function Toast.new(window, properties, container)
         title = properties.title or properties.Title or "",
         subtitle = properties.subtitle or properties.Subtitle,
         icon = properties.icon or properties.Icon,
-        -- a user id: shows that user's headshot as a larger, edge-hugging avatar (the profile
-        -- chip look). takes precedence over icon.
+        -- a user id shows that user's headshot as an edge-hugging avatar; beats icon
         avatar = properties.avatar or properties.Avatar,
-        -- floor the pill width (content is left-aligned, so the slack becomes right-hand room);
-        -- the welcome toast uses this to match the old license card, others just hug
+        -- floor the pill width; content is left-aligned, so the slack becomes right-hand room
         minWidth = properties.minWidth or properties.MinWidth,
-        -- put the subtitle line above the title (for label-over-value toasts like "Signed in
-        -- as" / name); default is the usual title-on-top
+        -- subtitle above the title, for label-over-value toasts; default is title-on-top
         subtitleAbove = properties.subtitleAbove or properties.SubtitleAbove or false,
         position = properties.position or "Top",
         _hovered = false,
@@ -78,12 +78,10 @@ function Toast.new(window, properties, container)
 
     self.duration = properties.duration or properties.Duration or autoDuration(self.title .. (self.subtitle or ""))
 
-    -- an avatar is a bigger, edge-hugging headshot with roomier trailing padding; a plain icon
-    -- is the compact glyph. these drive both the build below and _measure.
+    -- an avatar is a bigger, edge-hugging headshot; a plain icon is the compact glyph
     local hasAvatar = self.avatar ~= nil and self.avatar ~= 0
     local hasIcon = hasAvatar or (self.icon ~= nil and self.icon ~= 0 and self.icon ~= "")
-    -- headshots resolve to a local getcustomasset file in secure mode, fetched async - so it may
-    -- land after the toast builds, hence the onReady that fills the icon in once it's ready
+    -- headshots resolve asynchronously in secure mode, so onReady fills the icon in later
     self._iconImage = if hasAvatar
         then image.avatar(self.avatar, function(uri)
             -- a slow fetch can land after the toast is gone; dont write to a dead label
@@ -99,8 +97,7 @@ function Toast.new(window, properties, container)
     self._minWidth = math.max(self.minWidth or 0, MIN_WIDTH)
     local hasSubtitle = self.subtitle ~= nil and self.subtitle ~= ""
 
-    -- Outer frame: the stack item. Invisible; only its height animates (open the slot on
-    -- entry, collapse it on exit so neighbours slide up into the gap).
+    -- outer frame: the stack item, invisible; only its height animates
     self.main = self.window:Create("Frame", {
         Name = "Toast",
         BackgroundTransparency = 1,
@@ -195,8 +192,7 @@ function Toast.new(window, properties, container)
         })
     end
 
-    -- text column hugs its content; the body's AutomaticSize is off (we tween its width) so
-    -- this fixed height keeps the row centred
+    -- the body's AutomaticSize is off since its width tweens, so this fixed height centres the row
     self.container = self.window:Create("Frame", {
         AutomaticSize = Enum.AutomaticSize.X,
         Size = UDim2.fromOffset(0, hasSubtitle and 32 or 16),
@@ -217,8 +213,7 @@ function Toast.new(window, properties, container)
         Parent = self.container,
     })
 
-    -- the semibold title rides the theme so it tracks secure mode's brand swap and a dev's
-    -- fallbackFont; the measure below reads the same key so the hug-width always matches
+    -- the title rides the theme so it tracks the brand swap; the measure below reads the same key
     self.titleLabel = self.window:Create("TextLabel", {
         Text = self.title,
         AutomaticSize = Enum.AutomaticSize.X,
@@ -279,8 +274,8 @@ function Toast.new(window, properties, container)
     return self
 end
 
--- Width the pill needs to hug its content, measured without rendering so it grows into place
--- rather than snapping wide first. Height is fixed by line count (icon dictates the minimum).
+-- Width the pill needs to hug its content, measured without rendering. Height is fixed by
+-- line count, with the icon setting the minimum.
 function Toast:_measure()
     local titleWidth = functions.textWidth(self.window.theme.TitleFont, 16, self.title)
     local subtitleWidth = if self.subtitleLabel
@@ -297,8 +292,7 @@ function Toast:_measure()
     return width, height
 end
 
--- Enter: open the slot to full height while the pill drops in from above and fades, staggering
--- the content the way a notification does.
+-- Enter: open the slot while the pill drops in from above and fades, staggering the content.
 function Toast:_show()
     if not self.main.Parent then
         return

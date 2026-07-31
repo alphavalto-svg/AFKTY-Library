@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- Path building and sanitising for everything the library writes to disk. Folder and file names
+-- reach here from the consuming hub, so they are treated as untrusted: no input may produce a
+-- path that escapes the executor's workspace, and none may produce a name the OS refuses.
+
 local path = {}
 
 function path.join(basePath: string, childPath: string?): string

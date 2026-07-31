@@ -5,6 +5,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- The icon front end every element uses. Outside secure mode it hands back the asset id it was
+-- given. Inside it, ids are served from the local cache instead, which means an icon can resolve
+-- blank the first time it is asked for, so assign is the safe way to set one: it rebinds when
+-- the download lands. Failures are reported upward once, not per icon.
+
 local imageCache = require(script.Parent.imageCache)
 local variables = require(script.Parent.variables)
 

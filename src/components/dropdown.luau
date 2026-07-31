@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A single or multi select list. Options can be changed after construction (Refresh, Add,
+-- Remove), and past a threshold the open list grows its own search field. Multi select hands
+-- the callback a copy, so a hub cannot mutate the live selection by accident.
+
 local Dropdown = {}
 Dropdown.__index = Dropdown
 Dropdown.__type = "Dropdown"
@@ -18,7 +22,7 @@ local functions = require(utility.functions)
 local image = require(utility.image)
 local constants = require(utility.constants)
 local locale = require(utility.locale)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 local chevronIcon = constants.icons.chevron
 local checkIcon = constants.icons.check
@@ -121,16 +125,15 @@ function Dropdown.new(tab, properties)
         _optionFrames = {},
     }, Dropdown)
 
-    -- Remember the full intent so a selection survives options that only load later (via
-    -- Refresh), while self.value stays narrowed to options that currently exist.
+    -- remember the full intent so a selection survives options that load later; self.value
+    -- stays narrowed to options that currently exist
     self._desiredValue = self.value
     self.value = intersectWithOptions(self.value, self.options)
 
     -- Register as a saveable control if flagged
     self.window:_registerControl(self)
 
-    -- Outer wrapper: transparent, just holds the two cards and animates its height
-    -- open <-> closed. Clips so the options card is hidden while collapsed.
+    -- transparent wrapper holding the two cards; clips so the options card hides while collapsed
     self.main = self.window:Create("Frame", {
         Size = UDim2.new(1, -20, 0, 41),
         BorderSizePixel = 0,
@@ -259,9 +262,8 @@ function Dropdown.new(tab, properties)
         Parent = self.main,
     })
 
-    -- Options card: a second (full-width) pill below the header, revealed as the wrapper
-    -- grows. Anchored to the wrapper's bottom (top edge sits 6px under the header) so the
-    -- clip hides it while collapsed.
+    -- Options card: a full-width pill below the header, anchored to the wrapper's bottom so
+    -- the clip hides it while collapsed
     self.panel = self.window:Create("Frame", {
         AnchorPoint = Vector2.new(1, 1),
         Position = UDim2.new(1, 0, 1, 0),
@@ -277,9 +279,8 @@ function Dropdown.new(tab, properties)
 
     self.panelStroke = self.window:StyleElementPanel(self.panel)
 
-    -- The card stacks the search bar over the list. The search bar is always present in
-    -- the layout (it just grows/shrinks), so the gap under it is stable; the list is a
-    -- flex-fill item, so it takes whatever height is left and slides down as search grows.
+    -- the search bar is always in the layout and just grows/shrinks; the list is a flex-fill
+    -- item, so it takes whatever height is left
     self.window:Create("UIListLayout", {
         Padding = UDim.new(0, 5),
         FillDirection = Enum.FillDirection.Vertical,
@@ -550,8 +551,7 @@ function Dropdown.new(tab, properties)
                     end
                 end
 
-                -- the visible selection is now the player's intent; a later Refresh must build
-                -- on this, not revert to whatever was restored before they touched it
+                -- the visible selection is now the intent, so a later Refresh builds on it
                 self._desiredValue = table.clone(self.value)
 
                 for _, d in self._optionFrames do
@@ -593,8 +593,8 @@ function Dropdown.new(tab, properties)
         end
     end)
 
-    -- Hover feedback via the overlay + title only. The card uses a gradient stroke (white
-    -- base tinted by the gradient), so tweening stroke.Color here would fight the gradient.
+    -- hover via the overlay and title only: the card's stroke is a gradient, and tweening
+    -- stroke.Color would fight it
     self.window:ConnectFor(self, self.main.MouseEnter, function()
         if self._isOpen or not self.window:_interactive() then
             return
@@ -639,11 +639,10 @@ function Dropdown.new(tab, properties)
     return self
 end
 
--- Search bar: collapsed it's just the icon (centred, no bar); tapping expands it into a
--- full field. It's always in the card's layout - only its height/fills animate - so the
--- list below just flexes down as it grows.
--- what the dev's callback receives. multiSelect hands out a copy: the live table is our
--- selection state, and a dev who keeps or mutates it would corrupt the dropdown.
+-- Search bar: collapsed it is just the icon; tapping expands it into a full field. Always in
+-- the card's layout, so the list below flexes down as it grows.
+-- what the callback receives. multiSelect hands out a copy: the live table is the selection
+-- state, and a caller that mutates it would corrupt the dropdown.
 function Dropdown:_callbackValue()
     if self.multiSelect then
         return table.clone(self.value)
@@ -680,8 +679,7 @@ function Dropdown:_buildSearch()
 
     self.searchShadow = self.window:CreateGlow(self.searchbar, Color3.fromRGB(255, 255, 255), 20, 1) -- expanded = 0.92
 
-    -- Full-bar tap target: expands the bar while it's collapsed. Kept above the option
-    -- hit-targets (ZIndex 50) so taps here never bleed through to an option under them.
+    -- full-bar tap target, above the option hit-targets (ZIndex 50) so taps don't bleed through
     self.searchToggle = self.window:Create("TextButton", {
         BackgroundTransparency = 1,
         Size = UDim2.fromScale(1, 1),
@@ -808,10 +806,9 @@ function Dropdown:_resizeToOptions()
     variables.tweenService:Create(self.main, searchTween, { Size = UDim2.new(1, -20, 0, self:_openHeight()) }):Play()
 end
 
--- Per-corner rounding: an option's top corners round off only when nothing sits above it,
--- and its bottom corners only when nothing sits below - so a run of options reads as one
--- grouped block with rounded outer edges and sharp seams (a lone option is fully rounded).
--- Runs over the currently VISIBLE options, so it re-groups correctly while searching.
+-- Per-corner rounding: an option rounds a corner only when nothing sits next to it, so a run
+-- of options reads as one block with sharp seams. Runs over the visible options, so it
+-- re-groups while searching.
 function Dropdown:_updateCorners()
     local visible = {}
     for _, data in self._optionFrames do
@@ -830,10 +827,8 @@ function Dropdown:_updateCorners()
     end
 end
 
--- Open height sized to the options (header + search + paddings + rows), capped so long lists
--- scroll instead of running off the window. Short lists open just tall enough, no dead space.
--- sized from the options actually on screen, so a search filter (or an Add/Remove while
--- open) grows and shrinks the panel to fit rather than leaving dead space
+-- Open height sized to the visible options (header + search + paddings + rows), capped so long
+-- lists scroll instead of running off the window. A search filter resizes the panel to fit.
 function Dropdown:_openHeight()
     local n = 0
     for _, data in self._optionFrames do
@@ -971,8 +966,7 @@ function Dropdown:_close()
         :Play()
 end
 
--- tear an option down through the window registries, so rebuild churn doesnt leak tracked
--- instances (which would slow ChangeTheme forever) or dead connections
+-- tear an option down through the window registries, so rebuild churn leaks nothing
 function Dropdown:_destroyOption(data)
     if data.connections then
         for _, connection in data.connections do
@@ -995,9 +989,8 @@ function Dropdown:Refresh(newOptions)
     end
     table.clear(self._optionFrames)
 
-    -- re-derive the visible selection from the full intent: an option that loads now (or
-    -- comes back) re-selects, one that's genuinely gone drops out. self.value only ever holds
-    -- real options, so the saved config never carries a stale selection across sessions.
+    -- re-derive the visible selection from the full intent, so self.value only ever holds real
+    -- options and the saved config carries no stale selection
     local previous = self.value
     self.value = intersectWithOptions(self._desiredValue or self.value, self.options)
     local selectionChanged = not sameSelection(self.value, previous)
@@ -1005,8 +998,7 @@ function Dropdown:Refresh(newOptions)
     for _, opt in self.options do
         local data = self._buildOption(opt)
         table.insert(self._optionFrames, data)
-        -- fresh frames default to the closed look, so paint the open state if the
-        -- panel is already open (otherwise they'd sit blank until hovered)
+        -- fresh frames default to the closed look, so paint the open state if already open
         if self._isOpen then
             self._renderOptionState(data, false)
         end
@@ -1039,8 +1031,7 @@ function Dropdown:Add(option)
         self._renderOptionState(data, true)
     end
 
-    -- reconcile with any active search rather than showing an option the query excludes,
-    -- and resize for the new row (also refreshes corners)
+    -- reconcile with any active search, and resize for the new row (also refreshes corners)
     self:_applyFilter(if self._searchOpen then self.searchInput.Text else "")
 end
 
@@ -1092,8 +1083,7 @@ function Dropdown:Set(value, skipCallback)
 end
 
 function Dropdown:_setShown(shown, animate)
-    -- Custom reveal: main is a transparent wrapper, so reveal the header card (self.top)
-    -- rather than main. The options card fades in on open, not here.
+    -- main is a transparent wrapper, so reveal the header card rather than main
     local w = self.window
     w:_reveal(self.stroke, { Transparency = if shown then w.theme.ElementStrokeTransparency else 1 }, animate)
     w:_reveal(self.title, { TextTransparency = if shown then 0 else 1 }, animate)

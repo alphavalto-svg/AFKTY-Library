@@ -9,7 +9,6 @@
 -- Uses native executor functions when available, simulates with instances
 
 local services = require(script.Parent.services)
--- local variables = require(script.Parent.variables)
 
 local filesystem = {}
 
@@ -17,7 +16,7 @@ local isStudio = services.getService("RunService"):IsStudio()
 local hasNativeFS = not isStudio and typeof(writefile) == "function"
 
 if hasNativeFS then
-    -- Native executor environment - wrap globals directly
+    -- native executor globals, wrapped directly
 
     function filesystem.writefile(path: string, content: string)
         writefile(path, content)
@@ -55,8 +54,8 @@ if hasNativeFS then
         delfolder(path)
     end
 elseif isStudio then
-    -- Studio simulation using Instance hierarchy under ReplicatedStorage.
-    -- Files are StringValues, folders are Folders. Glass is glass.
+    -- Studio simulation using an Instance hierarchy under ReplicatedStorage.
+    -- Files are StringValues, folders are Folders.
 
     local root = Instance.new("Folder")
     root.Name = "Filesystem"

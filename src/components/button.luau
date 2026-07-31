@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A pressable row. Builds full width on a tab and in a narrower compact form inside a row,
+-- where _minWidth reports the room it needs so the group can decide how many fit before it
+-- wraps. Holds no state, so nothing here persists to a configuration.
+
 local Button = {}
 Button.__index = Button
 Button.__type = "Button"
@@ -17,7 +21,7 @@ local variables = require(utility.variables)
 local functions = require(utility.functions)
 local moveable = require(utility.moveable)
 local locale = require(utility.locale)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 function Button.new(tab, properties)
     properties = if typeof(properties) == "table" then properties else {}

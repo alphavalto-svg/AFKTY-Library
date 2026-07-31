@@ -5,15 +5,13 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
--- Odometer readout: a number as a row of per-digit reels. Each digit is a clipped
--- cell holding a strip of glyphs; changing it tweens the strip so the new digit
--- rolls up from the bottom and the old one leaves the top. Non-digit characters
--- (separators, %, prefix/suffix) are static cells.
+-- Odometer readout: a number as a row of per-digit reels. Each digit is a clipped cell holding
+-- a strip of glyphs; changing it tweens the strip so the new digit rolls in. Non-digit
+-- characters (separators, %, prefix/suffix) are static cells.
 --
--- Cells are variable width (each digit's natural advance) so it reads like normal
--- text, not a monospaced counter, and the width tweens with the roll. Reconciles
--- from the right so decimals/suffixes stay put as digits grow on the left. Cells are
--- pooled and reused (hidden, never destroyed) so window:Create owns their cleanup.
+-- Cells are variable width (each digit's natural advance) so it reads like text rather than a
+-- monospaced counter. Reconciles from the right so decimals and suffixes stay put. Cells are
+-- pooled and reused, never destroyed, so window:Create owns their cleanup.
 
 local variables = require(script.Parent.variables)
 local TextService = variables.textService
@@ -21,9 +19,8 @@ local TextService = variables.textService
 local odometer = {}
 odometer.__index = odometer
 
--- Two stacked copies of 0-9. A reel on digit d rests at strip Y = -d*H. Rolling up
--- moves to higher indices; rolling down first jumps to the second copy (same glyph)
--- so it can travel down without running past index 0.
+-- Two stacked copies of 0-9. A reel on digit d rests at strip Y = -d*H. Rolling up moves to
+-- higher indices; rolling down first jumps to the second copy so it never runs past index 0.
 local stripLength = 20
 
 local function measure(font, size, text)
@@ -36,9 +33,8 @@ local function measure(font, size, text)
     return if ok then bounds else Vector2.new(size * 0.6, size)
 end
 
--- Digit advances are the same for every odometer of a given font+size, but
--- GetTextBoundsAsync yields, so measure the ten digits once per (font, size) and
--- cache. Later odometers reuse the result and never touch TextService again.
+-- GetTextBoundsAsync yields, so measure the ten digits once per (font, size) and cache.
+-- Later odometers reuse the result and never touch TextService again.
 local metricsCache = {}
 local function digitMetrics(font, size)
     -- Style is part of the key: italic and normal measure differently
@@ -84,17 +80,14 @@ function odometer.new(window, container, opts)
 
     self.roll = TweenInfo.new(self.duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-    -- Cells sit above the container so the digits never get hidden by it under Global
-    -- ZIndexBehavior, wherever the container itself is stacked (floored at the old default).
+    -- cells sit above the container so Global ZIndexBehavior cannot hide the digits behind it
     self.zIndex = math.max(container.ZIndex + 1, 6)
 
-    -- Height tracks the text size (not the taller text-bounds height) so the readout
-    -- keeps a plain-label footprint; neighbour digits sit one cell away, outside the clip.
+    -- height tracks the text size, not the taller text-bounds height, so the readout keeps a
+    -- plain-label footprint
     self.height = math.ceil(self.textSize)
 
-    -- Natural advance per digit (includes side bearings), plus the widest: the
-    -- scrolling strip uses the widest so no glyph clips mid-roll, while each clip
-    -- cell uses its own digit's advance.
+    -- the strip uses the widest advance so no glyph clips mid-roll; each cell uses its own
     local metrics = digitMetrics(window.theme.Font, self.textSize)
     self.advance = metrics.advance
     self.maxWidth = metrics.maxWidth
@@ -112,9 +105,8 @@ function odometer.new(window, container, opts)
     return self
 end
 
--- Lazily build (or fetch) the reel for a slot: a clipped cell + a fixed-width
--- strip of 20 themed digit labels, centred so the visible glyph sits in the
--- middle of the (variable-width) cell.
+-- Lazily build or fetch the reel for a slot: a clipped cell plus a fixed-width strip of 20
+-- digit labels, centred in the variable-width cell.
 function odometer:_reel(index)
     local slot = self.slots[index]
     if slot.reel then
@@ -165,8 +157,7 @@ function odometer:_reel(index)
     return reel
 end
 
--- Fetch/build the static (separator/letter) label for a slot. Statics hug their
--- own glyph width so separators/suffixes space naturally.
+-- Fetch or build the static (separator/letter) label for a slot; statics hug their glyph width.
 function odometer:_static(index)
     local slot = self.slots[index]
     if slot.static then
@@ -253,9 +244,8 @@ function odometer:_reelRoll(reel, digit, up)
     reel.digit = digit
 end
 
--- Show a slot as a digit; hide its static twin. A cell coming back from hidden
--- (the number grew past this column earlier, e.g. 100 -> 99 -> 100) snaps rather
--- than rolling from whatever stale digit it last held.
+-- Show a slot as a digit and hide its static twin. A cell coming back from hidden snaps
+-- rather than rolling from a stale digit.
 function odometer:_putDigit(index, digit, up, animate)
     local reel = self:_reel(index)
     local wasHidden = not reel.cell.Visible
@@ -295,8 +285,7 @@ function odometer:_hide(index)
     end
 end
 
--- Core: render `text`, animating digit changes when `animate` and rolling in the
--- direction implied by `up` (value increased vs decreased).
+-- Render `text`, animating digit changes when `animate`, rolling in the direction of `up`.
 function odometer:_render(text, animate, up)
     text = tostring(text)
 
@@ -340,8 +329,7 @@ function odometer:snap(text)
     self:_render(text, false, true)
 end
 
--- Fade every current label toward `target` transparency, and remember it so
--- lazily-created cells come in at the same level. Mirrors Window:_reveal.
+-- Fade every current label toward `target`, remembering it so lazily-created cells match.
 function odometer:reveal(target, animate, info)
     self.transparency = target
     for _, slot in self.slots do

@@ -1,9 +1,9 @@
 local requireUtility = (_G :: any).__AFKTY_TEST_HELPERS.requireUtility
 
 return function()
-    local hapticEngine = requireUtility("HapticEngine")
+    local hapticEngine = requireUtility("hapticEngine")
 
-    describe("utility.HapticEngine", function()
+    describe("utility.hapticEngine", function()
         afterEach(function()
             hapticEngine.setEnabled(false)
         end)

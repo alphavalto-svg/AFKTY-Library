@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A page and the pill that selects it. Every element factory a hub calls lives here, and Group
+-- mirrors the fields those factories read so the same element code builds inside either. A tab
+-- marked neglectSelector has a page but no pill, which is how the settings page stays hidden.
+
 local Tab = {}
 Tab.__index = Tab
 Tab.__type = "Tab"
@@ -17,12 +21,11 @@ local variables = require(utility.variables)
 local functions = require(utility.functions)
 local locale = require(utility.locale)
 local assignOrder = require(utility.ordering)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 local search = require(script.Parent.search)
 
--- Walk a tab or group's children (groups nest) and tear each element down: drop its flag from
--- the window registry and disconnect every connection it owns, so nothing outlives the
--- instances we're about to destroy.
+-- Walk a tab or group's children (groups nest) and tear each element down: drop its flag and
+-- disconnect its connections, so nothing outlives the instances about to be destroyed.
 local function teardownElements(window, elements)
     for _, element in elements do
         if element.__type == "Group" then
@@ -51,7 +54,7 @@ local function teardownElements(window, elements)
     end
 end
 
--- Pill transparencies per state. Gradient stays constant (theme TabBackground/TabStroke), selection is just transparency.
+-- Pill transparencies per state. The gradient stays constant; selection is just transparency.
 local tabStates = {
     selected = { background = 0, stroke = 0, content = 0 },
     hover = { background = 0.4, stroke = 0.3, content = 0.3 },
@@ -70,9 +73,7 @@ function Tab.new(window, properties)
         name = properties.name or properties.Name,
         icon = properties.icon or properties.Icon,
         neglectSelector = properties.neglectSelector or properties.NeglectSelector or false,
-        -- Owning rail category, if any. A tab is a subcategory of exactly one main category,
-        -- so each category shows its own tab strip rather than one shared set. Tabs created
-        -- without a category stay visible under every category.
+        -- owning rail category, if any; tabs created without one stay visible under every category
         railCategory = properties.category or properties.Category,
         customOrder = properties.customOrder or properties.CustomOrder or 0,
         -- when true, controls on this tab default to not persisting to config (the settings tab)
@@ -169,8 +170,7 @@ function Tab.new(window, properties)
         if self.icon then
             self.topbarItemIcon = self.window:Create("ImageLabel", {
                 -- Configurables
-                -- raw value: Create routes Image through image.resolve, which already handles
-                -- numbers and rbxassetid strings (concat here would double the prefix)
+                -- raw value: Create routes Image through image.resolve, which handles both forms
                 Image = self.icon,
 
                 Size = UDim2.fromOffset(16, 16),
@@ -309,8 +309,8 @@ function Tab:_applyVisual(stateName, tweenInfo)
     end
 end
 
--- Flourish: spin the pill's fill + stroke gradients one full turn back to their resting 90deg.
--- Used staggered per tab on the first reveal, and again when hovering an unselected tab.
+-- Spin the pill's fill and stroke gradients one full turn back to their resting 90deg.
+-- Staggered per tab on the first reveal, and again when hovering an unselected tab.
 function Tab:_spinGradients()
     if self.neglectSelector then
         return
@@ -324,8 +324,7 @@ function Tab:_spinGradients()
 end
 
 function Tab:Select(noAnimation)
-    -- selecting a tab (e.g. via the settings action) leaves search: bring the strip back,
-    -- but let the navigation below pick the page.
+    -- selecting a tab leaves search: bring the strip back, but let navigation pick the page
     if self.window._searching then
         search.close(self.window, { showTabs = true, jumpTo = false })
     end
@@ -333,10 +332,8 @@ function Tab:Select(noAnimation)
     self.window.selectedTab = self
     self.window:_jumpTo(self.tabPage)
 
-    -- noAnimation = initial selection, the pill is still hidden and the window reveal shows it.
-    -- a dev calling Navigate/Select before the first Show() hits the same case even without
-    -- passing it explicitly - a tween played now would resolve while main is invisible, so the
-    -- icon it targets would just pop straight to its end state the moment the window appears
+    -- noAnimation = initial selection: the pill is still hidden and the window reveal shows it.
+    -- A tween played now would resolve while main is invisible and pop on open.
     local skipAnimation = noAnimation or not self.window:_interactive()
 
     if not self.neglectSelector and not skipAnimation then
@@ -366,10 +363,9 @@ function Tab:Deselect(noAnimation)
     end
 end
 
--- shared tail for every CreateX: track it, order it, and reveal it if the window is
--- already open. without this, elements added after Window:Show stay fully transparent.
--- Elements had no way to remove themselves. A hub could drop a whole tab but not one control it
--- had built, so anything conditional had to be rebuilt by tearing down the tab around it.
+-- Shared tail for every CreateX: track it, order it, and reveal it if the window is already
+-- open. Without this, elements added after Window:Show stay transparent.
+-- Remove a single element, so a hub can drop one control without rebuilding the tab.
 local function destroyElement(element)
     local tab = element.tab
     return if tab and tab.RemoveElement then tab:RemoveElement(element) else false
@@ -382,8 +378,7 @@ function Tab:RemoveElement(element)
     end
     table.remove(self.elements, index)
 
-    -- same teardown Tab:Remove runs, narrowed to one element: flags and connections first, so
-    -- nothing is still pointing at, or firing on, what is about to be destroyed
+    -- same teardown Tab:Remove runs, narrowed to one element: flags and connections first
     teardownElements(self.window, { element })
     if element.main then
         self.window:DestroySubtree(element.main)
@@ -477,8 +472,7 @@ end
 function Tab:Remove()
     local window = self.window
 
-    -- search reparents elements into its results page; close it first so this tabs
-    -- units go home before their page is destroyed under them
+    -- search reparents elements into its results page; close it first so they go home
     if window._searching then
         search.close(window, { showTabs = true, jumpTo = window.selectedTab and window.selectedTab.tabPage })
     end
@@ -499,12 +493,10 @@ function Tab:Remove()
         end
     end
 
-    -- Tear every element down (flags + connections) so nothing points at, or fires on, what
-    -- we're about to destroy. Groups nest, so walk their children too.
+    -- tear every element down (flags and connections); groups nest, so walk their children
     teardownElements(window, self.elements)
 
-    -- Tear down the UI; nil the refs so _applyVisual (which guards on self.topbarItem)
-    -- no-ops instead of touching a destroyed instance.
+    -- nil the refs so _applyVisual no-ops instead of touching a destroyed instance
     for _, connection in self.connections do
         window:Disconnect(connection)
     end

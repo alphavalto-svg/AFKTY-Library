@@ -5,6 +5,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- GetService through cloneref where the executor provides it. A cloned reference cannot be
+-- traced back to this script by a game hooking the service, so every service goes through here.
+
 local services = {}
 
 function services.getService(name)

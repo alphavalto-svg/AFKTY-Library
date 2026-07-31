@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A text field. The pill hugs its contents, tweening width rather than using AutomaticSize so
+-- the change animates. Commits on focus loss and on Enter, so a callback never sees a
+-- half-typed value.
+
 local Input = {}
 Input.__index = Input
 Input.__type = "Input"
@@ -18,7 +22,7 @@ local functions = require(utility.functions)
 local moveable = require(utility.moveable)
 local locale = require(utility.locale)
 local constants = require(utility.constants)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 local resizeInfo = constants.pillResizeInfo
 -- text is muted at rest, opaque while typing

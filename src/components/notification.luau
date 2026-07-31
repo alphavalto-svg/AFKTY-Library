@@ -5,6 +5,10 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+-- A card that stacks into the window's bottom-right corner and dismisses itself. Duration is
+-- derived from how much there is to read when the caller does not give one. Cards are measured
+-- before they appear, since the height depends on how the copy wraps.
+
 local Notification = {}
 Notification.__index = Notification
 Notification.__type = "Notification"
@@ -16,7 +20,7 @@ local utility = script.Parent.Parent.utility
 local variables = require(utility.variables)
 local functions = require(utility.functions)
 local constants = require(utility.constants)
-local hapticEngine = require(utility.HapticEngine)
+local hapticEngine = require(utility.hapticEngine)
 
 -- Timings/easings copied from AFKTY Gen1 (all Exponential, Out).
 local growInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
@@ -30,14 +34,11 @@ local shrinkInfo = TweenInfo.new(0.9, Enum.EasingStyle.Exponential, Enum.EasingD
 local offscreenRight = UDim2.new(0.5, 360, 0.5, 0)
 local centred = UDim2.new(0.5, 0, 0.5, 0)
 
--- Roughly what fits in the 800px stack. Past this the oldest is retired early rather than
--- left to march off the top of the screen still running its own dwell loop.
+-- Roughly what fits in the 800px stack; past this the oldest is retired early.
 local maxLive = 6
 
--- Gap between stacked notifications. Applied INSIDE each notification (as top
--- padding on the outer frame) rather than on the container's UIListLayout, so
--- removing one collapses its gap with it instead of dropping an external gap
--- and making the notifications above jump up.
+-- Gap between stacked notifications, applied inside each one as top padding rather than on the
+-- container's UIListLayout, so removing one collapses its gap with it.
 local stackPadding = 8
 
 -- Auto duration from content length, clamped to a sensible window (Gen1-style)
@@ -61,8 +62,7 @@ function Notification.new(window, properties)
 
     local hasIcon = self.icon ~= nil and self.icon ~= 0 and self.icon ~= ""
 
-    -- Outer frame: the stack layout item. Invisible itself; only its height is
-    -- animated (grow in / collapse the gap on exit).
+    -- outer frame: the stack layout item, invisible; only its height animates
     self.main = self.window:Create("Frame", {
         Name = "Notification",
         BackgroundTransparency = 1,
@@ -73,16 +73,14 @@ function Notification.new(window, properties)
         Parent = self.window.notifications,
     })
 
-    -- Inter-notification gap lives here (not on the stack layout) so it collapses
-    -- with the card and its neighbours don't jump when it's removed.
+    -- the gap lives here, not on the stack layout, so it collapses with the card
     self.window:Create("UIPadding", {
         PaddingTop = UDim.new(0, stackPadding),
 
         Parent = self.main,
     })
 
-    -- Inner body: the visible card. Centred so the exit width-shrink pulls in
-    -- symmetrically from both sides.
+    -- inner body: the visible card, centred so the exit width-shrink pulls in symmetrically
     self.body = self.window:Create("Frame", {
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         Size = UDim2.new(1, 0, 1, 0),
@@ -212,8 +210,7 @@ function Notification.new(window, properties)
     self.window._notificationCount = (self.window._notificationCount or 0) + 1
     self.main.LayoutOrder = self.window._notificationCount
 
-    -- a callback that notifies in a loop would stack cards forever, so retire the oldest once
-    -- theres more than the stack can show
+    -- retire the oldest once there are more than the stack can show
     local live = self.window._liveNotifications
     if not live then
         live = {}
@@ -227,8 +224,7 @@ function Notification.new(window, properties)
         end
     end
 
-    -- tracked so _dismiss can drop them; notifications come and go so we cant let their
-    -- connections/instances sit in the window lists until Unload
+    -- tracked so _dismiss can drop them rather than leaving them in the window lists
     self._connections = {
         self.window:Connect(self.body.MouseEnter, function()
             self._hovered = true
@@ -253,8 +249,7 @@ function Notification.new(window, properties)
     return self
 end
 
--- Height the card needs, measured without rendering (so nothing flickers into
--- the stack before it's ready to animate).
+-- Height the card needs, measured without rendering so nothing flickers into the stack.
 function Notification:_measure()
     local colWidth = self.iconLabel and 222 or 260
 
@@ -268,8 +263,7 @@ end
 
 -- Enter: grow the height, then stagger the fades (Gen1 timing).
 function Notification:_show()
-    -- All sizing done before anything is visible: outer is height 0 and the body
-    -- is fully transparent until the grow tween starts, so there's no flicker.
+    -- all sizing happens before anything is visible, so there is no flicker.
     -- +stackPadding because the outer's top padding holds the inter-card gap.
     local target = self:_measure() + stackPadding
     if not self.main.Parent then

@@ -10,6 +10,10 @@ local flagNames = {}
 local offsetBasis = 2166136261
 local prime = 16777619
 
+-- Config flag keys derived from element names, for elements that do not declare one. The key
+-- has to come out identical in every session or saved configurations stop reloading, and it
+-- has to survive names that are not ASCII.
+
 -- FNV-1a over the raw bytes. Same name, same flag, every session, or saved configs stop reloading.
 local function hashName(name: string): number
     local hash = offsetBasis

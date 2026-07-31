@@ -9,15 +9,14 @@ local Group = {}
 Group.__index = Group
 Group.__type = "Group"
 
--- A layout container. Lays its children along one axis and nests, so a row of columns
--- gives you a grid. A row wraps when it runs out of width instead of shrinking forever.
--- Mimics the Tab fields components read (window, tabPage, elements, compact, direction,
--- _moveElement) so the exact same element code builds inside it, and flags still register
--- on window.controls through the nesting.
+-- A layout container. Lays its children along one axis and nests, so a row of columns gives a
+-- grid. A row wraps when it runs out of width rather than shrinking forever. Mimics the Tab
+-- fields components read (window, tabPage, elements, compact, direction, _moveElement) so the
+-- same element code builds inside it.
 --
 -- row    -> children build compact and share the width, wrapping to new rows as needed
 -- column -> children build full width, stacked top to bottom
--- The public API calls these "row"/"column"; "horizontal"/"vertical" work too.
+-- "horizontal"/"vertical" are accepted as aliases.
 
 local moveable = require(script.Parent.Parent.utility.moveable)
 local log = require(script.Parent.Parent.utility.log)
@@ -59,8 +58,8 @@ function Group.new(tab, properties)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         AutomaticSize = Enum.AutomaticSize.Y,
-        -- row matches a normal element's inset (1,-20). column is full width so its
-        -- full-build children (1,-20) line up with the rest of the tab.
+        -- row matches a normal element's inset (1,-20); column is full width so its children
+        -- line up with the rest of the tab
         Size = if horizontal then UDim2.new(1, -20, 0, 0) else UDim2.new(1, 0, 0, 0),
 
         Parent = self.tab.tabPage,
@@ -110,7 +109,6 @@ function Group:_add(componentName, properties)
     self:_reflowRow() -- a leaf landing in a row of columns has to widen the gap back out
 
     -- same as Tab:_register: elements added after Window:Show must be revealed here
-    -- or they stay fully transparent
     if not self.window.hidden then
         element:_setShown(true, true)
     end
@@ -118,11 +116,9 @@ function Group:_add(componentName, properties)
     return element
 end
 
--- Padding is one property for the whole row, so it has to suit whatever the row ends up
--- holding. Columns carry their own 10px side margin (the 1,-20), so where two meet the gutter
--- is 10+10=20, twice the 10px outer margin - pull them together by one margin's worth to match.
--- Leaves carry no margin, so the same pull would just overlap them: a row holding any leaf
--- keeps the leaf gap and lets the columns sit a touch wider apart.
+-- Padding is one property for the whole row. Columns carry their own 10px side margin, so where
+-- two meet the gutter doubles to 20; pull them together by one margin to match the outer 10.
+-- Leaves carry no margin, so a row holding any leaf keeps the leaf gap instead.
 function Group:_reflowRow()
     if self.direction ~= Enum.FillDirection.Horizontal then
         return
@@ -139,15 +135,13 @@ function Group:_reflowRow()
     self.layout.Padding = if onlyGroups then UDim.new(0, -10) else UDim.new(0, elementPadding)
 end
 
--- A row wraps instead of shrinking forever. Each child is frozen to the width it actually
--- needs (element:_minWidth counts its icon, text, control + padding), so the row breaks on
--- real bounds, and HorizontalFlex grows each row's items to fill it.
+-- A row wraps rather than shrinking forever. Each child is frozen to element:_minWidth, so the
+-- row breaks on real bounds, and HorizontalFlex grows each row's items to fill it.
 function Group:_wrapChild(element)
     self.layout.Wraps = true
     self.layout.HorizontalFlex = Enum.UIFlexAlignment.Fill
 
-    -- tells a width-owning element (the slider) that we drive its width now, so its own
-    -- reflow stops fighting us. plain compact elements ignore the flag.
+    -- tells a width-owning element (the slider) that the group drives its width now
     element._widthManaged = true
 
     local minWidth = if element._minWidth then element:_minWidth() else 0
@@ -185,11 +179,10 @@ function Group:_addGroup(properties)
 
     -- adapt a row that's about to hold columns instead of compact leaves:
     if self.direction == Enum.FillDirection.Horizontal then
-        -- top-align, not centre: a column growing (e.g. a dropdown opening) must push down,
-        -- not re-centre and shove the other column around.
+        -- top-align, not centre: a growing column must push down rather than re-centre
         self.layout.VerticalAlignment = Enum.VerticalAlignment.Top
-        -- full width (unless we're ourselves a nested column sharing a parent's flex) so
-        -- column content lines up with the tab's normal elements instead of sitting 10px in.
+        -- full width, unless this is itself a nested column sharing a parent's flex, so
+        -- column content lines up with the tab's normal elements
         if self.tab.direction ~= Enum.FillDirection.Horizontal then
             self.main.Size = UDim2.new(1, 0, 0, 0)
         end
@@ -220,8 +213,8 @@ function Group:_moveElement(element, targetIndex)
     end
 end
 
--- children live in group.elements, not tab.elements, so forward the reveal down.
--- nested groups forward it again, so a whole grid reveals in one call.
+-- children live in group.elements, not tab.elements, so forward the reveal down; nested
+-- groups forward it again, so a whole grid reveals in one call.
 function Group:_setShown(shown, animate)
     for _, el in self.elements do
         el:_setShown(shown, animate)
