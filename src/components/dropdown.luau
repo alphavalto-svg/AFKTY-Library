@@ -115,6 +115,9 @@ function Dropdown.new(tab, properties)
 
         options = dedupStrings(options),
         multiSelect = multiSelect,
+        -- option name -> asset id. read at build time, so Refresh/Add pick up a table the hub
+        -- has since filled in
+        optionIcons = properties.optionIcons or properties.OptionIcons,
         placeholderText = locale.resolve(properties.placeholder or properties.Placeholder or "None"),
         value = normalizeValue(
             properties.value or properties.Value or properties.currentOption or properties.CurrentOption,
@@ -358,11 +361,19 @@ function Dropdown.new(tab, properties)
             variables.tweenService:Create(data.title, info, { TextTransparency = titleT }):Play()
             variables.tweenService:Create(data.checkIcon, info, { ImageTransparency = iconT }):Play()
             variables.tweenService:Create(data.stroke, info, { Transparency = strokeT }):Play()
+            -- item art tracks the title, not the check: it reads as part of the option rather
+            -- than as the selected/unselected affordance
+            if data.optionIcon then
+                variables.tweenService:Create(data.optionIcon, info, { ImageTransparency = titleT }):Play()
+            end
         else
             data.frame.BackgroundTransparency = bgT
             data.title.TextTransparency = titleT
             data.checkIcon.ImageTransparency = iconT
             data.stroke.Transparency = strokeT
+            if data.optionIcon then
+                data.optionIcon.ImageTransparency = titleT
+            end
         end
     end
 
@@ -416,10 +427,17 @@ function Dropdown.new(tab, properties)
             Parent = frame,
         })
 
+        -- optional per-option artwork. resolved before the container is sized, because an icon
+        -- costs the row 21px (16 wide + the layout's 5 padding) that comes out of the title
+        local optionIconAsset = if self.optionIcons then self.optionIcons[optionName] else nil
+        if optionIconAsset == nil or optionIconAsset == "" or optionIconAsset == 0 then
+            optionIconAsset = nil
+        end
+
         local container = self.window:Create("Frame", {
             AnchorPoint = Vector2.new(0, 0.5),
             Position = UDim2.new(0, 14, 0.5, 0),
-            Size = UDim2.fromOffset(170, 16),
+            Size = UDim2.fromOffset(191, 16),
             BorderSizePixel = 0,
             BackgroundTransparency = 1,
             ZIndex = 5,
@@ -440,19 +458,38 @@ function Dropdown.new(tab, properties)
             BorderSizePixel = 0,
             BackgroundTransparency = 1,
             ImageTransparency = 1,
+            LayoutOrder = 0,
             ZIndex = 5,
             Parent = container,
         }, { ImageColor3 = "ContentColor" })
 
+        -- deliberately unthemed: these are game item images, and an ImageColor3 theme key would
+        -- tint them. Fit keeps a non-square thumbnail from stretching into the 16x16 box.
+        local optionIcon = if optionIconAsset
+            then self.window:Create("ImageLabel", {
+                Image = optionIconAsset,
+                Size = UDim2.fromOffset(16, 16),
+                BorderSizePixel = 0,
+                BackgroundTransparency = 1,
+                ScaleType = Enum.ScaleType.Fit,
+                ImageTransparency = 1,
+                LayoutOrder = 1,
+                ZIndex = 5,
+                Parent = container,
+            })
+            else nil
+
         local title = self.window:Create("TextLabel", {
             Text = optionName,
-            Size = UDim2.fromOffset(170, 16),
+            -- an icon-less row keeps the original 170, so existing dropdowns show as much of a
+            -- long option name as they did before
+            Size = UDim2.fromOffset(if optionIcon then 149 else 170, 16),
             BorderSizePixel = 0,
             BackgroundTransparency = 1,
             TextSize = 16,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextWrapped = true,
-            LayoutOrder = 1,
+            LayoutOrder = 2,
             TextTransparency = 1,
             ZIndex = 5,
             Parent = container,
@@ -464,6 +501,7 @@ function Dropdown.new(tab, properties)
             interact = interact,
             title = title,
             checkIcon = checkIcon,
+            optionIcon = optionIcon,
             container = container,
             stroke = optionStroke,
             corner = corner,
@@ -494,6 +532,15 @@ function Dropdown.new(tab, properties)
                         { TextTransparency = 0.15 }
                     )
                     :Play()
+                if optionIcon then
+                    variables.tweenService
+                        :Create(
+                            optionIcon,
+                            TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+                            { ImageTransparency = 0.15 }
+                        )
+                        :Play()
+                end
             end)
         )
 
@@ -520,6 +567,15 @@ function Dropdown.new(tab, properties)
                         { TextTransparency = 0.3 }
                     )
                     :Play()
+                if optionIcon then
+                    variables.tweenService
+                        :Create(
+                            optionIcon,
+                            TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+                            { ImageTransparency = 0.3 }
+                        )
+                        :Play()
+                end
             end)
         )
 

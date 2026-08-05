@@ -208,6 +208,55 @@ return function()
             table.insert(handedOut, "Z")
             expect(#multi.value).to.equal(2)
 
+            -- per-option artwork: only the mapped options get an image, and it must stay untinted
+            local icons = { "rbxassetid://111", "rbxassetid://222" }
+            local withIcons = first:CreateDropdown({
+                name = "Pets",
+                options = { "Dog", "Cat", "Bee" },
+                optionIcons = { Dog = 111, Cat = "rbxassetid://222" },
+                forgetState = true,
+            })
+
+            local function optionNamed(target, name)
+                for _, data in target._optionFrames do
+                    if data.name == name then
+                        return data
+                    end
+                end
+                return nil
+            end
+
+            -- a bare id and a rbxassetid string both resolve
+            for i, name in { "Dog", "Cat" } do
+                local data = optionNamed(withIcons, name)
+                expect(data.optionIcon).to.be.ok()
+                expect(data.optionIcon.Image).to.equal(icons[i])
+                expect(data.optionIcon.Size).to.equal(UDim2.fromOffset(16, 16))
+                -- game item art: an ImageColor3 theme key would recolour it
+                expect(withIcons.window.themeProperties[data.optionIcon]).to.equal(nil)
+                -- the icon costs the title 21px, so the row still fits its container
+                expect(data.title.Size).to.equal(UDim2.fromOffset(149, 16))
+            end
+
+            -- an unmapped option keeps the original layout untouched
+            local bee = optionNamed(withIcons, "Bee")
+            expect(bee.optionIcon).to.equal(nil)
+            expect(bee.title.Size).to.equal(UDim2.fromOffset(170, 16))
+
+            -- closed the art is invisible; opening fades it in with the rest of the row
+            local dog = optionNamed(withIcons, "Dog")
+            expect(dog.optionIcon.ImageTransparency).to.equal(1)
+            withIcons._isOpen = true
+            withIcons._renderOptionState(dog, false)
+            expect(dog.optionIcon.ImageTransparency).to.equal(0.3)
+            withIcons._isOpen = false
+            withIcons._renderOptionState(dog, false)
+            expect(dog.optionIcon.ImageTransparency).to.equal(1)
+
+            -- rebuilt rows keep their artwork, so a Refresh after options load still shows it
+            withIcons:Refresh({ "Cat", "Dog" })
+            expect(optionNamed(withIcons, "Cat").optionIcon.Image).to.equal("rbxassetid://222")
+
             local input = first:CreateInput({
                 name = "Amount",
                 value = "10",

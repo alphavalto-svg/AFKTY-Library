@@ -131,6 +131,8 @@ export type DropdownProps = {
     options: { string }?,
     value: (string | { string })?,
     multiSelect: boolean?,
+    -- per-option artwork, keyed by option name. game item images, so they render untinted
+    optionIcons: { [string]: string | number }?,
     placeholder: string?,
     forgetState: boolean?,
     callback: ((value: any) -> ())?,
