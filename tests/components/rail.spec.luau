@@ -196,6 +196,62 @@ return function()
             expect(w.selectedTab).to.equal(mainTab)
         end)
 
+        it("keeps the strip to one category across minimise, hide and show", function()
+            local w = makeWindow()
+            w.hidden = false
+            w.hasShownOnce = true
+
+            local function categoryOf(name, icon)
+                return w:CreateRailItem({
+                    icon = icon,
+                    name = name,
+                    callback = function(item)
+                        item:Select()
+                    end,
+                })
+            end
+
+            local main = categoryOf("Main", 85628806611332)
+            local tools = categoryOf("Tools", 139478662436110)
+            local mainTab = w:CreateTab({ name = "Main Page", category = main })
+            local toolsTab = w:CreateTab({ name = "Tools Page", category = tools })
+            local global = w:CreateTab({ name = "Everywhere" })
+
+            main:Select()
+            expect(mainTab.topbarItem.Visible).to.equal(true)
+            expect(toolsTab.topbarItem.Visible).to.equal(false)
+
+            -- every path that brings the window back used to reveal all tabs, so the strip came
+            -- back holding both categories at once
+            expect(w:_tabInStrip(mainTab)).to.equal(true)
+            expect(w:_tabInStrip(toolsTab)).to.equal(false)
+            expect(w:_tabInStrip(global)).to.equal(true)
+
+            w:ToggleMinimise()
+            w.animating = false
+            w:ToggleMinimise()
+            w.animating = false
+
+            expect(w:_tabInStrip(toolsTab)).to.equal(false)
+            expect(main.active).to.equal(true)
+
+            -- search and settings deactivate every category, so the strip holds only global tabs
+            w.rail.settingsItem.main.MouseButton1Click:Fire()
+            expect(w:_tabInStrip(mainTab)).to.equal(false)
+            expect(w:_tabInStrip(toolsTab)).to.equal(false)
+            expect(w:_tabInStrip(global)).to.equal(true)
+        end)
+
+        it("treats every tab as strip-worthy when there is no rail", function()
+            local w = makeWindow()
+            local a = w:CreateTab({ name = "A" })
+            local b = w:CreateTab({ name = "B" })
+
+            expect(w.rail == nil).to.equal(true)
+            expect(w:_tabInStrip(a)).to.equal(true)
+            expect(w:_tabInStrip(b)).to.equal(true)
+        end)
+
         it("fires an item's callback when clicked", function()
             local w = makeWindow()
             local clicks = 0

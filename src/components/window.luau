@@ -1105,6 +1105,19 @@ function Window:ToggleHide()
     end
 end
 
+-- Whether a tab belongs in the strip right now. A tab with no category is global and always
+-- shows; a categorised one shows only while its category is the active rail item, which is also
+-- how search and settings end up with an empty strip (they deactivate every category). Every
+-- path that brings the window back has to ask this rather than reveal all tabs, or restoring
+-- from minimise or hide repopulates the strip with every category at once.
+function Window:_tabInStrip(tab)
+    if tab.neglectSelector or not tab.topbarItem then
+        return false
+    end
+    local category = tab.railCategory
+    return category == nil or category.active == true
+end
+
 function Window:ToggleMinimise()
     if self.animating or self.hidden then
         return
@@ -1155,7 +1168,7 @@ function Window:ToggleMinimise()
             self.tabList.Visible = true
 
             for _, tab in pairs(self.tabs) do
-                if not tab.neglectSelector and tab.topbarItem then
+                if self:_tabInStrip(tab) then
                     tab.topbarItem.Visible = true
                     tab:_applyVisual(if self.selectedTab == tab then "selected" else "unselected", fadeInfo)
                 end
@@ -1744,7 +1757,7 @@ function Window:_quickRestore()
         end
 
         for _, tab in pairs(self.tabs) do
-            if not tab.neglectSelector and tab.topbarItem then
+            if self:_tabInStrip(tab) then
                 tab.topbarItem.Visible = true
                 tab:_applyVisual(if self.selectedTab == tab then "selected" else "unselected", fadeInfo)
             end
@@ -1854,7 +1867,7 @@ function Window:_firstShow()
 
     task.spawn(function()
         for _, tab in pairs(self.tabs) do
-            if not tab.neglectSelector then
+            if self:_tabInStrip(tab) then
                 tab.topbarItem.Visible = true
                 tab:_applyVisual(
                     if self.selectedTab == tab then "selected" else "unselected",
